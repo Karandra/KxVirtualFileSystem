@@ -7,13 +7,19 @@
 
 const WCHAR* KxVFSService::GetLibraryVersion()
 {
+	return L"1.1";
+}
+const WCHAR* KxVFSService::GetDokanVersion()
+{
 	static std::wstring ms_DokanVersion;
 	if (ms_DokanVersion.empty())
 	{
 		WCHAR sTemp1[8] = {0};
 		WCHAR sTemp2[8] = {0};
 		wsprintfW(sTemp1, L"%d", DOKAN_VERSION);
-		wsprintfW(sTemp2, L"%c.%c.%c", sTemp1[0], sTemp1[1], sTemp1[2]);
+		int nSize = wsprintfW(sTemp2, L"%c.%c.%c", sTemp1[0], sTemp1[1], sTemp1[2]);
+
+		ms_DokanVersion.reserve(nSize);
 		ms_DokanVersion = sTemp2;
 	}
 	return ms_DokanVersion.c_str();
