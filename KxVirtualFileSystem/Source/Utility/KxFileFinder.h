@@ -6,7 +6,7 @@ class KxFileFinderItem;
 class KxFileFinder
 {
 	public:
-		static bool IsDirectoryEmpty(const KxDynamicStringRef& sDirectoryPath);
+		static bool IsDirectoryEmpty(const KxDynamicStringRef& directoryPath);
 
 	private:
 		const KxDynamicString m_Source;
@@ -17,14 +17,14 @@ class KxFileFinder
 		WIN32_FIND_DATAW m_FindData = {0};
 
 	private:
-		bool OnFound(const WIN32_FIND_DATAW& tFileInfo);
+		bool OnFound(const WIN32_FIND_DATAW& fileInfo);
 		KxDynamicString ConstructSearchQuery() const;
 
 	protected:
-		virtual bool OnFound(const KxFileFinderItem& tFoundItem);
+		virtual bool OnFound(const KxFileFinderItem& foundItem);
 
 	public:
-		KxFileFinder(const KxDynamicString& sSource, const KxDynamicStringRef& sFilter = KxNullDynamicStrigRef);
+		KxFileFinder(const KxDynamicString& source, const KxDynamicStringRef& filter = KxNullDynamicStrigRef);
 		virtual ~KxFileFinder();
 
 	public:
@@ -35,9 +35,9 @@ class KxFileFinder
 		}
 		bool Run();
 		KxFileFinderItem FindNext();
-		void NotifyFound(const KxFileFinderItem& tFoundItem)
+		void NotifyFound(const KxFileFinderItem& foundItem)
 		{
-			m_Canceled = !OnFound(tFoundItem);
+			m_Canceled = !OnFound(foundItem);
 		}
 
 		const KxDynamicString& GetSource() const
@@ -61,17 +61,17 @@ class KxFileFinderItem
 		int64_t m_FileSize = -1;
 
 	private:
-		void MakeNull(bool bAttribuesOnly = false);
-		void Set(const WIN32_FIND_DATAW& tFileInfo);
+		void MakeNull(bool attribuesOnly = false);
+		void Set(const WIN32_FIND_DATAW& fileInfo);
 
 	public:
 		KxFileFinderItem() {}
-		KxFileFinderItem(const KxDynamicStringRef& sFullPath);
+		KxFileFinderItem(const KxDynamicStringRef& fullPath);
 		KxFileFinderItem(const KxFileFinderItem& other) = default;
 		~KxFileFinderItem();
 
 	private:
-		KxFileFinderItem(KxFileFinder* pFinder, const WIN32_FIND_DATAW& tFileInfo);
+		KxFileFinderItem(KxFileFinder* finder, const WIN32_FIND_DATAW& fileInfo);
 
 	public:
 		bool IsOK() const
@@ -126,25 +126,25 @@ class KxFileFinderItem
 		{
 			return m_Source;
 		}
-		void SetSource(const KxDynamicStringRef& sSource)
+		void SetSource(const KxDynamicStringRef& source)
 		{
-			m_Source = sSource;
+			m_Source = source;
 		}
 		const KxDynamicString& GetName() const
 		{
 			return m_Name;
 		}
-		void SetName(const KxDynamicStringRef& sName)
+		void SetName(const KxDynamicStringRef& name)
 		{
-			m_Name = sName;
+			m_Name = name;
 		}
 		KxDynamicString GetFullPath() const
 		{
-			KxDynamicString sOut(m_Source);
-			sOut += TEXT('\\');
-			sOut += m_Name;
+			KxDynamicString out(m_Source);
+			out += TEXT('\\');
+			out += m_Name;
 
-			return sOut;
+			return out;
 		}
 
 		bool UpdateInfo();

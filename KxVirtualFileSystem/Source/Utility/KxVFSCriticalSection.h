@@ -11,9 +11,9 @@ class KxVFSCriticalSection
 		{
 			::InitializeCriticalSection(&m_CritSec);
 		}
-		KxVFSCriticalSection(DWORD nCount)
+		KxVFSCriticalSection(DWORD count)
 		{
-			::InitializeCriticalSectionAndSpinCount(&m_CritSec, nCount);
+			::InitializeCriticalSectionAndSpinCount(&m_CritSec, count);
 		}
 		~KxVFSCriticalSection()
 		{

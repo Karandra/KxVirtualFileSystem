@@ -22,9 +22,9 @@ class KxBasicDynamicString
 		#endif
 
 	protected:
-		void set_static_length(size_t nLength) noexcept
+		void set_static_length(size_t length) noexcept
 		{
-			m_StaticLength = nLength;
+			m_StaticLength = length;
 		}
 		bool can_use_static(const size_t nNewLength) const noexcept
 		{
@@ -144,9 +144,9 @@ class KxBasicDynamicString
 				m_HeapString.append(sv.data(), sv.length());
 			}
 		}
-		void do_append(size_t nCount, CharT c)
+		void do_append(size_t count, CharT c)
 		{
-			for (size_t i = 0; i < nCount; i++)
+			for (size_t i = 0; i < count; i++)
 			{
 				do_push_back(c);
 			}
@@ -211,28 +211,28 @@ class KxBasicDynamicString
 		{
 			m_HeapString.shrink_to_fit();
 		}
-		void reserve(size_t nSize = 0)
+		void reserve(size_t size = 0)
 		{
-			if (!can_use_static(nSize))
+			if (!can_use_static(size))
 			{
-				m_HeapString.reserve(nSize);
+				m_HeapString.reserve(size);
 				do_move_to_heap();
 			}
 		}
-		void resize(size_t nSize, CharT c = CharT())
+		void resize(size_t size, CharT c = CharT())
 		{
 			if (using_static())
 			{
-				if (can_use_static(nSize))
+				if (can_use_static(size))
 				{
-					nSize = std::min(nSize, max_size_static());
-					if (length() < nSize)
+					size = std::min(size, max_size_static());
+					if (length() < size)
 					{
-						do_append(nSize - length(), c);
+						do_append(size - length(), c);
 					}
 					else
 					{
-						set_static_length(nSize);
+						set_static_length(size);
 						do_set_eos_static();
 					}
 					return;
@@ -242,7 +242,7 @@ class KxBasicDynamicString
 					do_move_to_heap();
 				}
 			}
-			m_HeapString.resize(nSize, c);
+			m_HeapString.resize(size, c);
 		}
 		void swap(KxBasicDynamicString& other)
 		{
@@ -256,20 +256,20 @@ class KxBasicDynamicString
 			#endif
 		}
 
-		void erase(size_t nOffset, size_t nCount)
+		void erase(size_t offset, size_t count)
 		{
-			if (nOffset < length())
+			if (offset < length() && count != 0)
 			{
-				auto sv = view(nOffset + std::min(nCount, capacity()));
+				auto sv = view(offset + std::min(count, capacity()));
 				if (using_static())
 				{
-					set_static_length(nOffset);
+					set_static_length(offset);
 					do_set_eos_static();
 					do_append(sv);
 				}
 				else
 				{
-					m_HeapString.assign(sv, nOffset);
+					m_HeapString.assign(sv, offset);
 				}
 			}
 		}
@@ -279,9 +279,9 @@ class KxBasicDynamicString
 		{
 			return using_static() ? ViewT(m_StaticString.data(), m_StaticLength) : ViewT(m_HeapString.data(), m_HeapString.length());
 		}
-		ViewT view(size_t nOffset, size_t nCount = npos) const
+		ViewT view(size_t offset, size_t count = npos) const
 		{
-			return view().substr(nOffset, nCount);
+			return view().substr(offset, count);
 		}
 		
 		CharT* data() noexcept
@@ -322,27 +322,27 @@ class KxBasicDynamicString
 			return view().back();
 		}
 
-		CharT& at(size_t nIndex)
+		CharT& at(size_t index)
 		{
-			if (nIndex < length())
+			if (index < length())
 			{
-				return data()[nIndex];
+				return data()[index];
 			}
 			ThrowInvalidIndex();
 		}
-		const CharT& at(size_t nIndex) const
+		const CharT& at(size_t index) const
 		{
-			return view().at(nIndex);
+			return view().at(index);
 		}
-		template<class T> CharT& operator[](T nIndex)
+		template<class T> CharT& operator[](T index)
 		{
 			static_assert(std::is_integral<T>::value, "T must be integral");
-			return data()[(size_t)nIndex];
+			return data()[(size_t)index];
 		}
-		template<class T>const CharT& operator[](T nIndex) const
+		template<class T>const CharT& operator[](T index) const
 		{
 			static_assert(std::is_integral<T>::value, "T must be integral");
-			return data()[(size_t)nIndex];
+			return data()[(size_t)index];
 		}
 
 		// Comparison
@@ -360,40 +360,40 @@ class KxBasicDynamicString
 		}
 
 		// Search
-		size_t find(const ViewT& sPattern, size_t nPos = 0) const
+		size_t find(const ViewT& pattern, size_t pos = 0) const
 		{
-			return view().find(sPattern, nPos);
+			return view().find(pattern, pos);
 		}
-		size_t find(CharT c, size_t nPos = 0) const
+		size_t find(CharT c, size_t pos = 0) const
 		{
-			return view().find(c, nPos);
+			return view().find(c, pos);
 		}
 		
-		size_t rfind(const ViewT& sPattern, size_t nPos = npos) const
+		size_t rfind(const ViewT& pattern, size_t pos = npos) const
 		{
-			return view().rfind(sPattern, nPos);
+			return view().rfind(pattern, pos);
 		}
-		size_t rfind(CharT c, size_t nPos = npos) const
+		size_t rfind(CharT c, size_t pos = npos) const
 		{
-			return view().rfind(c, nPos);
-		}
-
-		size_t find_first_of(const ViewT& sPattern, size_t nPos = 0) const
-		{
-			return view().find_first_of(sPattern, nPos);
-		}
-		size_t find_first_of(CharT c, size_t nPos = 0) const
-		{
-			return view().find_first_of(c, nPos);
+			return view().rfind(c, pos);
 		}
 
-		size_t find_last_of(const ViewT& sPattern, size_t nPos = 0) const
+		size_t find_first_of(const ViewT& pattern, size_t pos = 0) const
 		{
-			return view().find_last_of(sPattern, nPos);
+			return view().find_first_of(pattern, pos);
 		}
-		size_t find_last_of(CharT c, size_t nPos = 0) const
+		size_t find_first_of(CharT c, size_t pos = 0) const
 		{
-			return view().find_last_of(c, nPos);
+			return view().find_first_of(c, pos);
+		}
+
+		size_t find_last_of(const ViewT& pattern, size_t pos = 0) const
+		{
+			return view().find_last_of(pattern, pos);
+		}
+		size_t find_last_of(CharT c, size_t pos = 0) const
+		{
+			return view().find_last_of(c, pos);
 		}
 
 	public:
@@ -463,7 +463,7 @@ class KxBasicDynamicString
 class KxDynamicString: public KxBasicDynamicString<wchar_t>
 {
 	public:
-		static KxDynamicString Format(const CharT* sFormatString, ...);
+		static KxDynamicString Format(const CharT* formatString, ...);
 
 	public:
 		KxDynamicString() {}
@@ -475,9 +475,9 @@ class KxDynamicString: public KxBasicDynamicString<wchar_t>
 		{
 			assign(s);
 		}
-		KxDynamicString(const CharT* s, size_t nCount = npos)
+		KxDynamicString(const CharT* s, size_t count = npos)
 		{
-			assign(s, nCount);
+			assign(s, count);
 		}
 		KxDynamicString(const KxDynamicString& other)
 		{
@@ -485,35 +485,35 @@ class KxDynamicString: public KxBasicDynamicString<wchar_t>
 		}
 
 	public:
-		KxDynamicString substr(size_t nPos = 0, size_t nCount = npos) const
+		KxDynamicString substr(size_t pos = 0, size_t count = npos) const
 		{
-			return view().substr(nPos, nCount);
+			return view().substr(pos, count);
 		}
-		KxDynamicString before_last(CharT ch, KxDynamicString* pRest = NULL) const
+		KxDynamicString before_last(CharT ch, KxDynamicString* rest = NULL) const
 		{
-			KxDynamicString sOut;
+			KxDynamicString out;
 			size_t nCharPos = rfind(ch);
 			if (nCharPos != npos)
 			{
 				if (nCharPos != 0)
 				{
-					sOut.assign(view(0, nCharPos));
+					out.assign(view(0, nCharPos));
 				}
 
-				if (pRest)
+				if (rest)
 				{
-					pRest->assign(view(nCharPos + 1, npos));
+					rest->assign(view(nCharPos + 1, npos));
 				}
 			}
 			else
 			{
-				if (pRest)
+				if (rest)
 				{
-					*pRest = *this;
+					*rest = *this;
 				}
 			}
 
-			return sOut;
+			return out;
 		}
 
 		KxDynamicString& assign(const ViewT& sv)
@@ -526,9 +526,9 @@ class KxDynamicString: public KxBasicDynamicString<wchar_t>
 			do_assign(s);
 			return *this;
 		}
-		KxDynamicString& assign(const CharT* s, size_t nCount = npos)
+		KxDynamicString& assign(const CharT* s, size_t count = npos)
 		{
-			do_assign(nCount == npos ? ViewT(s) : ViewT(s, nCount));
+			do_assign(count == npos ? ViewT(s) : ViewT(s, count));
 			return *this;
 		}
 		KxDynamicString& assign(const KxDynamicString& other)
@@ -570,9 +570,9 @@ class KxDynamicString: public KxBasicDynamicString<wchar_t>
 			do_append(s);
 			return *this;
 		}
-		KxDynamicString& append(const CharT* s, size_t nCount = npos)
+		KxDynamicString& append(const CharT* s, size_t count = npos)
 		{
-			do_append(nCount == npos ? ViewT(s) : ViewT(s, nCount));
+			do_append(count == npos ? ViewT(s) : ViewT(s, count));
 			return *this;
 		}
 		KxDynamicString& append(const KxDynamicString& other)
@@ -609,15 +609,15 @@ class KxDynamicString: public KxBasicDynamicString<wchar_t>
 		}
 		KxDynamicString to_lower() const
 		{
-			KxDynamicString sOut(*this);
-			sOut.make_lower();
-			return sOut;
+			KxDynamicString out(*this);
+			out.make_lower();
+			return out;
 		}
 		KxDynamicString to_upper() const
 		{
-			KxDynamicString sOut(*this);
-			sOut.make_upper();
-			return sOut;
+			KxDynamicString out(*this);
+			out.make_upper();
+			return out;
 		}
 };
 

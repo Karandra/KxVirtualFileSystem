@@ -12,8 +12,8 @@ class KxVFSFileHandle
 		bool operator!() const = delete;
 
 	public:
-		KxVFSFileHandle(HANDLE hFileHandle = INVALID_HANDLE_VALUE)
-			:m_Handle(hFileHandle)
+		KxVFSFileHandle(HANDLE fileHandle = INVALID_HANDLE_VALUE)
+			:m_Handle(fileHandle)
 		{
 		}
 		~KxVFSFileHandle()
@@ -30,18 +30,18 @@ class KxVFSFileHandle
 		{
 			return m_Handle;
 		}
-		KxVFSFileHandle& Assign(const HANDLE& hFileHandle)
+		KxVFSFileHandle& Assign(const HANDLE& fileHandle)
 		{
 			Close();
-			m_Handle = hFileHandle;
+			m_Handle = fileHandle;
 			return *this;
 		}
 		
 		HANDLE Release()
 		{
-			HANDLE hFileHandle = m_Handle;
+			HANDLE fileHandle = m_Handle;
 			m_Handle = INVALID_HANDLE_VALUE;
-			return hFileHandle;
+			return fileHandle;
 		}
 		bool Close()
 		{
@@ -52,41 +52,41 @@ class KxVFSFileHandle
 			return false;
 		}
 		
-		bool SetDeleteOnClose(bool bDeleteOnClose)
+		bool SetDeleteOnClose(bool deleteOnClose)
 		{
-			FILE_DISPOSITION_INFO tFileDispositionInfo = {0};
-			tFileDispositionInfo.DeleteFile = bDeleteOnClose;
+			FILE_DISPOSITION_INFO fileDispositionInfo = {0};
+			fileDispositionInfo.DeleteFile = deleteOnClose;
 
-			return ::SetFileInformationByHandle(m_Handle, FileDispositionInfo, &tFileDispositionInfo, sizeof(FILE_DISPOSITION_INFO));
+			return ::SetFileInformationByHandle(m_Handle, FileDispositionInfo, &fileDispositionInfo, sizeof(FILE_DISPOSITION_INFO));
 		}
 		int64_t GetSize() const
 		{
-			LARGE_INTEGER tSize = {0};
-			if (::GetFileSizeEx(m_Handle, &tSize))
+			LARGE_INTEGER size = {0};
+			if (::GetFileSizeEx(m_Handle, &size))
 			{
-				return tSize.QuadPart;
+				return size.QuadPart;
 			}
 			return -1;
 		}
-		bool Seek(int64_t nOffset, DWORD nMode = FILE_CURRENT)
+		bool Seek(int64_t offset, DWORD mode = FILE_CURRENT)
 		{
-			LARGE_INTEGER tPos = {0};
-			tPos.QuadPart = nOffset;
-			return SetFilePointerEx(m_Handle, tPos, &tPos, nMode);
+			LARGE_INTEGER pos = {0};
+			pos.QuadPart = offset;
+			return SetFilePointerEx(m_Handle, pos, &pos, mode);
 		}
 		int64_t GetPosition() const
 		{
-			LARGE_INTEGER tPos = {0};
-			SetFilePointerEx(m_Handle, tPos, &tPos, FILE_CURRENT);
-			return tPos.QuadPart;
+			LARGE_INTEGER pos = {0};
+			SetFilePointerEx(m_Handle, pos, &pos, FILE_CURRENT);
+			return pos.QuadPart;
 		}
 		KxDynamicString GetPath() const;
 		DWORD GetAttributes() const
 		{
-			BY_HANDLE_FILE_INFORMATION tInfo = {0};
-			if (GetFileInformationByHandle(m_Handle, &tInfo))
+			BY_HANDLE_FILE_INFORMATION info = {0};
+			if (GetFileInformationByHandle(m_Handle, &info))
 			{
-				return tInfo.dwFileAttributes;
+				return info.dwFileAttributes;
 			}
 			return INVALID_FILE_ATTRIBUTES;
 		}
@@ -100,9 +100,9 @@ class KxVFSFileHandle
 			return Get();
 		}
 		
-		KxVFSFileHandle& operator=(const HANDLE& hFileHandle)
+		KxVFSFileHandle& operator=(const HANDLE& fileHandle)
 		{
-			return Assign(hFileHandle);
+			return Assign(fileHandle);
 		}
 		bool operator==(const KxVFSFileHandle& other) const
 		{

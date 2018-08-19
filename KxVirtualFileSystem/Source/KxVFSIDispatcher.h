@@ -5,5 +5,5 @@
 class KxVFS_API KxVFSIDispatcher
 {
 	public:
-		virtual KxDynamicString GetTargetPath(const WCHAR* sRequestedPath) = 0;
+		virtual KxDynamicString GetTargetPath(const WCHAR* requestedPath) = 0;
 };

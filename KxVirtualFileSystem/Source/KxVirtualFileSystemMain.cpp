@@ -10,24 +10,24 @@
 
 int _tmain()
 {
-	KxVFSService* pService = new KxVFSService(L"KortexVFS");
-	pService->Install(L"C:\\Users\\Kerber\\Documents\\Visual Studio 2017\\Projects\\Kortex Mod Manager\\Kortex\\Bin\\Data\\VFS\\Drivers\\Win7 x64\\dokan2.sys");
-	pService->Start();
+	KxVFSService* service = new KxVFSService(L"KortexVFS");
+	service->Install(L"C:\\Users\\Kerber\\Documents\\Visual Studio 2017\\Projects\\Kortex Mod Manager\\Kortex\\Bin\\Data\\VFS\\Drivers\\Win7 x64\\dokan2.sys");
+	service->Start();
 
-	//KxVFSMirror* pMirror = new KxVFSMirror(pService, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim", 0, ULONG_MAX);
+	//KxVFSMirror* mirror = new KxVFSMirror(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim", 0, ULONG_MAX);
 	
-	KxVFSMirror* pMirrorGC = new KxVFSMirror(pService, L"C:\\Users\\Kerber\\Documents\\My Games\\Skyrim", L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\VirtualGameConfig", 0, ULONG_MAX);
-	KxVFSMirror* pMirrorPL = new KxVFSMirror(pService, L"C:\\Users\\Kerber\\AppData\\Local\\Skyrim", L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\PluginsOrder", 0, ULONG_MAX);
+	KxVFSMirror* mirrorGC = new KxVFSMirror(service, L"C:\\Users\\Kerber\\Documents\\My Games\\Skyrim", L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\VirtualGameConfig", 0, ULONG_MAX);
+	KxVFSMirror* mirrorPL = new KxVFSMirror(service, L"C:\\Users\\Kerber\\AppData\\Local\\Skyrim", L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\PluginsOrder", 0, ULONG_MAX);
 
-	KxVFSConvergence* pMainVFS = new KxVFSConvergence(pService, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite", 0, ULONG_MAX);
-	pMainVFS->SetCanDeleteInVirtualFolder(true);
-	pMainVFS->AddVirtualFolder(L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
-	//pMainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\TestData");
-	pMainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\979ba932bb6d9e9b8049c2fda6fc255d\\ModFiles");
-	pMainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\7cacfd93a9caea44cacfd86e614cd348\\ModFiles");
-	//pMirror->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\VF\\1");
-	//pMirror->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\VF\\2");
-	//pMirror->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\VF\\3");
+	KxVFSConvergence* mainVFS = new KxVFSConvergence(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite", 0, ULONG_MAX);
+	mainVFS->SetCanDeleteInVirtualFolder(true);
+	mainVFS->AddVirtualFolder(L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
+	//mainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\TestData");
+	mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\979ba932bb6d9e9b8049c2fda6fc255d\\ModFiles");
+	mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\7cacfd93a9caea44cacfd86e614cd348\\ModFiles");
+	//mirror->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\VF\\1");
+	//mirror->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\VF\\2");
+	//mirror->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\VF\\3");
 
 	char c = NULL;
 	while (c != 'x')
@@ -37,27 +37,27 @@ int _tmain()
 		{
 			case 'm':
 			{
-				int nError = pMainVFS->Mount();
-				pMirrorGC->Mount();
-				pMirrorPL->Mount();
-				fwprintf(stdout, L"%d: %s\r\n", nError, KxVFSMirror::GetErrorCodeMessage(nError).data());
+				int error = mainVFS->Mount();
+				mirrorGC->Mount();
+				mirrorPL->Mount();
+				fwprintf(stdout, L"%d: %s\r\n", error, KxVFSMirror::GetErrorCodeMessage(error).data());
 				break;
 			}
 			case 'c':
 			{
-				pMainVFS->RefreshDispatcherIndex();
+				mainVFS->RefreshDispatcherIndex();
 				break;
 			}
 			case 'r':
 			{
 				auto ThreadEntry = []()
 				{
-					STARTUPINFO tStartupInfo = {0};
-					tStartupInfo.cb = sizeof(tStartupInfo);
+					STARTUPINFO startupInfo = {0};
+					startupInfo.cb = sizeof(startupInfo);
 
-					PROCESS_INFORMATION tProcessInfo = {0};
-					tProcessInfo.hProcess = INVALID_HANDLE_VALUE;
-					tProcessInfo.hThread = INVALID_HANDLE_VALUE;
+					PROCESS_INFORMATION processInfo = {0};
+					processInfo.hProcess = INVALID_HANDLE_VALUE;
+					processInfo.hThread = INVALID_HANDLE_VALUE;
 
 					WCHAR s[1024] = L"C:\\Users\\Kerber\\Desktop\\Test\\enbhost.exe";
 					WCHAR s2[1024] = L"\"C:\\Users\\Kerber\\Desktop\\Test\\enbhost.exe\"";
@@ -65,7 +65,7 @@ int _tmain()
 					//WCHAR s[1024] = L"M:\\enbhost.exe";
 					//WCHAR s2[1024] = L"M:\\enbhost.exe";
 
-					bool bOK = CreateProcessW
+					bool isOK = CreateProcessW
 					(
 						NULL,
 						s2,
@@ -75,13 +75,13 @@ int _tmain()
 						0,
 						NULL,
 						s3,
-						&tStartupInfo,
-						&tProcessInfo
+						&startupInfo,
+						&processInfo
 					);
-					DWORD nError = GetLastError();
-					WaitForSingleObject(tProcessInfo.hProcess, INFINITE);
+					DWORD error = GetLastError();
+					WaitForSingleObject(processInfo.hProcess, INFINITE);
 
-					fprintf(stdout, "%s: %u\r\n", bOK ? "true" : "false", nError);
+					fprintf(stdout, "%s: %u\r\n", isOK ? "true" : "false", error);
 				};
 				std::thread t(ThreadEntry);
 				t.detach();
@@ -96,7 +96,7 @@ int _tmain()
 				
 				s.erase(2, 6);
 
-				KxDynamicString spf = KxDynamicString::Format(L"%s, %d, 0x%p", s.data(), 45, pMainVFS);
+				KxDynamicString spf = KxDynamicString::Format(L"%s, %d, 0x%p", s.data(), 45, mainVFS);
 
 				KxDynamicString s2 = L"\\Desktop\\f6c0ac810be991f2.kmpproj\\";
 				//s2.erase(0, 1);
@@ -109,22 +109,22 @@ int _tmain()
 
 			case 'u':
 			{
-				fprintf(stderr, "%s\r\n", pMainVFS->UnMount() ? "true" : "false");
-				pMirrorGC->UnMount();
-				pMirrorPL->UnMount();
+				fprintf(stderr, "%s\r\n", mainVFS->UnMount() ? "true" : "false");
+				mirrorGC->UnMount();
+				mirrorPL->UnMount();
 
 				break;
 			}
 			case 'x':
 			{
-				fprintf(stderr, "%s\r\n", pMainVFS->UnMount() ? "true" : "false");
-				pMirrorGC->UnMount();
-				pMirrorPL->UnMount();
+				fprintf(stderr, "%s\r\n", mainVFS->UnMount() ? "true" : "false");
+				mirrorGC->UnMount();
+				mirrorPL->UnMount();
 
-				delete pMainVFS;
-				delete pMirrorGC;
-				delete pMirrorPL;
-				delete pService;
+				delete mainVFS;
+				delete mirrorGC;
+				delete mirrorPL;
+				delete service;
 				break;
 			}
 		};

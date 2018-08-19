@@ -8,33 +8,33 @@ class KxVFSUtility
 		typedef std::unordered_set<size_t> StringSearcherHash;
 
 	public:
-		static std::wstring ToUTF16(const char* sText);
-		static std::string ToUTF8(const WCHAR* sText);
+		static std::wstring ToUTF16(const char* text);
+		static std::string ToUTF8(const WCHAR* text);
 
-		static WORD LocaleIDToLangID(WORD nLocaleID);
-		static std::wstring FormatMessage(DWORD nFlags, const void* pSource, DWORD nMessageID, WORD nLangID = 0);
-		static std::wstring GetErrorMessage(DWORD nCode = GetLastError(), WORD nLangID = 0);
-		template<class T, class V> static bool SetIfNotNull(T* pData, const V& vData)
+		static WORD LocaleIDToLangID(WORD localeID);
+		static std::wstring FormatMessage(DWORD flags, const void* source, DWORD messageID, WORD langID = 0);
+		static std::wstring GetErrorMessage(DWORD code = GetLastError(), WORD langID = 0);
+		template<class T, class V> static bool SetIfNotNull(T* p, const V& v)
 		{
-			if (pData)
+			if (p)
 			{
-				*pData = vData;
+				*p = v;
 				return true;
 			}
 			return false;
 		}
 
-		static bool CreateFolderTree(const WCHAR* sPathW, bool bNoLast = false, SECURITY_ATTRIBUTES* pSecurityAttributes = NULL, DWORD* pErrorCode = NULL);
-		static bool IsFolderEmpty(const WCHAR* sPath);
-		static std::wstring GetDriveFromPath(const WCHAR* sPath);
-		static DWORD GetFileAttributes(const WCHAR* sPath);
-		static bool IsExist(const WCHAR* sPath);
-		static bool IsFileExist(const WCHAR* sPath);
-		static bool IsFolderExist(const WCHAR* sPath);
+		static bool CreateFolderTree(const WCHAR* pathW, bool noLast = false, SECURITY_ATTRIBUTES* securityAttributes = NULL, DWORD* errorCodeOut = NULL);
+		static bool IsFolderEmpty(const WCHAR* path);
+		static std::wstring GetDriveFromPath(const WCHAR* path);
+		static DWORD GetFileAttributes(const WCHAR* path);
+		static bool IsExist(const WCHAR* path);
+		static bool IsFileExist(const WCHAR* path);
+		static bool IsFolderExist(const WCHAR* path);
 
-		static size_t HashString(const std::wstring_view& sString)
+		static size_t HashString(const std::wstring_view& string)
 		{
-			return std::hash<std::wstring_view>()(sString);
+			return std::hash<std::wstring_view>()(string);
 		}
 
 		static int DebugPrint(const WCHAR* fmt, ...);

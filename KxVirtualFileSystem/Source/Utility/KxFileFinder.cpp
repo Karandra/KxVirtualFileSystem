@@ -1,39 +1,39 @@
 #include "KxVirtualFileSystem.h"
 #include "KxFileFinder.h"
 
-bool KxFileFinder::IsDirectoryEmpty(const KxDynamicStringRef& sDirectoryPath)
+bool KxFileFinder::IsDirectoryEmpty(const KxDynamicStringRef& directoryPath)
 {
-	KxFileFinder tFinder(sDirectoryPath, TEXT("*"));
+	KxFileFinder finder(directoryPath, TEXT("*"));
 
-	KxFileFinderItem tItem = tFinder.FindNext();
-	if (!tItem.IsOK())
+	KxFileFinderItem item = finder.FindNext();
+	if (!item.IsOK())
 	{
 		// No files at all, folder is empty.
 		return true;
 	}
-	else if (tItem.IsCurrentOrParent())
+	else if (item.IsCurrentOrParent())
 	{
 		// If first and second item are references to current and parent folders
 		// and no more files found, then this particular folder is empty.
-		tItem = tFinder.FindNext();
-		if (tItem.IsCurrentOrParent())
+		item = finder.FindNext();
+		if (item.IsCurrentOrParent())
 		{
-			return !tFinder.FindNext().IsOK();
+			return !finder.FindNext().IsOK();
 		}
 	}
 	return false;
 }
 
-bool KxFileFinder::OnFound(const WIN32_FIND_DATAW& tFileInfo)
+bool KxFileFinder::OnFound(const WIN32_FIND_DATAW& fileInfo)
 {
-	KxFileFinderItem tFoundItem(this, tFileInfo);
-	if (!tFoundItem.IsCurrentOrParent())
+	KxFileFinderItem foundItem(this, fileInfo);
+	if (!foundItem.IsCurrentOrParent())
 	{
-		return OnFound(tFoundItem);
+		return OnFound(foundItem);
 	}
 	return true;
 }
-bool KxFileFinder::OnFound(const KxFileFinderItem& tFoundItem)
+bool KxFileFinder::OnFound(const KxFileFinderItem& foundItem)
 {
 	return true;
 }
@@ -41,16 +41,16 @@ KxDynamicString KxFileFinder::ConstructSearchQuery() const
 {
 	if (!m_Filter.empty())
 	{
-		KxDynamicString sQuery = m_Source;
-		sQuery += TEXT('\\');
-		sQuery += m_Filter;
-		return sQuery;
+		KxDynamicString query = m_Source;
+		query += TEXT('\\');
+		query += m_Filter;
+		return query;
 	}
 	return m_Source;
 }
 
-KxFileFinder::KxFileFinder(const KxDynamicString& sSource, const KxDynamicStringRef& sFilter)
-	:m_Source(sSource), m_Filter(sFilter)
+KxFileFinder::KxFileFinder(const KxDynamicString& source, const KxDynamicStringRef& filter)
+	:m_Source(source), m_Filter(filter)
 {
 }
 KxFileFinder::~KxFileFinder()
@@ -68,18 +68,18 @@ bool KxFileFinder::IsOK() const
 }
 bool KxFileFinder::Run()
 {
-	WIN32_FIND_DATAW tFileInfo = {0};
-	KxDynamicString sQuery = ConstructSearchQuery();
-	HANDLE hSearchHandle = ::FindFirstFileW(sQuery, &tFileInfo);
-	if (hSearchHandle != INVALID_HANDLE_VALUE)
+	WIN32_FIND_DATAW fileInfo = {0};
+	KxDynamicString query = ConstructSearchQuery();
+	HANDLE searchHandle = ::FindFirstFileW(query, &fileInfo);
+	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
-		if (OnFound(tFileInfo))
+		if (OnFound(fileInfo))
 		{
-			while (::FindNextFileW(hSearchHandle, &tFileInfo) && OnFound(tFileInfo))
+			while (::FindNextFileW(searchHandle, &fileInfo) && OnFound(fileInfo))
 			{
 			}
 		}
-		::FindClose(hSearchHandle);
+		::FindClose(searchHandle);
 		return true;
 	}
 	return false;
@@ -89,8 +89,8 @@ KxFileFinderItem KxFileFinder::FindNext()
 	if (!IsOK())
 	{
 		// No search handle available, begin operation.
-		KxDynamicString sQuery = ConstructSearchQuery();
-		m_Handle = ::FindFirstFileW(sQuery, &m_FindData);
+		KxDynamicString query = ConstructSearchQuery();
+		m_Handle = ::FindFirstFileW(query, &m_FindData);
 		if (IsOK())
 		{
 			m_Canceled = false;
@@ -113,9 +113,9 @@ KxFileFinderItem KxFileFinder::FindNext()
 }
 
 //////////////////////////////////////////////////////////////////////////
-void KxFileFinderItem::MakeNull(bool bAttribuesOnly)
+void KxFileFinderItem::MakeNull(bool attribuesOnly)
 {
-	if (bAttribuesOnly)
+	if (attribuesOnly)
 	{
 		m_Attributes = INVALID_FILE_ATTRIBUTES;
 		m_ReparsePointAttributes = 0;
@@ -129,44 +129,44 @@ void KxFileFinderItem::MakeNull(bool bAttribuesOnly)
 		*this = KxFileFinderItem();
 	}
 }
-void KxFileFinderItem::Set(const WIN32_FIND_DATAW& tFileInfo)
+void KxFileFinderItem::Set(const WIN32_FIND_DATAW& fileInfo)
 {
-	m_Attributes = tFileInfo.dwFileAttributes;
+	m_Attributes = fileInfo.dwFileAttributes;
 	if (IsReparsePoint())
 	{
-		m_ReparsePointAttributes = tFileInfo.dwReserved0;
+		m_ReparsePointAttributes = fileInfo.dwReserved0;
 	}
 
 	if (IsFile())
 	{
-		ULARGE_INTEGER tSize = {0};
-		tSize.HighPart = tFileInfo.nFileSizeHigh;
-		tSize.LowPart = tFileInfo.nFileSizeLow;
-		m_FileSize = (int64_t)tSize.QuadPart;
+		ULARGE_INTEGER size = {0};
+		size.HighPart = fileInfo.nFileSizeHigh;
+		size.LowPart = fileInfo.nFileSizeLow;
+		m_FileSize = (int64_t)size.QuadPart;
 	}
 	else
 	{
 		m_FileSize = -1;
 	}
 
-	m_Name = tFileInfo.cFileName;
+	m_Name = fileInfo.cFileName;
 
-	m_CreationTime = tFileInfo.ftCreationTime;
-	m_LastAccessTime = tFileInfo.ftLastAccessTime;
-	m_ModificationTime = tFileInfo.ftLastWriteTime;
+	m_CreationTime = fileInfo.ftCreationTime;
+	m_LastAccessTime = fileInfo.ftLastAccessTime;
+	m_ModificationTime = fileInfo.ftLastWriteTime;
 }
 
-KxFileFinderItem::KxFileFinderItem(const KxDynamicStringRef& sFullPath)
-	:m_Source(sFullPath)
+KxFileFinderItem::KxFileFinderItem(const KxDynamicStringRef& fullPath)
+	:m_Source(fullPath)
 {
 	m_Source = m_Source.before_last('\\', &m_Name);
 
 	UpdateInfo();
 }
-KxFileFinderItem::KxFileFinderItem(KxFileFinder* pFinder, const WIN32_FIND_DATAW& tFileInfo)
-	:m_Source(pFinder->GetSource())
+KxFileFinderItem::KxFileFinderItem(KxFileFinder* finder, const WIN32_FIND_DATAW& fileInfo)
+	:m_Source(finder->GetSource())
 {
-	Set(tFileInfo);
+	Set(fileInfo);
 }
 KxFileFinderItem::~KxFileFinderItem()
 {
@@ -182,16 +182,16 @@ bool KxFileFinderItem::IsCurrentOrParent() const
 }
 bool KxFileFinderItem::UpdateInfo()
 {
-	KxDynamicString sQuery = m_Source;
-	sQuery += TEXT('\\');
-	sQuery += m_Name;
+	KxDynamicString query = m_Source;
+	query += TEXT('\\');
+	query += m_Name;
 
-	WIN32_FIND_DATAW tInfo = {0};
-	HANDLE hSearchHandle = ::FindFirstFileW(sQuery, &tInfo);
-	if (hSearchHandle != INVALID_HANDLE_VALUE)
+	WIN32_FIND_DATAW info = {0};
+	HANDLE searchHandle = ::FindFirstFileW(query, &info);
+	if (searchHandle != INVALID_HANDLE_VALUE)
 	{
-		Set(tInfo);
-		::FindClose(hSearchHandle);
+		Set(info);
+		::FindClose(searchHandle);
 		return true;
 	}
 	else
@@ -202,25 +202,25 @@ bool KxFileFinderItem::UpdateInfo()
 }
 WIN32_FIND_DATAW KxFileFinderItem::GetAsWIN32_FIND_DATA() const
 {
-	WIN32_FIND_DATAW tFindData = {};
+	WIN32_FIND_DATAW findData = {};
 
-	tFindData.dwFileAttributes = m_Attributes;
-	tFindData.ftCreationTime = m_CreationTime;
-	tFindData.ftLastWriteTime = m_ModificationTime;
-	tFindData.ftLastAccessTime = m_LastAccessTime;
+	findData.dwFileAttributes = m_Attributes;
+	findData.ftCreationTime = m_CreationTime;
+	findData.ftLastWriteTime = m_ModificationTime;
+	findData.ftLastAccessTime = m_LastAccessTime;
 
 	if (IsReparsePoint())
 	{
-		tFindData.dwReserved0 = m_ReparsePointAttributes;
+		findData.dwReserved0 = m_ReparsePointAttributes;
 	}
 	
-	ULARGE_INTEGER tSize = {0};
-	tSize.QuadPart = m_FileSize;
+	ULARGE_INTEGER size = {0};
+	size.QuadPart = m_FileSize;
 
-	tFindData.nFileSizeHigh = tSize.HighPart;
-	tFindData.nFileSizeLow = tSize.LowPart;
+	findData.nFileSizeHigh = size.HighPart;
+	findData.nFileSizeLow = size.LowPart;
 
-	wcsncpy_s(tFindData.cFileName, m_Name, m_Name.length());
+	wcsncpy_s(findData.cFileName, m_Name, m_Name.length());
 
-	return tFindData;
+	return findData;
 }

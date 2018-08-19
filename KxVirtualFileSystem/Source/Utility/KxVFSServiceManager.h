@@ -9,9 +9,9 @@ class KxVFSServiceManager
 		DWORD m_LastError = 0;
 
 	public:
-		KxVFSServiceManager(DWORD nAccessMode = SERVICE_ALL_ACCESS)
+		KxVFSServiceManager(DWORD accessMode = SERVICE_ALL_ACCESS)
 		{
-			m_Handle = ::OpenSCManagerW(NULL, NULL, nAccessMode);
+			m_Handle = ::OpenSCManagerW(NULL, NULL, accessMode);
 			m_LastError = ::GetLastError();
 		}
 		~KxVFSServiceManager()

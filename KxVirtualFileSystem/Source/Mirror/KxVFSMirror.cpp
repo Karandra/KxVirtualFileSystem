@@ -9,48 +9,48 @@
 #pragma warning (disable: 4267)
 
 //////////////////////////////////////////////////////////////////////////
-DWORD KxVFSMirror::GetParentSecurity(const WCHAR* sFilePath, PSECURITY_DESCRIPTOR* pParentSecurity) const
+DWORD KxVFSMirror::GetParentSecurity(const WCHAR* filePath, PSECURITY_DESCRIPTOR* parentSecurity) const
 {
-	int nLastPathSeparator = -1;
-	for (int i = 0; i < MaxPathLength && sFilePath[i]; ++i)
+	int lastPathSeparator = -1;
+	for (int i = 0; i < MaxPathLength && filePath[i]; ++i)
 	{
-		if (sFilePath[i] == '\\')
+		if (filePath[i] == '\\')
 		{
-			nLastPathSeparator = i;
+			lastPathSeparator = i;
 		}
 	}
-	if (nLastPathSeparator == -1)
+	if (lastPathSeparator == -1)
 	{
 		return ERROR_PATH_NOT_FOUND;
 	}
 
-	WCHAR sParentPath[MaxPathLength];
-	memcpy_s(sParentPath, MaxPathLength * sizeof(WCHAR), sFilePath, nLastPathSeparator * sizeof(WCHAR));
-	sParentPath[nLastPathSeparator] = 0;
+	WCHAR parentPath[MaxPathLength];
+	memcpy_s(parentPath, MaxPathLength * sizeof(WCHAR), filePath, lastPathSeparator * sizeof(WCHAR));
+	parentPath[lastPathSeparator] = 0;
 
-	// Must LocalFree() pParentSecurity
+	// Must LocalFree() parentSecurity
 	return GetNamedSecurityInfoW
 	(
-		sParentPath,
+		parentPath,
 		SE_FILE_OBJECT,
 		BACKUP_SECURITY_INFORMATION, // give us everything
 		NULL,
 		NULL,
 		NULL,
 		NULL,
-		pParentSecurity
+		parentSecurity
 	);
 }
-DWORD KxVFSMirror::CreateNewSecurity(DOKAN_CREATE_FILE_EVENT* pEventInfo, const WCHAR* sFilePath, PSECURITY_DESCRIPTOR pRequestedSecurity, PSECURITY_DESCRIPTOR* pNewSecurity) const
+DWORD KxVFSMirror::CreateNewSecurity(DOKAN_CREATE_FILE_EVENT* eventInfo, const WCHAR* filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const
 {
-	if (!pEventInfo || !sFilePath || !pRequestedSecurity || !pNewSecurity)
+	if (!eventInfo || !filePath || !requestedSecurity || !newSecurity)
 	{
 		return ERROR_INVALID_PARAMETER;
 	}
 
-	int nErrorCode = ERROR_SUCCESS;
-	PSECURITY_DESCRIPTOR pParentDescriptor = NULL;
-	if ((nErrorCode = GetParentSecurity(sFilePath, &pParentDescriptor)) == ERROR_SUCCESS)
+	int errorCode = ERROR_SUCCESS;
+	PSECURITY_DESCRIPTOR parentDescriptor = NULL;
+	if ((errorCode = GetParentSecurity(filePath, &parentDescriptor)) == ERROR_SUCCESS)
 	{
 		static GENERIC_MAPPING g_GenericMapping =
 		{
@@ -60,115 +60,115 @@ DWORD KxVFSMirror::CreateNewSecurity(DOKAN_CREATE_FILE_EVENT* pEventInfo, const 
 			FILE_ALL_ACCESS
 		};
 
-		HANDLE hAaccessToken = DokanOpenRequestorToken(pEventInfo->DokanFileInfo);
-		if (hAaccessToken && hAaccessToken != INVALID_HANDLE_VALUE)
+		HANDLE aaccessTokenHandle = DokanOpenRequestorToken(eventInfo->DokanFileInfo);
+		if (aaccessTokenHandle && aaccessTokenHandle != INVALID_HANDLE_VALUE)
 		{
-			if (!CreatePrivateObjectSecurity(pParentDescriptor,
-											 pEventInfo->SecurityContext.AccessState.SecurityDescriptor,
-											 pNewSecurity,
-											 pEventInfo->DokanFileInfo->IsDirectory,
-											 hAaccessToken,
+			if (!CreatePrivateObjectSecurity(parentDescriptor,
+											 eventInfo->SecurityContext.AccessState.SecurityDescriptor,
+											 newSecurity,
+											 eventInfo->DokanFileInfo->IsDirectory,
+											 aaccessTokenHandle,
 											 &g_GenericMapping))
 			{
 
-				nErrorCode = GetLastError();
+				errorCode = GetLastError();
 			}
-			CloseHandle(hAaccessToken);
+			CloseHandle(aaccessTokenHandle);
 		}
 		else
 		{
-			nErrorCode = GetLastError();
+			errorCode = GetLastError();
 		}
-		LocalFree(pParentDescriptor);
+		LocalFree(parentDescriptor);
 	}
-	return nErrorCode;
+	return errorCode;
 }
 
-bool KxVFSMirror::CheckDeleteOnClose(PDOKAN_FILE_INFO pFileInfo, const WCHAR* sFilePath) const
+bool KxVFSMirror::CheckDeleteOnClose(PDOKAN_FILE_INFO fileInfo, const WCHAR* filePath) const
 {
-	if (pFileInfo->DeleteOnClose)
+	if (fileInfo->DeleteOnClose)
 	{
-		KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), sFilePath);
+		KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), filePath);
 
 		// Should already be deleted by CloseHandle
 		// if open with FILE_FLAG_DELETE_ON_CLOSE
-		if (pFileInfo->IsDirectory)
+		if (fileInfo->IsDirectory)
 		{
-			RemoveDirectoryW(sFilePath);
+			RemoveDirectoryW(filePath);
 		}
 		else
 		{
-			DeleteFileW(sFilePath);
+			DeleteFileW(filePath);
 		}
 		return true;
 	}
 	return false;
 }
-NTSTATUS KxVFSMirror::CanDeleteDirectory(const WCHAR* sFilePath) const
+NTSTATUS KxVFSMirror::CanDeleteDirectory(const WCHAR* filePath) const
 {
-	KxDynamicString sFilePathCopy = sFilePath;
+	KxDynamicString filePathCopy = filePath;
 
-	size_t nFilePathLength = sFilePathCopy.length();
-	if (sFilePathCopy[nFilePathLength - 1] != L'\\')
+	size_t nFilePathLength = filePathCopy.length();
+	if (filePathCopy[nFilePathLength - 1] != L'\\')
 	{
-		sFilePathCopy[nFilePathLength++] = L'\\';
+		filePathCopy[nFilePathLength++] = L'\\';
 	}
 
-	sFilePathCopy[nFilePathLength] = L'*';
-	sFilePathCopy[nFilePathLength + 1] = L'\0';
+	filePathCopy[nFilePathLength] = L'*';
+	filePathCopy[nFilePathLength + 1] = L'\0';
 
-	WIN32_FIND_DATAW tFindData = {0};
-	HANDLE hFind = FindFirstFileW(sFilePathCopy, &tFindData);
-	if (hFind == INVALID_HANDLE_VALUE)
+	WIN32_FIND_DATAW findData = {0};
+	HANDLE findHandle = FindFirstFileW(filePathCopy, &findData);
+	if (findHandle == INVALID_HANDLE_VALUE)
 	{
 		return GetNtStatusByWin32LastErrorCode();
 	}
 
 	do
 	{
-		if (wcscmp(tFindData.cFileName, L"..") != 0 && wcscmp(tFindData.cFileName, L".") != 0)
+		if (wcscmp(findData.cFileName, L"..") != 0 && wcscmp(findData.cFileName, L".") != 0)
 		{
-			FindClose(hFind);
+			FindClose(findHandle);
 			return STATUS_DIRECTORY_NOT_EMPTY;
 		}
 	}
-	while (FindNextFileW(hFind, &tFindData) != 0);
+	while (FindNextFileW(findHandle, &findData) != 0);
 
-	DWORD nErrorCode = GetLastError();
-	if (nErrorCode != ERROR_NO_MORE_FILES)
+	DWORD errorCode = GetLastError();
+	if (errorCode != ERROR_NO_MORE_FILES)
 	{
-		return GetNtStatusByWin32ErrorCode(nErrorCode);
+		return GetNtStatusByWin32ErrorCode(errorCode);
 	}
 
-	FindClose(hFind);
+	FindClose(findHandle);
 	return STATUS_SUCCESS;
 }
-NTSTATUS KxVFSMirror::ReadFileSynchronous(DOKAN_READ_FILE_EVENT* pEventInfo, HANDLE hFileHandle) const
+NTSTATUS KxVFSMirror::ReadFileSynchronous(DOKAN_READ_FILE_EVENT* eventInfo, HANDLE fileHandle) const
 {
-	LARGE_INTEGER tDistanceToMove;
-	tDistanceToMove.QuadPart = pEventInfo->Offset;
+	LARGE_INTEGER distanceToMove;
+	distanceToMove.QuadPart = eventInfo->Offset;
 
-	if (!SetFilePointerEx(hFileHandle, tDistanceToMove, NULL, FILE_BEGIN))
+	if (!SetFilePointerEx(fileHandle, distanceToMove, NULL, FILE_BEGIN))
 	{
 		return GetNtStatusByWin32LastErrorCode();
 	}
 
-	if (ReadFile(hFileHandle, pEventInfo->Buffer, pEventInfo->NumberOfBytesToRead, &pEventInfo->NumberOfBytesRead, NULL))
+	if (ReadFile(fileHandle, eventInfo->Buffer, eventInfo->NumberOfBytesToRead, &eventInfo->NumberOfBytesRead, NULL))
 	{
 		return STATUS_SUCCESS;
 	}
 	return GetNtStatusByWin32LastErrorCode();
 }
-NTSTATUS KxVFSMirror::WriteFileSynchronous(DOKAN_WRITE_FILE_EVENT* pEventInfo, HANDLE hFileHandle, UINT64 nFileSize) const
+NTSTATUS KxVFSMirror::WriteFileSynchronous(DOKAN_WRITE_FILE_EVENT* eventInfo, HANDLE fileHandle, UINT64 fileSize) const
 {
-	LARGE_INTEGER tDistanceToMove;
+	LARGE_INTEGER distanceToMove;
 
-	if (pEventInfo->DokanFileInfo->WriteToEndOfFile)
+	if (eventInfo->DokanFileInfo->WriteToEndOfFile)
 	{
-		LARGE_INTEGER tPos;
-		tPos.QuadPart = 0;
+		LARGE_INTEGER pos;
+		pos.QuadPart = 0;
 
-		if (!SetFilePointerEx(hFileHandle, tPos, NULL, FILE_END))
+		if (!SetFilePointerEx(fileHandle, pos, NULL, FILE_END))
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
@@ -176,30 +176,30 @@ NTSTATUS KxVFSMirror::WriteFileSynchronous(DOKAN_WRITE_FILE_EVENT* pEventInfo, H
 	else
 	{
 		// Paging IO cannot write after allocate file size.
-		if (pEventInfo->DokanFileInfo->PagingIo)
+		if (eventInfo->DokanFileInfo->PagingIo)
 		{
-			if ((UINT64)pEventInfo->Offset >= nFileSize)
+			if ((UINT64)eventInfo->Offset >= fileSize)
 			{
-				pEventInfo->NumberOfBytesWritten = 0;
+				eventInfo->NumberOfBytesWritten = 0;
 				return STATUS_SUCCESS;
 			}
 
 			// WFT is happening here?
-			if (((UINT64)pEventInfo->Offset + pEventInfo->NumberOfBytesToWrite) > nFileSize)
+			if (((UINT64)eventInfo->Offset + eventInfo->NumberOfBytesToWrite) > fileSize)
 			{
-				UINT64 nBytes = nFileSize - pEventInfo->Offset;
-				if (nBytes >> 32)
+				UINT64 bytes = fileSize - eventInfo->Offset;
+				if (bytes >> 32)
 				{
-					pEventInfo->NumberOfBytesToWrite = (DWORD)(nBytes & 0xFFFFFFFFUL);
+					eventInfo->NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
 				}
 				else {
 
-					pEventInfo->NumberOfBytesToWrite = (DWORD)nBytes;
+					eventInfo->NumberOfBytesToWrite = (DWORD)bytes;
 				}
 			}
 		}
 
-		if ((UINT64)pEventInfo->Offset > nFileSize)
+		if ((UINT64)eventInfo->Offset > fileSize)
 		{
 			// In the mirror sample helperZeroFileData is not necessary. NTFS will zero a hole.
 			// But if user's file system is different from NTFS (or other Windows
@@ -208,42 +208,42 @@ NTSTATUS KxVFSMirror::WriteFileSynchronous(DOKAN_WRITE_FILE_EVENT* pEventInfo, H
 			// If only Dokan devs can explain more clearly what they are talking about
 		}
 
-		tDistanceToMove.QuadPart = pEventInfo->Offset;
-		if (!SetFilePointerEx(hFileHandle, tDistanceToMove, NULL, FILE_BEGIN))
+		distanceToMove.QuadPart = eventInfo->Offset;
+		if (!SetFilePointerEx(fileHandle, distanceToMove, NULL, FILE_BEGIN))
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
 	}
 
-	if (WriteFile(hFileHandle, pEventInfo->Buffer, pEventInfo->NumberOfBytesToWrite, &pEventInfo->NumberOfBytesWritten, NULL))
+	if (WriteFile(fileHandle, eventInfo->Buffer, eventInfo->NumberOfBytesToWrite, &eventInfo->NumberOfBytesWritten, NULL))
 	{
 		return STATUS_SUCCESS;
 	}
 	return GetNtStatusByWin32LastErrorCode();
 }
 
-KxDynamicString KxVFSMirror::GetTargetPath(const WCHAR* sRequestedPath)
+KxDynamicString KxVFSMirror::GetTargetPath(const WCHAR* requestedPath)
 {
-	KxDynamicString sTargetPath(L"\\\\?\\");
-	sTargetPath.append(m_Source);
-	sTargetPath.append(sRequestedPath);
-	return sTargetPath;
+	KxDynamicString targetPath(L"\\\\?\\");
+	targetPath.append(m_Source);
+	targetPath.append(requestedPath);
+	return targetPath;
 }
 
 //////////////////////////////////////////////////////////////////////////
-KxVFSMirror::KxVFSMirror(KxVFSService* pVFSService, const WCHAR* sMountPoint, const WCHAR* sSource, ULONG nFalgs, ULONG nRequestTimeout)
-	:KxVFSBase(pVFSService, sMountPoint, nFalgs, nRequestTimeout), m_Source(sSource)
+KxVFSMirror::KxVFSMirror(KxVFSService* vfsService, const WCHAR* mountPoint, const WCHAR* source, ULONG falgs, ULONG requestTimeout)
+	:KxVFSBase(vfsService, mountPoint, falgs, requestTimeout), m_Source(source)
 {
 }
 KxVFSMirror::~KxVFSMirror()
 {
 }
 
-bool KxVFSMirror::SetSource(const WCHAR* sSource)
+bool KxVFSMirror::SetSource(const WCHAR* source)
 {
 	if (!IsMounted())
 	{
-		m_Source = sSource;
+		m_Source = source;
 		return true;
 	}
 	return false;
@@ -266,11 +266,11 @@ int KxVFSMirror::Mount()
 }
 
 //////////////////////////////////////////////////////////////////////////
-NTSTATUS KxVFSMirror::OnMount(DOKAN_MOUNTED_INFO* pEventInfo)
+NTSTATUS KxVFSMirror::OnMount(DOKAN_MOUNTED_INFO* eventInfo)
 {
 	return STATUS_NOT_SUPPORTED;
 }
-NTSTATUS KxVFSMirror::OnUnMount(DOKAN_UNMOUNTED_INFO* pEventInfo)
+NTSTATUS KxVFSMirror::OnUnMount(DOKAN_UNMOUNTED_INFO* eventInfo)
 {
 	CleanupMirrorFileHandles();
 	#if KxVFS_USE_ASYNC_IO
@@ -280,75 +280,75 @@ NTSTATUS KxVFSMirror::OnUnMount(DOKAN_UNMOUNTED_INFO* pEventInfo)
 	return STATUS_NOT_SUPPORTED;
 }
 
-NTSTATUS KxVFSMirror::OnGetVolumeFreeSpace(DOKAN_GET_DISK_FREE_SPACE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnGetVolumeFreeSpace(DOKAN_GET_DISK_FREE_SPACE_EVENT* eventInfo)
 {
-	if (!GetDiskFreeSpaceExW(GetSource(), (ULARGE_INTEGER*)&pEventInfo->FreeBytesAvailable, (ULARGE_INTEGER*)&pEventInfo->TotalNumberOfBytes, (ULARGE_INTEGER*)&pEventInfo->TotalNumberOfFreeBytes))
+	if (!GetDiskFreeSpaceExW(GetSource(), (ULARGE_INTEGER*)&eventInfo->FreeBytesAvailable, (ULARGE_INTEGER*)&eventInfo->TotalNumberOfBytes, (ULARGE_INTEGER*)&eventInfo->TotalNumberOfFreeBytes))
 	{
 		return GetNtStatusByWin32LastErrorCode();
 	}
 	return STATUS_SUCCESS;
 }
-NTSTATUS KxVFSMirror::OnGetVolumeInfo(DOKAN_GET_VOLUME_INFO_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnGetVolumeInfo(DOKAN_GET_VOLUME_INFO_EVENT* eventInfo)
 {
-	pEventInfo->VolumeInfo->VolumeSerialNumber = GetVolumeSerialNumber();
-	pEventInfo->VolumeInfo->VolumeLabelLength = WriteString(GetVolumeName(), pEventInfo->VolumeInfo->VolumeLabel, pEventInfo->MaxLabelLengthInChars);
-	pEventInfo->VolumeInfo->SupportsObjects = FALSE;
+	eventInfo->VolumeInfo->VolumeSerialNumber = GetVolumeSerialNumber();
+	eventInfo->VolumeInfo->VolumeLabelLength = WriteString(GetVolumeName(), eventInfo->VolumeInfo->VolumeLabel, eventInfo->MaxLabelLengthInChars);
+	eventInfo->VolumeInfo->SupportsObjects = FALSE;
 
 	return STATUS_SUCCESS;
 }
-NTSTATUS KxVFSMirror::OnGetVolumeAttributes(DOKAN_GET_VOLUME_ATTRIBUTES_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnGetVolumeAttributes(DOKAN_GET_VOLUME_ATTRIBUTES_EVENT* eventInfo)
 {
-	LPCWSTR sFileSystemName = GetVolumeFileSystemName();
-	size_t maxFileSystemNameLengthInBytes = pEventInfo->MaxFileSystemNameLengthInChars * sizeof(WCHAR);
+	LPCWSTR fileSystemName = GetVolumeFileSystemName();
+	size_t maxFileSystemNameLengthInBytes = eventInfo->MaxFileSystemNameLengthInChars * sizeof(WCHAR);
 
-	pEventInfo->Attributes->FileSystemAttributes = FILE_CASE_SENSITIVE_SEARCH|FILE_CASE_PRESERVED_NAMES|FILE_SUPPORTS_REMOTE_STORAGE|FILE_UNICODE_ON_DISK|FILE_PERSISTENT_ACLS|FILE_NAMED_STREAMS;
-	pEventInfo->Attributes->MaximumComponentNameLength = 256; // Not 255, this means Dokan doesn't support long file names?
+	eventInfo->Attributes->FileSystemAttributes = FILE_CASE_SENSITIVE_SEARCH|FILE_CASE_PRESERVED_NAMES|FILE_SUPPORTS_REMOTE_STORAGE|FILE_UNICODE_ON_DISK|FILE_PERSISTENT_ACLS|FILE_NAMED_STREAMS;
+	eventInfo->Attributes->MaximumComponentNameLength = 256; // Not 255, this means Dokan doesn't support long file names?
 
-	WCHAR sVolumeRoot[4];
-	sVolumeRoot[0] = GetSource()[0];
-	sVolumeRoot[1] = ':';
-	sVolumeRoot[2] = '\\';
-	sVolumeRoot[3] = '\0';
+	WCHAR volumeRoot[4];
+	volumeRoot[0] = GetSource()[0];
+	volumeRoot[1] = ':';
+	volumeRoot[2] = '\\';
+	volumeRoot[3] = '\0';
 
-	DWORD nFileSystemFlags = 0;
-	DWORD nMaximumComponentLength = 0;
+	DWORD fileSystemFlags = 0;
+	DWORD maximumComponentLength = 0;
 
-	WCHAR sFileSystemNameBuffer[255] = {0};
-	if (GetVolumeInformationW(sVolumeRoot, NULL, 0, NULL, &nMaximumComponentLength, &nFileSystemFlags, sFileSystemNameBuffer, ARRAYSIZE(sFileSystemNameBuffer)))
+	WCHAR fileSystemNameBuffer[255] = {0};
+	if (GetVolumeInformationW(volumeRoot, NULL, 0, NULL, &maximumComponentLength, &fileSystemFlags, fileSystemNameBuffer, ARRAYSIZE(fileSystemNameBuffer)))
 	{
-		pEventInfo->Attributes->MaximumComponentNameLength = nMaximumComponentLength;
-		pEventInfo->Attributes->FileSystemAttributes &= nFileSystemFlags;
+		eventInfo->Attributes->MaximumComponentNameLength = maximumComponentLength;
+		eventInfo->Attributes->FileSystemAttributes &= fileSystemFlags;
 
-		sFileSystemName = sFileSystemNameBuffer;
+		fileSystemName = fileSystemNameBuffer;
 	}
-	pEventInfo->Attributes->FileSystemNameLength = WriteString(sFileSystemName, pEventInfo->Attributes->FileSystemName, pEventInfo->MaxFileSystemNameLengthInChars);
+	eventInfo->Attributes->FileSystemNameLength = WriteString(fileSystemName, eventInfo->Attributes->FileSystemName, eventInfo->MaxFileSystemNameLengthInChars);
 
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS KxVFSMirror::OnCreateFile(DOKAN_CREATE_FILE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnCreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo)
 {
-	DWORD nErrorCode = 0;
-	NTSTATUS nStatusCode = STATUS_SUCCESS;
-	KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
+	DWORD errorCode = 0;
+	NTSTATUS statusCode = STATUS_SUCCESS;
+	KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
 
-	DWORD nFileAttributesAndFlags = 0;
-	DWORD nCreationDisposition = 0;
-	ACCESS_MASK nGenericDesiredAccess = DokanMapStandardToGenericAccess(pEventInfo->DesiredAccess);
-	DokanMapKernelToUserCreateFileFlags(pEventInfo, &nFileAttributesAndFlags, &nCreationDisposition);
+	DWORD fileAttributesAndFlags = 0;
+	DWORD creationDisposition = 0;
+	ACCESS_MASK genericDesiredAccess = DokanMapStandardToGenericAccess(eventInfo->DesiredAccess);
+	DokanMapKernelToUserCreateFileFlags(eventInfo, &fileAttributesAndFlags, &creationDisposition);
 
 	// When filePath is a directory, needs to change the flag so that the file can be opened.
-	DWORD nFileAttributes = ::GetFileAttributesW(sTargetPath);
-	if (nFileAttributes != INVALID_FILE_ATTRIBUTES)
+	DWORD fileAttributes = ::GetFileAttributesW(targetPath);
+	if (fileAttributes != INVALID_FILE_ATTRIBUTES)
 	{
-		if (nFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		{
-			if (!(pEventInfo->CreateOptions & FILE_NON_DIRECTORY_FILE))
+			if (!(eventInfo->CreateOptions & FILE_NON_DIRECTORY_FILE))
 			{
 				// Needed by FindFirstFile to list files in it
 				// TODO: use ReOpenFile in MirrorFindFiles to set share read temporary
-				pEventInfo->DokanFileInfo->IsDirectory = TRUE;
-				pEventInfo->ShareAccess |= FILE_SHARE_READ;
+				eventInfo->DokanFileInfo->IsDirectory = TRUE;
+				eventInfo->ShareAccess |= FILE_SHARE_READ;
 			}
 			else
 			{
@@ -359,85 +359,85 @@ NTSTATUS KxVFSMirror::OnCreateFile(DOKAN_CREATE_FILE_EVENT* pEventInfo)
 	}
 
 	#if KxVFS_USE_ASYNC_IO
-	nFileAttributesAndFlags |= FILE_FLAG_OVERLAPPED;
+	fileAttributesAndFlags |= FILE_FLAG_OVERLAPPED;
 	#endif
 
-	SECURITY_DESCRIPTOR* pFileSecurity = NULL;
-	if (wcscmp(pEventInfo->FileName, L"\\") != 0 && wcscmp(pEventInfo->FileName, L"/") != 0	&& nCreationDisposition != OPEN_EXISTING && nCreationDisposition != TRUNCATE_EXISTING)
+	SECURITY_DESCRIPTOR* fileSecurity = NULL;
+	if (wcscmp(eventInfo->FileName, L"\\") != 0 && wcscmp(eventInfo->FileName, L"/") != 0	&& creationDisposition != OPEN_EXISTING && creationDisposition != TRUNCATE_EXISTING)
 	{
 		// We only need security information if there's a possibility a new file could be created
-		CreateNewSecurity(pEventInfo, sTargetPath, pEventInfo->SecurityContext.AccessState.SecurityDescriptor, reinterpret_cast<PSECURITY_DESCRIPTOR*>(&pFileSecurity));
+		CreateNewSecurity(eventInfo, targetPath, eventInfo->SecurityContext.AccessState.SecurityDescriptor, reinterpret_cast<PSECURITY_DESCRIPTOR*>(&fileSecurity));
 	}
 
-	SECURITY_ATTRIBUTES tSecurityAttributes;
-	tSecurityAttributes.nLength = sizeof(tSecurityAttributes);
-	tSecurityAttributes.lpSecurityDescriptor = pFileSecurity;
-	tSecurityAttributes.bInheritHandle = FALSE;
+	SECURITY_ATTRIBUTES securityAttributes;
+	securityAttributes.nLength = sizeof(securityAttributes);
+	securityAttributes.lpSecurityDescriptor = fileSecurity;
+	securityAttributes.bInheritHandle = FALSE;
 
-	if (pEventInfo->DokanFileInfo->IsDirectory)
+	if (eventInfo->DokanFileInfo->IsDirectory)
 	{
 		// It is a create directory request
-		if (nCreationDisposition == CREATE_NEW || nCreationDisposition == OPEN_ALWAYS)
+		if (creationDisposition == CREATE_NEW || creationDisposition == OPEN_ALWAYS)
 		{
 			// We create folder
-			if (!CreateDirectoryW(sTargetPath, &tSecurityAttributes))
+			if (!CreateDirectoryW(targetPath, &securityAttributes))
 			{
-				nErrorCode = GetLastError();
+				errorCode = GetLastError();
 
 				// Fail to create folder for OPEN_ALWAYS is not an error
-				if (nErrorCode != ERROR_ALREADY_EXISTS || nCreationDisposition == CREATE_NEW)
+				if (errorCode != ERROR_ALREADY_EXISTS || creationDisposition == CREATE_NEW)
 				{
-					nStatusCode = GetNtStatusByWin32ErrorCode(nErrorCode);
+					statusCode = GetNtStatusByWin32ErrorCode(errorCode);
 				}
 			}
 		}
 
-		if (nStatusCode == STATUS_SUCCESS)
+		if (statusCode == STATUS_SUCCESS)
 		{
 			// Check first if we're trying to open a file as a directory.
-			if (nFileAttributes != INVALID_FILE_ATTRIBUTES && !(nFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (pEventInfo->CreateOptions & FILE_DIRECTORY_FILE))
+			if (fileAttributes != INVALID_FILE_ATTRIBUTES && !(fileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (eventInfo->CreateOptions & FILE_DIRECTORY_FILE))
 			{
 				return STATUS_NOT_A_DIRECTORY;
 			}
 
 			// FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
-			KxVFSFileHandle hFile = CreateFileW
+			KxVFSFileHandle fileHandle = CreateFileW
 			(
-				sTargetPath,
-				nGenericDesiredAccess,
-				pEventInfo->ShareAccess,
-				&tSecurityAttributes,
+				targetPath,
+				genericDesiredAccess,
+				eventInfo->ShareAccess,
+				&securityAttributes,
 				OPEN_EXISTING,
-				nFileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
+				fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
 				NULL
 			);
 
-			if (hFile.IsOK())
+			if (fileHandle.IsOK())
 			{
-				KxVFSMirror_FileHandle* pMirrorHandle = PopMirrorFileHandle(hFile);
-				if (!pMirrorHandle)
+				KxVFSMirror_FileHandle* mirrorHandle = PopMirrorFileHandle(fileHandle);
+				if (!mirrorHandle)
 				{
 					SetLastError(ERROR_INTERNAL_ERROR);
-					nStatusCode = STATUS_INTERNAL_ERROR;
-					hFile.Close();
+					statusCode = STATUS_INTERNAL_ERROR;
+					fileHandle.Close();
 				}
 				else
 				{
-					hFile.Release();
+					fileHandle.Release();
 				}
 
 				// Save the file handle in Context
-				pEventInfo->DokanFileInfo->Context = (ULONG64)pMirrorHandle;
+				eventInfo->DokanFileInfo->Context = (ULONG64)mirrorHandle;
 
 				// Open succeed but we need to inform the driver that the dir open and not created by returning STATUS_OBJECT_NAME_COLLISION
-				if (nCreationDisposition == OPEN_ALWAYS && nFileAttributes != INVALID_FILE_ATTRIBUTES)
+				if (creationDisposition == OPEN_ALWAYS && fileAttributes != INVALID_FILE_ATTRIBUTES)
 				{
-					nStatusCode = STATUS_OBJECT_NAME_COLLISION;
+					statusCode = STATUS_OBJECT_NAME_COLLISION;
 				}
 			}
 			else
 			{
-				nStatusCode = GetNtStatusByWin32LastErrorCode();
+				statusCode = GetNtStatusByWin32LastErrorCode();
 			}
 		}
 	}
@@ -446,65 +446,65 @@ NTSTATUS KxVFSMirror::OnCreateFile(DOKAN_CREATE_FILE_EVENT* pEventInfo)
 		// It is a create file request
 
 		// Cannot overwrite a hidden or system file if flag not set
-		if (nFileAttributes != INVALID_FILE_ATTRIBUTES && ((!(nFileAttributesAndFlags & FILE_ATTRIBUTE_HIDDEN) &&
-			(nFileAttributes & FILE_ATTRIBUTE_HIDDEN)) || (!(nFileAttributesAndFlags & FILE_ATTRIBUTE_SYSTEM) &&
-															(nFileAttributes & FILE_ATTRIBUTE_SYSTEM))) &&(pEventInfo->CreateDisposition == TRUNCATE_EXISTING ||
-																										   pEventInfo->CreateDisposition == CREATE_ALWAYS))
+		if (fileAttributes != INVALID_FILE_ATTRIBUTES && ((!(fileAttributesAndFlags & FILE_ATTRIBUTE_HIDDEN) &&
+			(fileAttributes & FILE_ATTRIBUTE_HIDDEN)) || (!(fileAttributesAndFlags & FILE_ATTRIBUTE_SYSTEM) &&
+															(fileAttributes & FILE_ATTRIBUTE_SYSTEM))) &&(eventInfo->CreateDisposition == TRUNCATE_EXISTING ||
+																										   eventInfo->CreateDisposition == CREATE_ALWAYS))
 		{
-			nStatusCode = STATUS_ACCESS_DENIED;
+			statusCode = STATUS_ACCESS_DENIED;
 		}
 		else
 		{
 			// Truncate should always be used with write access
-			if (nCreationDisposition == TRUNCATE_EXISTING)
+			if (creationDisposition == TRUNCATE_EXISTING)
 			{
-				nGenericDesiredAccess |= GENERIC_WRITE;
+				genericDesiredAccess |= GENERIC_WRITE;
 			}
 
-			KxVFSFileHandle hFile = CreateFileW
+			KxVFSFileHandle fileHandle = CreateFileW
 			(
-				sTargetPath,
-				nGenericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
-				pEventInfo->ShareAccess,
-				&tSecurityAttributes,
-				nCreationDisposition,
-				nFileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
+				targetPath,
+				genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
+				eventInfo->ShareAccess,
+				&securityAttributes,
+				creationDisposition,
+				fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
 				NULL
 			);
-			nErrorCode = GetLastError();
+			errorCode = GetLastError();
 
-			if (!hFile.IsOK())
+			if (!fileHandle.IsOK())
 			{
-				nStatusCode = GetNtStatusByWin32ErrorCode(nErrorCode);
+				statusCode = GetNtStatusByWin32ErrorCode(errorCode);
 			}
 			else
 			{
 				// Need to update FileAttributes with previous when Overwrite file
-				if (nFileAttributes != INVALID_FILE_ATTRIBUTES && nCreationDisposition == TRUNCATE_EXISTING)
+				if (fileAttributes != INVALID_FILE_ATTRIBUTES && creationDisposition == TRUNCATE_EXISTING)
 				{
-					SetFileAttributesW(sTargetPath, nFileAttributesAndFlags|nFileAttributes);
+					SetFileAttributesW(targetPath, fileAttributesAndFlags|fileAttributes);
 				}
 
-				KxVFSMirror_FileHandle* pMirrorHandle = PopMirrorFileHandle(hFile);
-				if (!pMirrorHandle)
+				KxVFSMirror_FileHandle* mirrorHandle = PopMirrorFileHandle(fileHandle);
+				if (!mirrorHandle)
 				{
 					SetLastError(ERROR_INTERNAL_ERROR);
-					nStatusCode = STATUS_INTERNAL_ERROR;
+					statusCode = STATUS_INTERNAL_ERROR;
 				}
 				else
 				{
-					hFile.Release();
+					fileHandle.Release();
 
 					// Save the file handle in Context
-					pEventInfo->DokanFileInfo->Context = (ULONG64)pMirrorHandle;
+					eventInfo->DokanFileInfo->Context = (ULONG64)mirrorHandle;
 
-					if (nCreationDisposition == OPEN_ALWAYS || nCreationDisposition == CREATE_ALWAYS)
+					if (creationDisposition == OPEN_ALWAYS || creationDisposition == CREATE_ALWAYS)
 					{
-						if (nErrorCode == ERROR_ALREADY_EXISTS)
+						if (errorCode == ERROR_ALREADY_EXISTS)
 						{
 							// Open succeed but we need to inform the driver
 							// that the file open and not created by returning STATUS_OBJECT_NAME_COLLISION
-							nStatusCode = STATUS_OBJECT_NAME_COLLISION;
+							statusCode = STATUS_OBJECT_NAME_COLLISION;
 						}
 					}
 				}
@@ -512,38 +512,38 @@ NTSTATUS KxVFSMirror::OnCreateFile(DOKAN_CREATE_FILE_EVENT* pEventInfo)
 		}
 	}
 
-	if (pFileSecurity)
+	if (fileSecurity)
 	{
-		DestroyPrivateObjectSecurity(reinterpret_cast<PSECURITY_DESCRIPTOR*>(&pFileSecurity));
+		DestroyPrivateObjectSecurity(reinterpret_cast<PSECURITY_DESCRIPTOR*>(&fileSecurity));
 	}
-	return nStatusCode;
+	return statusCode;
 }
-NTSTATUS KxVFSMirror::OnCloseFile(DOKAN_CLOSE_FILE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnCloseFile(DOKAN_CLOSE_FILE_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
 		{
-			KxVFSCriticalSectionLocker lock(pMirrorHandle->Lock);
+			KxVFSCriticalSectionLocker lock(mirrorHandle->Lock);
 
-			pMirrorHandle->IsClosed = true;
-			if (pMirrorHandle->FileHandle && pMirrorHandle->FileHandle != INVALID_HANDLE_VALUE)
+			mirrorHandle->IsClosed = true;
+			if (mirrorHandle->FileHandle && mirrorHandle->FileHandle != INVALID_HANDLE_VALUE)
 			{
-				CloseHandle(pMirrorHandle->FileHandle);
-				pMirrorHandle->FileHandle = NULL;
+				CloseHandle(mirrorHandle->FileHandle);
+				mirrorHandle->FileHandle = NULL;
 
-				KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
-				CheckDeleteOnClose(pEventInfo->DokanFileInfo, sTargetPath);
+				KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
+				CheckDeleteOnClose(eventInfo->DokanFileInfo, targetPath);
 			}
 		}
 
-		pEventInfo->DokanFileInfo->Context = NULL;
-		PushMirrorFileHandle(pMirrorHandle);
+		eventInfo->DokanFileInfo->Context = NULL;
+		PushMirrorFileHandle(mirrorHandle);
 		return STATUS_SUCCESS;
 	}
 	return STATUS_INVALID_HANDLE;
 }
-NTSTATUS KxVFSMirror::OnCleanUp(DOKAN_CLEANUP_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnCleanUp(DOKAN_CLEANUP_EVENT* eventInfo)
 {
 	/* This gets called BEFORE MirrorCloseFile(). Per the documentation:
 	*
@@ -558,53 +558,53 @@ NTSTATUS KxVFSMirror::OnCleanUp(DOKAN_CLEANUP_EVENT* pEventInfo)
 	* after an IRP_MJ_CLEANUP request is received.
 	*/
 
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
 		{
-			KxVFSCriticalSectionLocker lock(pMirrorHandle->Lock);
+			KxVFSCriticalSectionLocker lock(mirrorHandle->Lock);
 
-			CloseHandle(pMirrorHandle->FileHandle);
+			CloseHandle(mirrorHandle->FileHandle);
 
-			pMirrorHandle->FileHandle = NULL;
-			pMirrorHandle->IsCleanedUp = true;
+			mirrorHandle->FileHandle = NULL;
+			mirrorHandle->IsCleanedUp = true;
 
-			KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
-			CheckDeleteOnClose(pEventInfo->DokanFileInfo, sTargetPath);
+			KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
+			CheckDeleteOnClose(eventInfo->DokanFileInfo, targetPath);
 		}
 		return STATUS_SUCCESS;
 	}
 	return STATUS_INVALID_HANDLE;
 }
-NTSTATUS KxVFSMirror::OnMoveFile(DOKAN_MOVE_FILE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnMoveFile(DOKAN_MOVE_FILE_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
-		//KxDynamicString sTargetPathOld = GetTargetPath(pEventInfo->FileName);
-		KxDynamicString sTargetPathNew = GetTargetPath(pEventInfo->NewFileName);
+		//KxDynamicString targetPathOld = GetTargetPath(eventInfo->FileName);
+		KxDynamicString targetPathNew = GetTargetPath(eventInfo->NewFileName);
 
 		// The FILE_RENAME_INFO struct has space for one WCHAR for the name at
 		// the end, so that accounts for the null terminator
-		DWORD nBufferSize = (DWORD)(sizeof(FILE_RENAME_INFO) + sTargetPathNew.length() * sizeof(sTargetPathNew[0]));
-		PFILE_RENAME_INFO pRenameInfo = (PFILE_RENAME_INFO)malloc(nBufferSize);
+		DWORD bufferSize = (DWORD)(sizeof(FILE_RENAME_INFO) + targetPathNew.length() * sizeof(targetPathNew[0]));
+		PFILE_RENAME_INFO renameInfo = (PFILE_RENAME_INFO)malloc(bufferSize);
 
-		if (!pRenameInfo)
+		if (!renameInfo)
 		{
 			return STATUS_BUFFER_OVERFLOW;
 		}
-		ZeroMemory(pRenameInfo, nBufferSize);
+		ZeroMemory(renameInfo, bufferSize);
 
-		pRenameInfo->ReplaceIfExists = pEventInfo->ReplaceIfExists ? TRUE : FALSE; // Some warning about converting BOOL to BOOLEAN
-		pRenameInfo->RootDirectory = NULL; // Hope it is never needed, shouldn't be
+		renameInfo->ReplaceIfExists = eventInfo->ReplaceIfExists ? TRUE : FALSE; // Some warning about converting BOOL to BOOLEAN
+		renameInfo->RootDirectory = NULL; // Hope it is never needed, shouldn't be
 
-		pRenameInfo->FileNameLength = (DWORD)sTargetPathNew.length() * sizeof(sTargetPathNew[0]); // They want length in bytes
-		wcscpy_s(pRenameInfo->FileName, sTargetPathNew.length() + 1, sTargetPathNew);
+		renameInfo->FileNameLength = (DWORD)targetPathNew.length() * sizeof(targetPathNew[0]); // They want length in bytes
+		wcscpy_s(renameInfo->FileName, targetPathNew.length() + 1, targetPathNew);
 
-		BOOL bResult = SetFileInformationByHandle(pMirrorHandle->FileHandle, FileRenameInfo, pRenameInfo, nBufferSize);
-		free(pRenameInfo);
+		BOOL result = SetFileInformationByHandle(mirrorHandle->FileHandle, FileRenameInfo, renameInfo, bufferSize);
+		free(renameInfo);
 
-		if (bResult)
+		if (result)
 		{
 			return STATUS_SUCCESS;
 		}
@@ -615,43 +615,43 @@ NTSTATUS KxVFSMirror::OnMoveFile(DOKAN_MOVE_FILE_EVENT* pEventInfo)
 	}
 	return STATUS_INVALID_HANDLE;
 }
-NTSTATUS KxVFSMirror::OnCanDeleteFile(DOKAN_CAN_DELETE_FILE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnCanDeleteFile(DOKAN_CAN_DELETE_FILE_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
-		BY_HANDLE_FILE_INFORMATION tFileInfo = {0};
-		if (!GetFileInformationByHandle(pMirrorHandle->FileHandle, &tFileInfo))
+		BY_HANDLE_FILE_INFORMATION fileInfo = {0};
+		if (!GetFileInformationByHandle(mirrorHandle->FileHandle, &fileInfo))
 		{
 			return DokanNtStatusFromWin32(GetLastError());
 		}
-		if ((tFileInfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY)
+		if ((fileInfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY)
 		{
 			return STATUS_CANNOT_DELETE;
 		}
 
-		if (pEventInfo->DokanFileInfo->IsDirectory)
+		if (eventInfo->DokanFileInfo->IsDirectory)
 		{
-			KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
-			return CanDeleteDirectory(sTargetPath);
+			KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
+			return CanDeleteDirectory(targetPath);
 		}
 		return STATUS_SUCCESS;
 	}
 	return STATUS_INVALID_HANDLE;
 }
 
-NTSTATUS KxVFSMirror::OnLockFile(DOKAN_LOCK_FILE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnLockFile(DOKAN_LOCK_FILE_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
-		LARGE_INTEGER nLength;
-		nLength.QuadPart = pEventInfo->Length;
+		LARGE_INTEGER length;
+		length.QuadPart = eventInfo->Length;
 
-		LARGE_INTEGER nOffset;
-		nOffset.QuadPart = pEventInfo->ByteOffset;
+		LARGE_INTEGER offset;
+		offset.QuadPart = eventInfo->ByteOffset;
 
-		if (!LockFile(pMirrorHandle->FileHandle, nOffset.LowPart, nOffset.HighPart, nLength.LowPart, nLength.HighPart))
+		if (!LockFile(mirrorHandle->FileHandle, offset.LowPart, offset.HighPart, length.LowPart, length.HighPart))
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
@@ -659,18 +659,18 @@ NTSTATUS KxVFSMirror::OnLockFile(DOKAN_LOCK_FILE_EVENT* pEventInfo)
 	}
 	return STATUS_INVALID_HANDLE;
 }
-NTSTATUS KxVFSMirror::OnUnlockFile(DOKAN_UNLOCK_FILE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnUnlockFile(DOKAN_UNLOCK_FILE_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
-		LARGE_INTEGER nLength;
-		nLength.QuadPart = pEventInfo->Length;
+		LARGE_INTEGER length;
+		length.QuadPart = eventInfo->Length;
 
-		LARGE_INTEGER nOffset;
-		nOffset.QuadPart = pEventInfo->ByteOffset;
+		LARGE_INTEGER offset;
+		offset.QuadPart = eventInfo->ByteOffset;
 
-		if (!UnlockFile(pMirrorHandle->FileHandle, nOffset.LowPart, nOffset.HighPart, nLength.LowPart, nLength.HighPart))
+		if (!UnlockFile(mirrorHandle->FileHandle, offset.LowPart, offset.HighPart, length.LowPart, length.HighPart))
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
@@ -678,101 +678,101 @@ NTSTATUS KxVFSMirror::OnUnlockFile(DOKAN_UNLOCK_FILE_EVENT* pEventInfo)
 	}
 	return STATUS_INVALID_HANDLE;
 }
-NTSTATUS KxVFSMirror::OnGetFileSecurity(DOKAN_GET_FILE_SECURITY_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnGetFileSecurity(DOKAN_GET_FILE_SECURITY_EVENT* eventInfo)
 {
 	return STATUS_NOT_IMPLEMENTED;
 
 	#if 0
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
-		PSECURITY_DESCRIPTOR pTempSecurityDescriptor = NULL;
+		PSECURITY_DESCRIPTOR tempSecurityDescriptor = NULL;
 
 		// GetSecurityInfo() is not thread safe so we use a critical section here to synchronize
-		DWORD nErrorCode = ERROR_SUCCESS;
+		DWORD errorCode = ERROR_SUCCESS;
 		{
-			KxVFSCriticalSectionLocker lock(pMirrorHandle->Lock);
+			KxVFSCriticalSectionLocker lock(mirrorHandle->Lock);
 
-			if (pMirrorHandle->IsClosed)
+			if (mirrorHandle->IsClosed)
 			{
-				nErrorCode = ERROR_INVALID_HANDLE;
+				errorCode = ERROR_INVALID_HANDLE;
 			}
-			else if (pMirrorHandle->IsCleanedUp)
+			else if (mirrorHandle->IsCleanedUp)
 			{
-				KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
-				nErrorCode = GetNamedSecurityInfoW(sTargetPath, SE_FILE_OBJECT, pEventInfo->SecurityInformation, NULL, NULL, NULL, NULL, &pTempSecurityDescriptor);
+				KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
+				errorCode = GetNamedSecurityInfoW(targetPath, SE_FILE_OBJECT, eventInfo->SecurityInformation, NULL, NULL, NULL, NULL, &tempSecurityDescriptor);
 			}
 			else
 			{
-				nErrorCode = GetSecurityInfo(pMirrorHandle->FileHandle, SE_FILE_OBJECT, pEventInfo->SecurityInformation, NULL, NULL, NULL, NULL, &pTempSecurityDescriptor);
+				errorCode = GetSecurityInfo(mirrorHandle->FileHandle, SE_FILE_OBJECT, eventInfo->SecurityInformation, NULL, NULL, NULL, NULL, &tempSecurityDescriptor);
 			}
 		}
 
-		if (nErrorCode != ERROR_SUCCESS)
+		if (errorCode != ERROR_SUCCESS)
 		{
-			return GetNtStatusByWin32ErrorCode(nErrorCode);
+			return GetNtStatusByWin32ErrorCode(errorCode);
 		}
 
-		SECURITY_DESCRIPTOR_CONTROL nControl = 0;
+		SECURITY_DESCRIPTOR_CONTROL control = 0;
 		DWORD nRevision;
-		if (!GetSecurityDescriptorControl(pTempSecurityDescriptor, &nControl, &nRevision))
+		if (!GetSecurityDescriptorControl(tempSecurityDescriptor, &control, &nRevision))
 		{
 			//DbgPrint(L"  GetSecurityDescriptorControl error: %d\n", GetLastError());
 		}
 
-		if (!(nControl & SE_SELF_RELATIVE))
+		if (!(control & SE_SELF_RELATIVE))
 		{
-			if (!MakeSelfRelativeSD(pTempSecurityDescriptor, pEventInfo->SecurityDescriptor, &pEventInfo->LengthNeeded))
+			if (!MakeSelfRelativeSD(tempSecurityDescriptor, eventInfo->SecurityDescriptor, &eventInfo->LengthNeeded))
 			{
-				nErrorCode = GetLastError();
-				LocalFree(pTempSecurityDescriptor);
+				errorCode = GetLastError();
+				LocalFree(tempSecurityDescriptor);
 
-				if (nErrorCode == ERROR_INSUFFICIENT_BUFFER)
+				if (errorCode == ERROR_INSUFFICIENT_BUFFER)
 				{
 					return STATUS_BUFFER_OVERFLOW;
 				}
-				return GetNtStatusByWin32ErrorCode(nErrorCode);
+				return GetNtStatusByWin32ErrorCode(errorCode);
 			}
 		}
 		else
 		{
-			pEventInfo->LengthNeeded = GetSecurityDescriptorLength(pTempSecurityDescriptor);
-			if (pEventInfo->LengthNeeded > pEventInfo->SecurityDescriptorSize)
+			eventInfo->LengthNeeded = GetSecurityDescriptorLength(tempSecurityDescriptor);
+			if (eventInfo->LengthNeeded > eventInfo->SecurityDescriptorSize)
 			{
-				LocalFree(pTempSecurityDescriptor);
+				LocalFree(tempSecurityDescriptor);
 				return STATUS_BUFFER_OVERFLOW;
 			}
-			memcpy_s(pEventInfo->SecurityDescriptor, pEventInfo->SecurityDescriptorSize, pTempSecurityDescriptor, pEventInfo->LengthNeeded);
+			memcpy_s(eventInfo->SecurityDescriptor, eventInfo->SecurityDescriptorSize, tempSecurityDescriptor, eventInfo->LengthNeeded);
 		}
-		LocalFree(pTempSecurityDescriptor);
+		LocalFree(tempSecurityDescriptor);
 
 		return STATUS_SUCCESS;
 	}
 	return STATUS_INVALID_HANDLE;
 	#endif
 }
-NTSTATUS KxVFSMirror::OnSetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnSetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* eventInfo)
 {
 	return STATUS_NOT_IMPLEMENTED;
 
 	#if 0
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
 		// SecurityDescriptor must be 4-byte aligned
 		//assert(((size_t)EventInfo->SecurityDescriptor & 3) == 0);
 
-		BOOL bSetSecurity = FALSE;
+		BOOL setSecurity = FALSE;
 
 		{
-			KxVFSCriticalSectionLocker lock(pMirrorHandle->Lock);
+			KxVFSCriticalSectionLocker lock(mirrorHandle->Lock);
 
-			if (pMirrorHandle->IsClosed)
+			if (mirrorHandle->IsClosed)
 			{
-				bSetSecurity = FALSE;
+				setSecurity = FALSE;
 				SetLastError(ERROR_INVALID_HANDLE);
 			}
-			else if (pMirrorHandle->IsCleanedUp)
+			else if (mirrorHandle->IsCleanedUp)
 			{
 				// I wonder why it was commented out
 				#if 0
@@ -812,17 +812,17 @@ NTSTATUS KxVFSMirror::OnSetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* pEventInf
 				setSecurity = SetNamedSecurityInfoW(filePath, SE_FILE_OBJECT, EventInfo->SecurityInformation, owner, group, dacl, sacl) == ERROR_SUCCESS;
 				#endif
 
-				KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
-				bSetSecurity = SetFileSecurityW(sTargetPath, pEventInfo->SecurityInformation, pEventInfo->SecurityDescriptor);
+				KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
+				setSecurity = SetFileSecurityW(targetPath, eventInfo->SecurityInformation, eventInfo->SecurityDescriptor);
 			}
 			else
 			{
 				// For some reason this appears to be only variant of SetSecurity that works without returning an ERROR_ACCESS_DENIED
-				bSetSecurity = SetUserObjectSecurity(pMirrorHandle->FileHandle, &pEventInfo->SecurityInformation, pEventInfo->SecurityDescriptor);
+				setSecurity = SetUserObjectSecurity(mirrorHandle->FileHandle, &eventInfo->SecurityInformation, eventInfo->SecurityDescriptor);
 			}
 		}
 
-		if (!bSetSecurity)
+		if (!setSecurity)
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
@@ -832,187 +832,187 @@ NTSTATUS KxVFSMirror::OnSetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* pEventInf
 	#endif
 }
 
-NTSTATUS KxVFSMirror::OnReadFile(DOKAN_READ_FILE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnReadFile(DOKAN_READ_FILE_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle *pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (!pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (!mirrorHandle)
 	{
 		return STATUS_FILE_CLOSED;
 	}
 
-	bool bIsCleanedUp = false;
-	bool bIsClosed = false;
-	GetMirrorFileHandleState(pMirrorHandle, &bIsCleanedUp, &bIsClosed);
+	bool isCleanedUp = false;
+	bool isClosed = false;
+	GetMirrorFileHandleState(mirrorHandle, &isCleanedUp, &isClosed);
 
-	if (bIsClosed)
+	if (isClosed)
 	{
 		return STATUS_FILE_CLOSED;
 	}
 
-	if (bIsCleanedUp)
+	if (isCleanedUp)
 	{
-		KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
-		KxVFSFileHandle hTempFile = CreateFileW(sTargetPath, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-		if (hTempFile.IsOK())
+		KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
+		KxVFSFileHandle tempFileHandle = CreateFileW(targetPath, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+		if (tempFileHandle.IsOK())
 		{
-			return ReadFileSynchronous(pEventInfo, hTempFile);
+			return ReadFileSynchronous(eventInfo, tempFileHandle);
 		}
 		return GetNtStatusByWin32LastErrorCode();
 	}
 
 	#if KxVFS_USE_ASYNC_IO
-	KxVFSMirror_Overlapped* pOverlapped = PopMirrorOverlapped();
-	if (!pOverlapped)
+	KxVFSMirror_Overlapped* overlapped = PopMirrorOverlapped();
+	if (!overlapped)
 	{
 		return STATUS_MEMORY_NOT_ALLOCATED;
 	}
 
-	pOverlapped->InternalOverlapped.Offset = (DWORD)(pEventInfo->Offset & 0xffffffff);
-	pOverlapped->InternalOverlapped.OffsetHigh = (DWORD)((pEventInfo->Offset >> 32) & 0xffffffff);
-	pOverlapped->FileHandle = pMirrorHandle;
-	pOverlapped->Context = pEventInfo;
-	pOverlapped->IoType = MIRROR_IOTYPE_READ;
+	overlapped->InternalOverlapped.Offset = (DWORD)(eventInfo->Offset & 0xffffffff);
+	overlapped->InternalOverlapped.OffsetHigh = (DWORD)((eventInfo->Offset >> 32) & 0xffffffff);
+	overlapped->FileHandle = mirrorHandle;
+	overlapped->Context = eventInfo;
+	overlapped->IoType = MIRROR_IOTYPE_READ;
 
-	StartThreadpoolIo(pMirrorHandle->IoCompletion);
-	if (!ReadFile(pMirrorHandle->FileHandle, pEventInfo->Buffer, pEventInfo->NumberOfBytesToRead, &pEventInfo->NumberOfBytesRead, (LPOVERLAPPED)pOverlapped))
+	StartThreadpoolIo(mirrorHandle->IoCompletion);
+	if (!ReadFile(mirrorHandle->FileHandle, eventInfo->Buffer, eventInfo->NumberOfBytesToRead, &eventInfo->NumberOfBytesRead, (LPOVERLAPPED)overlapped))
 	{
-		DWORD nErrorCode = GetLastError();
-		if (nErrorCode != ERROR_IO_PENDING)
+		DWORD errorCode = GetLastError();
+		if (errorCode != ERROR_IO_PENDING)
 		{
-			CancelThreadpoolIo(pMirrorHandle->IoCompletion);
-			return GetNtStatusByWin32ErrorCode(nErrorCode);
+			CancelThreadpoolIo(mirrorHandle->IoCompletion);
+			return GetNtStatusByWin32ErrorCode(errorCode);
 		}
 	}
 
 	return STATUS_PENDING;
 	#else
-	return ReadFileSynchronous(pEventInfo, pMirrorHandle->FileHandle);
+	return ReadFileSynchronous(eventInfo, mirrorHandle->FileHandle);
 	#endif
 }
-NTSTATUS KxVFSMirror::OnWriteFile(DOKAN_WRITE_FILE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnWriteFile(DOKAN_WRITE_FILE_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (!pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (!mirrorHandle)
 	{
 		return STATUS_FILE_CLOSED;
 	}
 
-	bool bIsCleanedUp = false;
-	bool bIsClosed = false;
-	GetMirrorFileHandleState(pMirrorHandle, &bIsCleanedUp, &bIsClosed);
-	if (bIsClosed)
+	bool isCleanedUp = false;
+	bool isClosed = false;
+	GetMirrorFileHandleState(mirrorHandle, &isCleanedUp, &isClosed);
+	if (isClosed)
 	{
 		return STATUS_FILE_CLOSED;
 	}
 
-	DWORD nFileSizeHigh = 0;
-	DWORD nFileSizeLow = 0;
-	UINT64 nFileSize = 0;
-	if (bIsCleanedUp)
+	DWORD fileSizeHigh = 0;
+	DWORD fileSizeLow = 0;
+	UINT64 fileSize = 0;
+	if (isCleanedUp)
 	{
-		KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
-		KxVFSFileHandle hTempFile = CreateFileW(sTargetPath, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
-		if (!hTempFile.IsOK())
+		KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
+		KxVFSFileHandle tempFileHandle = CreateFileW(targetPath, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+		if (!tempFileHandle.IsOK())
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
 
-		nFileSizeLow = ::GetFileSize(hTempFile, &nFileSizeHigh);
-		if (nFileSizeLow == INVALID_FILE_SIZE)
+		fileSizeLow = ::GetFileSize(tempFileHandle, &fileSizeHigh);
+		if (fileSizeLow == INVALID_FILE_SIZE)
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
-		nFileSize = ((UINT64)nFileSizeHigh << 32) | nFileSizeLow;
+		fileSize = ((UINT64)fileSizeHigh << 32) | fileSizeLow;
 
-		// Need to check if its really needs to be 'pMirrorHandle->FileHandle' and not 'hTempFile'
-		return WriteFileSynchronous(pEventInfo, pMirrorHandle->FileHandle, nFileSize);
+		// Need to check if its really needs to be 'mirrorHandle->FileHandle' and not 'tempFileHandle'
+		return WriteFileSynchronous(eventInfo, mirrorHandle->FileHandle, fileSize);
 	}
 
-	nFileSizeLow = ::GetFileSize(pMirrorHandle->FileHandle, &nFileSizeHigh);
-	if (nFileSizeLow == INVALID_FILE_SIZE)
+	fileSizeLow = ::GetFileSize(mirrorHandle->FileHandle, &fileSizeHigh);
+	if (fileSizeLow == INVALID_FILE_SIZE)
 	{
 		return GetNtStatusByWin32LastErrorCode();
 	}
-	nFileSize = ((UINT64)nFileSizeHigh << 32) | nFileSizeLow;
+	fileSize = ((UINT64)fileSizeHigh << 32) | fileSizeLow;
 
 	#if KxVFS_USE_ASYNC_IO
 
-	if (pEventInfo->DokanFileInfo->PagingIo)
+	if (eventInfo->DokanFileInfo->PagingIo)
 	{
-		if ((UINT64)pEventInfo->Offset >= nFileSize)
+		if ((UINT64)eventInfo->Offset >= fileSize)
 		{
-			pEventInfo->NumberOfBytesWritten = 0;
+			eventInfo->NumberOfBytesWritten = 0;
 			return STATUS_SUCCESS;
 		}
 
-		if (((UINT64)pEventInfo->Offset + pEventInfo->NumberOfBytesToWrite) > nFileSize)
+		if (((UINT64)eventInfo->Offset + eventInfo->NumberOfBytesToWrite) > fileSize)
 		{
-			UINT64 nBytes = nFileSize - pEventInfo->Offset;
-			if (nBytes >> 32)
+			UINT64 bytes = fileSize - eventInfo->Offset;
+			if (bytes >> 32)
 			{
-				pEventInfo->NumberOfBytesToWrite = (DWORD)(nBytes & 0xFFFFFFFFUL);
+				eventInfo->NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
 			}
 			else
 			{
-				pEventInfo->NumberOfBytesToWrite = (DWORD)nBytes;
+				eventInfo->NumberOfBytesToWrite = (DWORD)bytes;
 			}
 		}
 	}
 
-	KxVFSMirror_Overlapped* pOverlapped = PopMirrorOverlapped();
-	if (!pOverlapped)
+	KxVFSMirror_Overlapped* overlapped = PopMirrorOverlapped();
+	if (!overlapped)
 	{
 		return STATUS_MEMORY_NOT_ALLOCATED;
 	}
 
-	pOverlapped->InternalOverlapped.Offset = (DWORD)(pEventInfo->Offset & 0xffffffff);
-	pOverlapped->InternalOverlapped.OffsetHigh = (DWORD)((pEventInfo->Offset >> 32) & 0xffffffff);
-	pOverlapped->FileHandle = pMirrorHandle;
-	pOverlapped->Context = pEventInfo;
-	pOverlapped->IoType = MIRROR_IOTYPE_WRITE;
+	overlapped->InternalOverlapped.Offset = (DWORD)(eventInfo->Offset & 0xffffffff);
+	overlapped->InternalOverlapped.OffsetHigh = (DWORD)((eventInfo->Offset >> 32) & 0xffffffff);
+	overlapped->FileHandle = mirrorHandle;
+	overlapped->Context = eventInfo;
+	overlapped->IoType = MIRROR_IOTYPE_WRITE;
 
-	StartThreadpoolIo(pMirrorHandle->IoCompletion);
-	if (!WriteFile(pMirrorHandle->FileHandle, pEventInfo->Buffer, pEventInfo->NumberOfBytesToWrite, &pEventInfo->NumberOfBytesWritten, (LPOVERLAPPED)pOverlapped))
+	StartThreadpoolIo(mirrorHandle->IoCompletion);
+	if (!WriteFile(mirrorHandle->FileHandle, eventInfo->Buffer, eventInfo->NumberOfBytesToWrite, &eventInfo->NumberOfBytesWritten, (LPOVERLAPPED)overlapped))
 	{
-		DWORD nErrorCode = GetLastError();
-		if (nErrorCode != ERROR_IO_PENDING)
+		DWORD errorCode = GetLastError();
+		if (errorCode != ERROR_IO_PENDING)
 		{
-			CancelThreadpoolIo(pMirrorHandle->IoCompletion);
-			return GetNtStatusByWin32ErrorCode(nErrorCode);
+			CancelThreadpoolIo(mirrorHandle->IoCompletion);
+			return GetNtStatusByWin32ErrorCode(errorCode);
 		}
 	}
 	return STATUS_PENDING;
 	#else
-	return WriteFileSynchronous(pEventInfo, pMirrorHandle->FileHandle, nFileSize);
+	return WriteFileSynchronous(eventInfo, mirrorHandle->FileHandle, fileSize);
 	#endif
 }
-NTSTATUS KxVFSMirror::OnFlushFileBuffers(DOKAN_FLUSH_BUFFERS_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnFlushFileBuffers(DOKAN_FLUSH_BUFFERS_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (!pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (!mirrorHandle)
 	{
 		return STATUS_FILE_CLOSED;
 	}
 
-	if (FlushFileBuffers(pMirrorHandle->FileHandle))
+	if (FlushFileBuffers(mirrorHandle->FileHandle))
 	{
 		return STATUS_SUCCESS;
 	}
 	return GetNtStatusByWin32LastErrorCode();
 }
-NTSTATUS KxVFSMirror::OnSetEndOfFile(DOKAN_SET_EOF_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnSetEndOfFile(DOKAN_SET_EOF_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
-		LARGE_INTEGER tOffset;
-		tOffset.QuadPart = pEventInfo->Length;
+		LARGE_INTEGER offset;
+		offset.QuadPart = eventInfo->Length;
 
-		if (!SetFilePointerEx(pMirrorHandle->FileHandle, tOffset, NULL, FILE_BEGIN))
+		if (!SetFilePointerEx(mirrorHandle->FileHandle, offset, NULL, FILE_BEGIN))
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
-		if (!SetEndOfFile(pMirrorHandle->FileHandle))
+		if (!SetEndOfFile(mirrorHandle->FileHandle))
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
@@ -1020,23 +1020,23 @@ NTSTATUS KxVFSMirror::OnSetEndOfFile(DOKAN_SET_EOF_EVENT* pEventInfo)
 	}
 	return STATUS_INVALID_HANDLE;
 }
-NTSTATUS KxVFSMirror::OnSetAllocationSize(DOKAN_SET_ALLOCATION_SIZE_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnSetAllocationSize(DOKAN_SET_ALLOCATION_SIZE_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* nMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (nMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
-		LARGE_INTEGER nFileSize;
-		if (GetFileSizeEx(nMirrorHandle->FileHandle, &nFileSize))
+		LARGE_INTEGER fileSize;
+		if (GetFileSizeEx(mirrorHandle->FileHandle, &fileSize))
 		{
-			if (pEventInfo->Length < nFileSize.QuadPart)
+			if (eventInfo->Length < fileSize.QuadPart)
 			{
-				nFileSize.QuadPart = pEventInfo->Length;
+				fileSize.QuadPart = eventInfo->Length;
 
-				if (!SetFilePointerEx(nMirrorHandle->FileHandle, nFileSize, NULL, FILE_BEGIN))
+				if (!SetFilePointerEx(mirrorHandle->FileHandle, fileSize, NULL, FILE_BEGIN))
 				{
 					return GetNtStatusByWin32LastErrorCode();
 				}
-				if (!SetEndOfFile(nMirrorHandle->FileHandle))
+				if (!SetEndOfFile(mirrorHandle->FileHandle))
 				{
 					return GetNtStatusByWin32LastErrorCode();
 				}
@@ -1050,49 +1050,49 @@ NTSTATUS KxVFSMirror::OnSetAllocationSize(DOKAN_SET_ALLOCATION_SIZE_EVENT* pEven
 	}
 	return STATUS_INVALID_HANDLE;
 }
-NTSTATUS KxVFSMirror::OnGetFileInfo(DOKAN_GET_FILE_INFO_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnGetFileInfo(DOKAN_GET_FILE_INFO_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
-		if (!GetFileInformationByHandle(pMirrorHandle->FileHandle, &pEventInfo->FileHandleInfo))
+		if (!GetFileInformationByHandle(mirrorHandle->FileHandle, &eventInfo->FileHandleInfo))
 		{
-			KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
+			KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
 
 			// FileName is a root directory
 			// in this case, FindFirstFile can't get directory information
-			if (wcslen(pEventInfo->FileName) == 1)
+			if (wcslen(eventInfo->FileName) == 1)
 			{
-				pEventInfo->FileHandleInfo.dwFileAttributes = ::GetFileAttributesW(sTargetPath);
+				eventInfo->FileHandleInfo.dwFileAttributes = ::GetFileAttributesW(targetPath);
 			}
 			else
 			{
-				WIN32_FIND_DATAW tFindData = {0};
-				HANDLE hFile = FindFirstFileW(sTargetPath, &tFindData);
-				if (hFile == INVALID_HANDLE_VALUE)
+				WIN32_FIND_DATAW findData = {0};
+				HANDLE fileHandle = FindFirstFileW(targetPath, &findData);
+				if (fileHandle == INVALID_HANDLE_VALUE)
 				{
 					return GetNtStatusByWin32LastErrorCode();
 				}
 
-				pEventInfo->FileHandleInfo.dwFileAttributes = tFindData.dwFileAttributes;
-				pEventInfo->FileHandleInfo.ftCreationTime = tFindData.ftCreationTime;
-				pEventInfo->FileHandleInfo.ftLastAccessTime = tFindData.ftLastAccessTime;
-				pEventInfo->FileHandleInfo.ftLastWriteTime = tFindData.ftLastWriteTime;
-				pEventInfo->FileHandleInfo.nFileSizeHigh = tFindData.nFileSizeHigh;
-				pEventInfo->FileHandleInfo.nFileSizeLow = tFindData.nFileSizeLow;
-				FindClose(hFile);
+				eventInfo->FileHandleInfo.dwFileAttributes = findData.dwFileAttributes;
+				eventInfo->FileHandleInfo.ftCreationTime = findData.ftCreationTime;
+				eventInfo->FileHandleInfo.ftLastAccessTime = findData.ftLastAccessTime;
+				eventInfo->FileHandleInfo.ftLastWriteTime = findData.ftLastWriteTime;
+				eventInfo->FileHandleInfo.nFileSizeHigh = findData.nFileSizeHigh;
+				eventInfo->FileHandleInfo.nFileSizeLow = findData.nFileSizeLow;
+				FindClose(fileHandle);
 			}
 		}
 		return STATUS_SUCCESS;
 	}
 	return STATUS_INVALID_HANDLE;
 }
-NTSTATUS KxVFSMirror::OnSetBasicFileInfo(DOKAN_SET_FILE_BASIC_INFO_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnSetBasicFileInfo(DOKAN_SET_FILE_BASIC_INFO_EVENT* eventInfo)
 {
-	KxVFSMirror_FileHandle* pMirrorHandle = (KxVFSMirror_FileHandle*)pEventInfo->DokanFileInfo->Context;
-	if (pMirrorHandle)
+	KxVFSMirror_FileHandle* mirrorHandle = (KxVFSMirror_FileHandle*)eventInfo->DokanFileInfo->Context;
+	if (mirrorHandle)
 	{
-		if (!SetFileInformationByHandle(pMirrorHandle->FileHandle, FileBasicInfo, pEventInfo->Info, (DWORD)sizeof(FILE_BASIC_INFORMATION)))
+		if (!SetFileInformationByHandle(mirrorHandle->FileHandle, FileBasicInfo, eventInfo->Info, (DWORD)sizeof(FILE_BASIC_INFORMATION)))
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
@@ -1101,193 +1101,191 @@ NTSTATUS KxVFSMirror::OnSetBasicFileInfo(DOKAN_SET_FILE_BASIC_INFO_EVENT* pEvent
 	return STATUS_INVALID_HANDLE;
 }
 
-NTSTATUS KxVFSMirror::OnFindFiles(DOKAN_FIND_FILES_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnFindFiles(DOKAN_FIND_FILES_EVENT* eventInfo)
 {
-	KxDynamicString sTargetPath = GetTargetPath(pEventInfo->PathName);
-	size_t sTargetPathLength = sTargetPath.length();
+	KxDynamicString targetPath = GetTargetPath(eventInfo->PathName);
+	size_t sTargetPathLength = targetPath.length();
 
-	if (sTargetPath[sTargetPathLength - 1] != L'\\')
+	if (targetPath[sTargetPathLength - 1] != L'\\')
 	{
-		sTargetPath[sTargetPathLength++] = L'\\';
+		targetPath[sTargetPathLength++] = L'\\';
 	}
-	sTargetPath[sTargetPathLength] = L'*';
-	sTargetPath[sTargetPathLength + 1] = L'\0';
+	targetPath[sTargetPathLength] = L'*';
+	targetPath[sTargetPathLength + 1] = L'\0';
 
-	WIN32_FIND_DATAW tFindData = {0};
-	HANDLE hFind = FindFirstFileW(sTargetPath, &tFindData);
+	WIN32_FIND_DATAW findData = {0};
+	HANDLE findHandle = FindFirstFileW(targetPath, &findData);
 
-	if (hFind == INVALID_HANDLE_VALUE)
+	if (findHandle == INVALID_HANDLE_VALUE)
 	{
 		return GetNtStatusByWin32LastErrorCode();
 	}
 
 	// Root folder does not have . and .. folder - we remove them
-	bool bRootFolder = (wcscmp(pEventInfo->PathName, L"\\") == 0);
+	bool bRootFolder = (wcscmp(eventInfo->PathName, L"\\") == 0);
 
-	size_t nCount = 0;
+	size_t count = 0;
 	do
 	{
-		if (!bRootFolder || (wcscmp(tFindData.cFileName, L".") != 0 && wcscmp(tFindData.cFileName, L"..") != 0))
+		if (!bRootFolder || (wcscmp(findData.cFileName, L".") != 0 && wcscmp(findData.cFileName, L"..") != 0))
 		{
-			pEventInfo->FillFindData(pEventInfo, &tFindData);
+			eventInfo->FillFindData(eventInfo, &findData);
 		}
-		nCount++;
+		count++;
 	}
-	while (FindNextFileW(hFind, &tFindData) != 0);
+	while (FindNextFileW(findHandle, &findData) != 0);
 
-	DWORD nErrorCode = GetLastError();
-	FindClose(hFind);
+	DWORD errorCode = GetLastError();
+	FindClose(findHandle);
 
-	if (nErrorCode != ERROR_NO_MORE_FILES)
+	if (errorCode != ERROR_NO_MORE_FILES)
 	{
 		return GetNtStatusByWin32LastErrorCode();
 	}
 	return STATUS_SUCCESS;
 }
-NTSTATUS KxVFSMirror::OnFindStreams(DOKAN_FIND_STREAMS_EVENT* pEventInfo)
+NTSTATUS KxVFSMirror::OnFindStreams(DOKAN_FIND_STREAMS_EVENT* eventInfo)
 {
-	KxDynamicString sTargetPath = GetTargetPath(pEventInfo->FileName);
+	KxDynamicString targetPath = GetTargetPath(eventInfo->FileName);
 
-	WIN32_FIND_STREAM_DATA tFindData;
-	HANDLE hFind = FindFirstStreamW(sTargetPath, FindStreamInfoStandard, &tFindData, 0);
-	if (hFind == INVALID_HANDLE_VALUE)
+	WIN32_FIND_STREAM_DATA findData;
+	HANDLE findHandle = FindFirstStreamW(targetPath, FindStreamInfoStandard, &findData, 0);
+	if (findHandle == INVALID_HANDLE_VALUE)
 	{
 		return GetNtStatusByWin32LastErrorCode();
 	}
 
-	DWORD nErrorCode = 0;
-	size_t nCount = 0;
+	DWORD errorCode = 0;
+	size_t count = 0;
 
-	DOKAN_STREAM_FIND_RESULT nFindResult = DOKAN_STREAM_BUFFER_CONTINUE;
-	if ((nFindResult = pEventInfo->FillFindStreamData(pEventInfo, &tFindData)) == DOKAN_STREAM_BUFFER_CONTINUE)
+	DOKAN_STREAM_FIND_RESULT findResult = DOKAN_STREAM_BUFFER_CONTINUE;
+	if ((findResult = eventInfo->FillFindStreamData(eventInfo, &findData)) == DOKAN_STREAM_BUFFER_CONTINUE)
 	{
-		nCount++;
-		while (FindNextStreamW(hFind, &tFindData) != 0 && (nFindResult = pEventInfo->FillFindStreamData(pEventInfo, &tFindData)) == DOKAN_STREAM_BUFFER_CONTINUE)
+		count++;
+		while (FindNextStreamW(findHandle, &findData) != 0 && (findResult = eventInfo->FillFindStreamData(eventInfo, &findData)) == DOKAN_STREAM_BUFFER_CONTINUE)
 		{
-			nCount++;
+			count++;
 		}
 	}
 
-	nErrorCode = GetLastError();
-	FindClose(hFind);
+	errorCode = GetLastError();
+	FindClose(findHandle);
 
-	if (nFindResult == DOKAN_STREAM_BUFFER_FULL)
+	if (findResult == DOKAN_STREAM_BUFFER_FULL)
 	{
-		// FindStreams returned 'nCount' entries in 'sInSourcePath' with STATUS_BUFFER_OVERFLOW
+		// FindStreams returned 'count' entries in 'sInSourcePath' with STATUS_BUFFER_OVERFLOW
 		// https://msdn.microsoft.com/en-us/library/windows/hardware/ff540364(v=vs.85).aspx
 		return STATUS_BUFFER_OVERFLOW;
 	}
 
-	if (nErrorCode != ERROR_HANDLE_EOF)
+	if (errorCode != ERROR_HANDLE_EOF)
 	{
-		return GetNtStatusByWin32ErrorCode(nErrorCode);
+		return GetNtStatusByWin32ErrorCode(errorCode);
 	}
 	return STATUS_SUCCESS;
 }
 
 //////////////////////////////////////////////////////////////////////////
-void KxVFSMirror::FreeMirrorFileHandle(KxVFSMirror_FileHandle* pFileHandle)
+void KxVFSMirror::FreeMirrorFileHandle(KxVFSMirror_FileHandle* fileHandle)
 {
-	if (pFileHandle)
+	if (fileHandle)
 	{
 		#if KxVFS_USE_ASYNC_IO
-		if (pFileHandle->IoCompletion)
+		if (fileHandle->IoCompletion)
 		{
 			{
 				KxVFSCriticalSectionLocker lock(m_ThreadPoolCS);
 				if (m_ThreadPoolCleanupGroup)
 				{
-					CloseThreadpoolIo(pFileHandle->IoCompletion);
+					CloseThreadpoolIo(fileHandle->IoCompletion);
 				}
 			}
-			pFileHandle->IoCompletion = NULL;
+			fileHandle->IoCompletion = NULL;
 		}
 		#endif
 
-		//DeleteCriticalSection(&pFileHandle->Lock);
-		//free(pFileHandle);
-		delete pFileHandle;
+		delete fileHandle;
 	}
 }
-void KxVFSMirror::PushMirrorFileHandle(KxVFSMirror_FileHandle* pFileHandle)
+void KxVFSMirror::PushMirrorFileHandle(KxVFSMirror_FileHandle* fileHandle)
 {
-	pFileHandle->self = this;
+	fileHandle->self = this;
 
 	#if KxVFS_USE_ASYNC_IO
-	if (pFileHandle->IoCompletion)
+	if (fileHandle->IoCompletion)
 	{
 		{
 			KxVFSCriticalSectionLocker lock(m_ThreadPoolCS);
 			if (m_ThreadPoolCleanupGroup)
 			{
-				CloseThreadpoolIo(pFileHandle->IoCompletion);
+				CloseThreadpoolIo(fileHandle->IoCompletion);
 			}
 		}
-		pFileHandle->IoCompletion = NULL;
+		fileHandle->IoCompletion = NULL;
 	}
 	#endif
 
 	KxVFSCriticalSectionLocker lock(m_FileHandlePoolCS);
 	{
-		DokanVector_PushBack(&m_FileHandlePool, &pFileHandle);
+		DokanVector_PushBack(&m_FileHandlePool, &fileHandle);
 	}
 }
-KxVFSMirror_FileHandle* KxVFSMirror::PopMirrorFileHandle(HANDLE hActualFileHandle)
+KxVFSMirror_FileHandle* KxVFSMirror::PopMirrorFileHandle(HANDLE actualFileHandle)
 {
-	if (hActualFileHandle == NULL || hActualFileHandle == INVALID_HANDLE_VALUE || InterlockedAdd(&m_IsUnmounted, 0) != FALSE)
+	if (actualFileHandle == NULL || actualFileHandle == INVALID_HANDLE_VALUE || InterlockedAdd(&m_IsUnmounted, 0) != FALSE)
 	{
 		return NULL;
 	}
 
-	KxVFSMirror_FileHandle* pMirrorHandle = NULL;
+	KxVFSMirror_FileHandle* mirrorHandle = NULL;
 	KxVFSCriticalSectionLocker lock(m_FileHandlePoolCS);
 	{
 		if (DokanVector_GetCount(&m_FileHandlePool) > 0)
 		{
-			pMirrorHandle = *(KxVFSMirror_FileHandle**)DokanVector_GetLastItem(&m_FileHandlePool);
+			mirrorHandle = *(KxVFSMirror_FileHandle**)DokanVector_GetLastItem(&m_FileHandlePool);
 			DokanVector_PopBack(&m_FileHandlePool);
 		}
 	}
 
-	if (!pMirrorHandle)
+	if (!mirrorHandle)
 	{
-		pMirrorHandle = new KxVFSMirror_FileHandle(this);
+		mirrorHandle = new KxVFSMirror_FileHandle(this);
 	}
 
-	pMirrorHandle->FileHandle = hActualFileHandle;
-	pMirrorHandle->IsCleanedUp = false;
-	pMirrorHandle->IsClosed = false;
+	mirrorHandle->FileHandle = actualFileHandle;
+	mirrorHandle->IsCleanedUp = false;
+	mirrorHandle->IsClosed = false;
 
 	#if KxVFS_USE_ASYNC_IO
 	{
 		KxVFSCriticalSectionLocker lock(m_ThreadPoolCS);
 		if (m_ThreadPoolCleanupGroup)
 		{
-			pMirrorHandle->IoCompletion = CreateThreadpoolIo(hActualFileHandle, MirrorIoCallback, pMirrorHandle, &m_ThreadPoolEnvironment);
+			mirrorHandle->IoCompletion = CreateThreadpoolIo(actualFileHandle, MirrorIoCallback, mirrorHandle, &m_ThreadPoolEnvironment);
 		}
 	}
 
-	if (!pMirrorHandle->IoCompletion)
+	if (!mirrorHandle->IoCompletion)
 	{
-		PushMirrorFileHandle(pMirrorHandle);
-		pMirrorHandle = NULL;
+		PushMirrorFileHandle(mirrorHandle);
+		mirrorHandle = NULL;
 	}
 	#endif
-	return pMirrorHandle;
+	return mirrorHandle;
 }
-void KxVFSMirror::GetMirrorFileHandleState(KxVFSMirror_FileHandle* pFileHandle, bool* pIsCleanedUp, bool* bIsClosed) const
+void KxVFSMirror::GetMirrorFileHandleState(KxVFSMirror_FileHandle* fileHandle, bool* isCleanedUp, bool* isClosed) const
 {
-	if (pFileHandle && (pIsCleanedUp || bIsClosed))
+	if (fileHandle && (isCleanedUp || isClosed))
 	{
-		KxVFSCriticalSectionLocker lock(pFileHandle->Lock);
+		KxVFSCriticalSectionLocker lock(fileHandle->Lock);
 
-		if (pIsCleanedUp)
+		if (isCleanedUp)
 		{
-			*pIsCleanedUp = pFileHandle->IsCleanedUp;
+			*isCleanedUp = fileHandle->IsCleanedUp;
 		}
-		if (bIsClosed)
+		if (isClosed)
 		{
-			*bIsClosed = pFileHandle->IsClosed;
+			*isClosed = fileHandle->IsClosed;
 		}
 	}
 }
@@ -1308,32 +1306,32 @@ void KxVFSMirror::CleanupMirrorFileHandles()
 }
 
 #if KxVFS_USE_ASYNC_IO
-void KxVFSMirror::FreeMirrorOverlapped(KxVFSMirror_Overlapped* pOverlapped) const
+void KxVFSMirror::FreeMirrorOverlapped(KxVFSMirror_Overlapped* overlapped) const
 {
-	delete pOverlapped;
+	delete overlapped;
 }
-void KxVFSMirror::PushMirrorOverlapped(KxVFSMirror_Overlapped* pOverlapped)
+void KxVFSMirror::PushMirrorOverlapped(KxVFSMirror_Overlapped* overlapped)
 {
 	KxVFSCriticalSectionLocker lock(m_OverlappedPoolCS);
-	DokanVector_PushBack(&m_OverlappedPool, &pOverlapped);
+	DokanVector_PushBack(&m_OverlappedPool, &overlapped);
 }
 KxVFSMirror_Overlapped* KxVFSMirror::PopMirrorOverlapped()
 {
-	KxVFSMirror_Overlapped* pOverlapped = NULL;
+	KxVFSMirror_Overlapped* overlapped = NULL;
 	{
 		KxVFSCriticalSectionLocker lock(m_OverlappedPoolCS);
 		if (DokanVector_GetCount(&m_OverlappedPool) > 0)
 		{
-			pOverlapped = *(KxVFSMirror_Overlapped**)DokanVector_GetLastItem(&m_OverlappedPool);
+			overlapped = *(KxVFSMirror_Overlapped**)DokanVector_GetLastItem(&m_OverlappedPool);
 			DokanVector_PopBack(&m_OverlappedPool);
 		}
 	}
 
-	if (!pOverlapped)
+	if (!overlapped)
 	{
-		pOverlapped = new KxVFSMirror_Overlapped();
+		overlapped = new KxVFSMirror_Overlapped();
 	}
-	return pOverlapped;
+	return overlapped;
 }
 
 BOOL KxVFSMirror::InitializeAsyncIO()
@@ -1397,28 +1395,28 @@ void CALLBACK KxVFSMirror::MirrorIoCallback
 	UNREFERENCED_PARAMETER(Instance);
 	UNREFERENCED_PARAMETER(Io);
 
-	KxVFSMirror_FileHandle* pHandle = reinterpret_cast<KxVFSMirror_FileHandle*>(Context);
-	KxVFSMirror_Overlapped* pOverlapped = (KxVFSMirror_Overlapped*)Overlapped;
-	DOKAN_READ_FILE_EVENT* pReadFile = NULL;
-	DOKAN_WRITE_FILE_EVENT* pWriteFile = NULL;
+	KxVFSMirror_FileHandle* mirrorHandle = reinterpret_cast<KxVFSMirror_FileHandle*>(Context);
+	KxVFSMirror_Overlapped* overlapped = (KxVFSMirror_Overlapped*)Overlapped;
+	DOKAN_READ_FILE_EVENT* readFileEvent = NULL;
+	DOKAN_WRITE_FILE_EVENT* writeFileEvent = NULL;
 
-	switch (pOverlapped->IoType)
+	switch (overlapped->IoType)
 	{
 		case MIRROR_IOTYPE_READ:
 		{
-			pReadFile = (DOKAN_READ_FILE_EVENT*)pOverlapped->Context;
-			pReadFile->NumberOfBytesRead = (DWORD)NumberOfBytesTransferred;
-			DokanEndDispatchRead(pReadFile, DokanNtStatusFromWin32(IoResult));
+			readFileEvent = (DOKAN_READ_FILE_EVENT*)overlapped->Context;
+			readFileEvent->NumberOfBytesRead = (DWORD)NumberOfBytesTransferred;
+			DokanEndDispatchRead(readFileEvent, DokanNtStatusFromWin32(IoResult));
 			break;
 		}
 		case MIRROR_IOTYPE_WRITE:
 		{
-			pWriteFile = (DOKAN_WRITE_FILE_EVENT*)pOverlapped->Context;
-			pWriteFile->NumberOfBytesWritten = (DWORD)NumberOfBytesTransferred;
-			DokanEndDispatchWrite(pWriteFile, DokanNtStatusFromWin32(IoResult));
+			writeFileEvent = (DOKAN_WRITE_FILE_EVENT*)overlapped->Context;
+			writeFileEvent->NumberOfBytesWritten = (DWORD)NumberOfBytesTransferred;
+			DokanEndDispatchWrite(writeFileEvent, DokanNtStatusFromWin32(IoResult));
 			break;
 		}
 	};
-	pHandle->self->PushMirrorOverlapped(pOverlapped);
+	mirrorHandle->self->PushMirrorOverlapped(overlapped);
 }
 #endif

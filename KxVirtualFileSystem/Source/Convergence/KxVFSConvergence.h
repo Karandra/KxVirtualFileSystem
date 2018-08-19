@@ -31,37 +31,37 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		NonExistentINIMapT m_NonExistentINIFiles;
 
 	protected:
-		KxDynamicString MakeFilePath(const KxDynamicStringRef& sFolder, const KxDynamicStringRef& sFile) const;
-		bool IsPathInVirtualFolder(const WCHAR* sFileName) const
+		KxDynamicString MakeFilePath(const KxDynamicStringRef& folder, const KxDynamicStringRef& file) const;
+		bool IsPathInVirtualFolder(const WCHAR* fileName) const
 		{
-			return IsPathPresent(sFileName);
+			return IsPathPresent(fileName);
 		}
-		bool IsPathPresent(const WCHAR* sFileName, const WCHAR** sVirtualFolder = NULL) const;
-		bool IsPathPresentInWriteTarget(const WCHAR* sFileName) const;
+		bool IsPathPresent(const WCHAR* fileName, const WCHAR** virtualFolder = NULL) const;
+		bool IsPathPresentInWriteTarget(const WCHAR* fileName) const;
 
-		bool IsRequestToRoot(const WCHAR* pFileName) const
+		bool IsRequestToRoot(const WCHAR* fileName) const
 		{
-			return pFileName == NULL || (*pFileName == L'\\' && *(pFileName++)== L'\000');
+			return fileName == NULL || (*fileName == L'\\' && *(fileName++)== L'\000');
 		}
-		bool IsWriteRequest(const WCHAR* sFilePath, ACCESS_MASK nDesiredAccess, DWORD nCreateDisposition) const;
-		bool IsReadRequest(const WCHAR* sFilePath, ACCESS_MASK nDesiredAccess, DWORD nCreateDisposition) const;
-		bool IsDirectory(ULONG nKeCreateOptions) const;
-		bool IsRequestingSACLInfo(const PSECURITY_INFORMATION pSecurityInformation) const;
-		void ProcessSESecurityPrivilege(bool bHasSESecurityPrivilege, PSECURITY_INFORMATION pSecurityInformation) const;
+		bool IsWriteRequest(const WCHAR* filePath, ACCESS_MASK desiredAccess, DWORD createDisposition) const;
+		bool IsReadRequest(const WCHAR* filePath, ACCESS_MASK desiredAccess, DWORD createDisposition) const;
+		bool IsDirectory(ULONG kernelCreateOptions) const;
+		bool IsRequestingSACLInfo(const PSECURITY_INFORMATION securityInformation) const;
+		void ProcessSESecurityPrivilege(bool hasSESecurityPrivilege, PSECURITY_INFORMATION securityInformation) const;
 
 		// KxVFSIDispatcher
-		virtual KxDynamicString GetTargetPath(const WCHAR* sRequestedPath) override;
-		bool UpdateDispatcherIndex(const KxDynamicString& sRequestedPath, const KxDynamicString& sTargetPath);
-		void UpdateDispatcherIndex(const KxDynamicString& sRequestedPath);
-		KxDynamicString TryDispatchRequest(const KxDynamicString& sRequestedPath) const;
+		virtual KxDynamicString GetTargetPath(const WCHAR* requestedPath) override;
+		bool UpdateDispatcherIndex(const KxDynamicString& requestedPath, const KxDynamicString& targetPath);
+		void UpdateDispatcherIndex(const KxDynamicString& requestedPath);
+		KxDynamicString TryDispatchRequest(const KxDynamicString& requestedPath) const;
 
 		// KxVFSISearchDispatcher
-		virtual SearchDispatcherVectorT* GetSearchDispatcherVector(const KxDynamicString& sRequestedPath) override;
-		virtual SearchDispatcherVectorT* CreateSearchDispatcherVector(const KxDynamicString& sRequestedPath) override;
-		virtual void InvalidateSearchDispatcherVector(const KxDynamicString& sRequestedPath) override;
-		void InvalidateSearchDispatcherVectorForFile(const KxDynamicString& sRequestedFilePath)
+		virtual SearchDispatcherVectorT* GetSearchDispatcherVector(const KxDynamicString& requestedPath) override;
+		virtual SearchDispatcherVectorT* CreateSearchDispatcherVector(const KxDynamicString& requestedPath) override;
+		virtual void InvalidateSearchDispatcherVector(const KxDynamicString& requestedPath) override;
+		void InvalidateSearchDispatcherVectorForFile(const KxDynamicString& requestedFilePath)
 		{
-			KxDynamicString sFolderPath = sRequestedFilePath.before_last(TEXT('\\'));
+			KxDynamicString sFolderPath = requestedFilePath.before_last(TEXT('\\'));
 			if (sFolderPath.empty())
 			{
 				sFolderPath = TEXT("\\");
@@ -70,9 +70,9 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		}
 
 		// Non-existent INI-files
-		bool IsINIFile(const KxDynamicStringRef& sRequestedPath) const;
-		bool IsINIFileNonExistent(const KxDynamicStringRef& sRequestedPath) const;
-		void AddINIFile(const KxDynamicStringRef& sRequestedPath);
+		bool IsINIFile(const KxDynamicStringRef& requestedPath) const;
+		bool IsINIFileNonExistent(const KxDynamicStringRef& requestedPath) const;
+		void AddINIFile(const KxDynamicStringRef& requestedPath);
 
 	private:
 		const RedirectionPathsListT& GetPaths() const
@@ -83,11 +83,11 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		{
 			return m_RedirectionPaths;
 		}
-		KxDynamicString& NormalizePath(KxDynamicString& sRequestedPath) const;
-		KxDynamicString NormalizePath(const KxDynamicStringRef& sRequestedPath) const;
+		KxDynamicString& NormalizePath(KxDynamicString& requestedPath) const;
+		KxDynamicString NormalizePath(const KxDynamicStringRef& requestedPath) const;
 
 	public:
-		KxVFSConvergence(KxVFSService* pVFSService, const WCHAR* sMountPoint, const WCHAR* sWriteTarget, ULONG nFalgs = DefFlags, ULONG nRequestTimeout = DefRequestTimeout);
+		KxVFSConvergence(KxVFSService* vfsService, const WCHAR* mountPoint, const WCHAR* writeTarget, ULONG falgs = DefFlags, ULONG requestTimeout = DefRequestTimeout);
 		virtual ~KxVFSConvergence();
 
 	public:
@@ -102,35 +102,35 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		{
 			return GetSourceRef();
 		}
-		bool SetWriteTarget(const WCHAR* sWriteTarget);
+		bool SetWriteTarget(const WCHAR* writeTarget);
 		
-		bool AddVirtualFolder(const WCHAR* sPath);
+		bool AddVirtualFolder(const WCHAR* path);
 		bool ClearVirtualFolders();
 
 		bool CanDeleteInVirtualFolder() const
 		{
 			return m_CanDeleteInVirtualFolder;
 		}
-		bool SetCanDeleteInVirtualFolder(bool bValue);
+		bool SetCanDeleteInVirtualFolder(bool value);
 
 		void RefreshDispatcherIndex();
 
 	protected:
-		virtual NTSTATUS OnMount(DOKAN_MOUNTED_INFO* pEventInfo) override;
-		virtual NTSTATUS OnUnMount(DOKAN_UNMOUNTED_INFO* pEventInfo) override;
+		virtual NTSTATUS OnMount(DOKAN_MOUNTED_INFO* eventInfo) override;
+		virtual NTSTATUS OnUnMount(DOKAN_UNMOUNTED_INFO* eventInfo) override;
 
-		virtual NTSTATUS OnCreateFile(DOKAN_CREATE_FILE_EVENT* pEventInfo) override;
-		virtual NTSTATUS OnCloseFile(DOKAN_CLOSE_FILE_EVENT* pEventInfo) override;
-		virtual NTSTATUS OnCleanUp(DOKAN_CLEANUP_EVENT* pEventInfo) override;
-		virtual NTSTATUS OnMoveFile(DOKAN_MOVE_FILE_EVENT* pEventInfo) override;
-		virtual NTSTATUS OnCanDeleteFile(DOKAN_CAN_DELETE_FILE_EVENT* pEventInfo) override;
+		virtual NTSTATUS OnCreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo) override;
+		virtual NTSTATUS OnCloseFile(DOKAN_CLOSE_FILE_EVENT* eventInfo) override;
+		virtual NTSTATUS OnCleanUp(DOKAN_CLEANUP_EVENT* eventInfo) override;
+		virtual NTSTATUS OnMoveFile(DOKAN_MOVE_FILE_EVENT* eventInfo) override;
+		virtual NTSTATUS OnCanDeleteFile(DOKAN_CAN_DELETE_FILE_EVENT* eventInfo) override;
 
-		virtual NTSTATUS OnGetFileSecurity(DOKAN_GET_FILE_SECURITY_EVENT* pEventInfo) override;
-		virtual NTSTATUS OnSetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* pEventInfo) override;
+		virtual NTSTATUS OnGetFileSecurity(DOKAN_GET_FILE_SECURITY_EVENT* eventInfo) override;
+		virtual NTSTATUS OnSetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* eventInfo) override;
 
-		virtual NTSTATUS OnReadFile(DOKAN_READ_FILE_EVENT* pEventInfo) override;
-		virtual NTSTATUS OnWriteFile(DOKAN_WRITE_FILE_EVENT* pEventInfo) override;
+		virtual NTSTATUS OnReadFile(DOKAN_READ_FILE_EVENT* eventInfo) override;
+		virtual NTSTATUS OnWriteFile(DOKAN_WRITE_FILE_EVENT* eventInfo) override;
 
-		DWORD OnFindFilesAux(const KxDynamicString& sPath, DOKAN_FIND_FILES_EVENT* pEventInfo, KxVFSUtility::StringSearcherHash& tHash, SearchDispatcherVectorT* pSearchIndex);
-		virtual NTSTATUS OnFindFiles(DOKAN_FIND_FILES_EVENT* pEventInfo) override;
+		DWORD OnFindFilesAux(const KxDynamicString& path, DOKAN_FIND_FILES_EVENT* eventInfo, KxVFSUtility::StringSearcherHash& hashStore, SearchDispatcherVectorT* searchIndex);
+		virtual NTSTATUS OnFindFiles(DOKAN_FIND_FILES_EVENT* eventInfo) override;
 };

@@ -8,8 +8,6 @@ extern "C"
 	// Define _EXPORTING to link statically
 	#define _EXPORTING
 	#include "Dokan/dokan.h"
-	#include "Dokan/dokani.h"
-	#include "Dokan/dokanc.h"
 	#include "Dokan/fileinfo.h"
 	#undef _EXPORTING
 

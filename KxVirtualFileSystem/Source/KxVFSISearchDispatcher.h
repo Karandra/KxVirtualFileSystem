@@ -9,15 +9,15 @@ class KxVFS_API KxVFSISearchDispatcher
 		using SearchDispatcherVectorT = std::vector<WIN32_FIND_DATA>;
 
 	protected:
-		void SendDispatcherVector(DOKAN_FIND_FILES_EVENT* pEventInfo, const SearchDispatcherVectorT& tItems)
+		void SendDispatcherVector(DOKAN_FIND_FILES_EVENT* eventInfo, const SearchDispatcherVectorT& items)
 		{
-			for (const WIN32_FIND_DATA& tItem: tItems)
+			for (const WIN32_FIND_DATA& item: items)
 			{
-				pEventInfo->FillFindData(pEventInfo, const_cast<WIN32_FIND_DATA*>(&tItem));
+				eventInfo->FillFindData(eventInfo, const_cast<WIN32_FIND_DATA*>(&item));
 			}
 		}
 		
-		virtual SearchDispatcherVectorT* GetSearchDispatcherVector(const KxDynamicString& sRequestedPath) =0;
-		virtual SearchDispatcherVectorT* CreateSearchDispatcherVector(const KxDynamicString& sRequestedPath) = 0;
-		virtual void InvalidateSearchDispatcherVector(const KxDynamicString& sRequestedPath) = 0;
+		virtual SearchDispatcherVectorT* GetSearchDispatcherVector(const KxDynamicString& requestedPath) = 0;
+		virtual SearchDispatcherVectorT* CreateSearchDispatcherVector(const KxDynamicString& requestedPath) = 0;
+		virtual void InvalidateSearchDispatcherVector(const KxDynamicString& requestedPath) = 0;
 };

@@ -3,79 +3,79 @@
 #include "KxVFSService.h"
 #include "Utility/KxVFSUtility.h"
 
-bool KxVFSBase::UnMountDirectory(const WCHAR* sMountPoint)
+bool KxVFSBase::UnMountDirectory(const WCHAR* mountPoint)
 {
-	return DokanRemoveMountPoint(sMountPoint);
+	return DokanRemoveMountPoint(mountPoint);
 }
-bool KxVFSBase::IsCodeSuccess(int nErrorCode)
+bool KxVFSBase::IsCodeSuccess(int errorCode)
 {
-	return DOKAN_SUCCEEDED(nErrorCode);
+	return DOKAN_SUCCEEDED(errorCode);
 }
-KxDynamicString KxVFSBase::GetErrorCodeMessage(int nErrorCode)
+KxDynamicString KxVFSBase::GetErrorCodeMessage(int errorCode)
 {
-	const WCHAR* sMessage = NULL;
-	switch (nErrorCode)
+	const WCHAR* message = NULL;
+	switch (errorCode)
 	{
 		case DOKAN_SUCCESS:
 		{
-			sMessage = L"Success";
+			message = L"Success";
 			break;
 		}
 		case DOKAN_ERROR:
 		{
-			sMessage = L"Mount error";
+			message = L"Mount error";
 			break;
 		}
 		case DOKAN_DRIVE_LETTER_ERROR:
 		{
-			sMessage = L"Bad Drive letter";
+			message = L"Bad Drive letter";
 			break;
 		}
 		case DOKAN_DRIVER_INSTALL_ERROR:
 		{
-			sMessage = L"Can't install driver";
+			message = L"Can't install driver";
 			break;
 		}
 		case DOKAN_START_ERROR:
 		{
-			sMessage = L"Driver answer that something is wrong";
+			message = L"Driver answer that something is wrong";
 			break;
 		}
 		case DOKAN_MOUNT_ERROR:
 		{
-			sMessage = L"Can't assign a drive letter or mount point, probably already used by another volume";
+			message = L"Can't assign a drive letter or mount point, probably already used by another volume";
 			break;
 		}
 		case DOKAN_MOUNT_POINT_ERROR:
 		{
-			sMessage = L"Mount point is invalid";
+			message = L"Mount point is invalid";
 			break;
 		}
 		case DOKAN_VERSION_ERROR:
 		{
-			sMessage = L"Requested an incompatible version";
+			message = L"Requested an incompatible version";
 			break;
 		}
 		default:
 		{
-			return KxDynamicString::Format(L"Unknown error: %d", nErrorCode);
+			return KxDynamicString::Format(L"Unknown error: %d", errorCode);
 		}
 	};
-	return sMessage;
+	return message;
 }
-size_t KxVFSBase::WriteString(const WCHAR* sSource, WCHAR* sDestination, size_t nMaxDestLength)
+size_t KxVFSBase::WriteString(const WCHAR* source, WCHAR* destination, size_t maxDestLength)
 {
-	size_t nMaxNameLength = nMaxDestLength * sizeof(WCHAR);
-	size_t nNameLength = std::min(nMaxNameLength, wcslen(sSource) * sizeof(WCHAR));
-	memcpy_s(sDestination, nMaxNameLength, sSource, nNameLength);
+	size_t maxNameLength = maxDestLength * sizeof(WCHAR);
+	size_t nameLength = std::min(maxNameLength, wcslen(source) * sizeof(WCHAR));
+	memcpy_s(destination, maxNameLength, source, nameLength);
 
-	return nNameLength / sizeof(WCHAR);
+	return nameLength / sizeof(WCHAR);
 }
 
 //////////////////////////////////////////////////////////////////////////
-void KxVFSBase::SetMounted(bool bValue)
+void KxVFSBase::SetMounted(bool value)
 {
-	m_IsMounted = bValue;
+	m_IsMounted = value;
 }
 int KxVFSBase::DoMount()
 {
@@ -117,16 +117,16 @@ bool KxVFSBase::DoUnMount()
 	return false;
 }
 
-KxVFSBase::KxVFSBase(KxVFSService* pVFSService, const WCHAR* sMountPoint, ULONG nFalgs, ULONG nRequestTimeout)
-	:m_ServiceInstance(pVFSService), m_MountPoint(sMountPoint)
+KxVFSBase::KxVFSBase(KxVFSService* vfsService, const WCHAR* mountPoint, ULONG falgs, ULONG requestTimeout)
+	:m_ServiceInstance(vfsService), m_MountPoint(mountPoint)
 {
 	// Options
 	m_Options.GlobalContext = reinterpret_cast<ULONG64>(this);
 	m_Options.Version = DOKAN_VERSION;
 	m_Options.ThreadCount = 0;
 	m_Options.MountPoint = GetMountPoint();
-	m_Options.Options = nFalgs;
-	m_Options.Timeout = nRequestTimeout;
+	m_Options.Options = falgs;
+	m_Options.Timeout = requestTimeout;
 
 	// Operations
 	m_Operations.Mounted = Dokan_Mount;
@@ -210,11 +210,11 @@ bool KxVFSBase::IsMounted() const
 {
 	return m_IsMounted;
 }
-bool KxVFSBase::SetMountPoint(const WCHAR* sMountPoint)
+bool KxVFSBase::SetMountPoint(const WCHAR* mountPoint)
 {
 	if (!IsMounted())
 	{
-		m_MountPoint = sMountPoint;
+		m_MountPoint = mountPoint;
 		return true;
 	}
 	return false;
@@ -224,11 +224,11 @@ ULONG KxVFSBase::GetFlags() const
 {
 	return m_Options.Options;
 }
-bool KxVFSBase::SetFlags(ULONG nFalgs)
+bool KxVFSBase::SetFlags(ULONG falgs)
 {
 	if (!IsMounted())
 	{
-		m_Options.Options = nFalgs;
+		m_Options.Options = falgs;
 		return true;
 	}
 	return false;
@@ -243,19 +243,19 @@ NTSTATUS KxVFSBase::GetNtStatusByWin32LastErrorCode() const
 	return DokanNtStatusFromWin32(::GetLastError());
 }
 
-NTSTATUS KxVFSBase::OnMountInternal(DOKAN_MOUNTED_INFO* pEventInfo)
+NTSTATUS KxVFSBase::OnMountInternal(DOKAN_MOUNTED_INFO* eventInfo)
 {
 	SetMounted(true);
 	GetService()->AddVFS(this);
 
-	return OnMount(pEventInfo);
+	return OnMount(eventInfo);
 }
-NTSTATUS KxVFSBase::OnUnMountInternal(DOKAN_UNMOUNTED_INFO* pEventInfo)
+NTSTATUS KxVFSBase::OnUnMountInternal(DOKAN_UNMOUNTED_INFO* eventInfo)
 {
 	OutputDebugStringA(__FUNCTION__);
 	OutputDebugStringA("\r\n");
 
-	NTSTATUS nStatusCode = STATUS_UNSUCCESSFUL;
+	NTSTATUS statusCode = STATUS_UNSUCCESSFUL;
 	KxVFSCriticalSectionLocker lock(m_UnmountCS);
 	{
 		OutputDebugStringA("In EnterCriticalSection: ");
@@ -265,131 +265,131 @@ NTSTATUS KxVFSBase::OnUnMountInternal(DOKAN_UNMOUNTED_INFO* pEventInfo)
 		SetMounted(false);
 		GetService()->RemoveVFS(this);
 
-		nStatusCode = OnUnMount(pEventInfo);
+		statusCode = OnUnMount(eventInfo);
 	}
-	return nStatusCode;
+	return statusCode;
 }
 
 //////////////////////////////////////////////////////////////////////////
-//#define THIS(pEventInfo) GetFromContext((pEventInfo)->DokanFileInfo->DokanOptions)
+//#define THIS(eventInfo) GetFromContext((eventInfo)->DokanFileInfo->DokanOptions)
 
-void DOKAN_CALLBACK KxVFSBase::Dokan_Mount(DOKAN_MOUNTED_INFO* pEventInfo)
+void DOKAN_CALLBACK KxVFSBase::Dokan_Mount(DOKAN_MOUNTED_INFO* eventInfo)
 {
 	KxVFSDebugPrint(TEXT("%s\r\n"), TEXT(__FUNCTION__));
-	return (void)GetFromContext(pEventInfo->DokanOptions)->OnMountInternal(pEventInfo);
+	return (void)GetFromContext(eventInfo->DokanOptions)->OnMountInternal(eventInfo);
 }
-void DOKAN_CALLBACK KxVFSBase::Dokan_Unmount(DOKAN_UNMOUNTED_INFO* pEventInfo)
+void DOKAN_CALLBACK KxVFSBase::Dokan_Unmount(DOKAN_UNMOUNTED_INFO* eventInfo)
 {
 	KxVFSDebugPrint(TEXT("%s\r\n"), TEXT(__FUNCTION__));
-	return (void)GetFromContext(pEventInfo->DokanOptions)->OnUnMountInternal(pEventInfo);
+	return (void)GetFromContext(eventInfo->DokanOptions)->OnUnMountInternal(eventInfo);
 }
 
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetVolumeFreeSpace(DOKAN_GET_DISK_FREE_SPACE_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetVolumeFreeSpace(DOKAN_GET_DISK_FREE_SPACE_EVENT* eventInfo)
 {
 	KxVFSDebugPrint(TEXT("%s\r\n"), TEXT(__FUNCTION__));
-	return GetFromContext(pEventInfo)->OnGetVolumeFreeSpace(pEventInfo);
+	return GetFromContext(eventInfo)->OnGetVolumeFreeSpace(eventInfo);
 }
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetVolumeInfo(DOKAN_GET_VOLUME_INFO_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetVolumeInfo(DOKAN_GET_VOLUME_INFO_EVENT* eventInfo)
 {
 	KxVFSDebugPrint(TEXT("%s\r\n"), TEXT(__FUNCTION__));
-	return GetFromContext(pEventInfo)->OnGetVolumeInfo(pEventInfo);
+	return GetFromContext(eventInfo)->OnGetVolumeInfo(eventInfo);
 }
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetVolumeAttributes(DOKAN_GET_VOLUME_ATTRIBUTES_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetVolumeAttributes(DOKAN_GET_VOLUME_ATTRIBUTES_EVENT* eventInfo)
 {
 	KxVFSDebugPrint(TEXT("%s\r\n"), TEXT(__FUNCTION__));
-	return GetFromContext(pEventInfo)->OnGetVolumeAttributes(pEventInfo);
+	return GetFromContext(eventInfo)->OnGetVolumeAttributes(eventInfo);
 }
 
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_CreateFile(DOKAN_CREATE_FILE_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_CreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnCreateFile(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnCreateFile(eventInfo);
 }
-void DOKAN_CALLBACK KxVFSBase::Dokan_CloseFile(DOKAN_CLOSE_FILE_EVENT* pEventInfo)
+void DOKAN_CALLBACK KxVFSBase::Dokan_CloseFile(DOKAN_CLOSE_FILE_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\", DeleteOnClose: %d\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName, (int)pEventInfo->DokanFileInfo->DeleteOnClose);
-	return (void)GetFromContext(pEventInfo)->OnCloseFile(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\", DeleteOnClose: %d\r\n"), TEXT(__FUNCTION__), eventInfo->FileName, (int)eventInfo->DokanFileInfo->DeleteOnClose);
+	return (void)GetFromContext(eventInfo)->OnCloseFile(eventInfo);
 }
-void DOKAN_CALLBACK KxVFSBase::Dokan_CleanUp(DOKAN_CLEANUP_EVENT* pEventInfo)
+void DOKAN_CALLBACK KxVFSBase::Dokan_CleanUp(DOKAN_CLEANUP_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\", DeleteOnClose: %d\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName, (int)pEventInfo->DokanFileInfo->DeleteOnClose);
-	return (void)GetFromContext(pEventInfo)->OnCleanUp(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\", DeleteOnClose: %d\r\n"), TEXT(__FUNCTION__), eventInfo->FileName, (int)eventInfo->DokanFileInfo->DeleteOnClose);
+	return (void)GetFromContext(eventInfo)->OnCleanUp(eventInfo);
 }
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_MoveFile(DOKAN_MOVE_FILE_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_MoveFile(DOKAN_MOVE_FILE_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\" -> \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName, pEventInfo->NewFileName);
-	return GetFromContext(pEventInfo)->OnMoveFile(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\" -> \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName, eventInfo->NewFileName);
+	return GetFromContext(eventInfo)->OnMoveFile(eventInfo);
 }
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_CanDeleteFile(DOKAN_CAN_DELETE_FILE_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_CanDeleteFile(DOKAN_CAN_DELETE_FILE_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\", DeleteOnClose: %d\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName, (int)pEventInfo->DokanFileInfo->DeleteOnClose);
-	return GetFromContext(pEventInfo)->OnCanDeleteFile(pEventInfo);
-}
-
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_LockFile(DOKAN_LOCK_FILE_EVENT* pEventInfo)
-{
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnLockFile(pEventInfo);
-}
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_UnlockFile(DOKAN_UNLOCK_FILE_EVENT* pEventInfo)
-{
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnUnlockFile(pEventInfo);
-}
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetFileSecurity(DOKAN_GET_FILE_SECURITY_EVENT* pEventInfo)
-{
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnGetFileSecurity(pEventInfo);
-}
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_SetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* pEventInfo)
-{
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnSetFileSecurity(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\", DeleteOnClose: %d\r\n"), TEXT(__FUNCTION__), eventInfo->FileName, (int)eventInfo->DokanFileInfo->DeleteOnClose);
+	return GetFromContext(eventInfo)->OnCanDeleteFile(eventInfo);
 }
 
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_ReadFile(DOKAN_READ_FILE_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_LockFile(DOKAN_LOCK_FILE_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnReadFile(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnLockFile(eventInfo);
 }
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_WriteFile(DOKAN_WRITE_FILE_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_UnlockFile(DOKAN_UNLOCK_FILE_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnWriteFile(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnUnlockFile(eventInfo);
 }
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_FlushFileBuffers(DOKAN_FLUSH_BUFFERS_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetFileSecurity(DOKAN_GET_FILE_SECURITY_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnFlushFileBuffers(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnGetFileSecurity(eventInfo);
 }
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_SetEndOfFile(DOKAN_SET_EOF_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_SetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnSetEndOfFile(pEventInfo);
-}
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_SetAllocationSize(DOKAN_SET_ALLOCATION_SIZE_EVENT* pEventInfo)
-{
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnSetAllocationSize(pEventInfo);
-}
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetFileInfo(DOKAN_GET_FILE_INFO_EVENT* pEventInfo)
-{
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnGetFileInfo(pEventInfo);
-}
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_SetBasicFileInfo(DOKAN_SET_FILE_BASIC_INFO_EVENT* pEventInfo)
-{
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnSetBasicFileInfo(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnSetFileSecurity(eventInfo);
 }
 
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_FindFiles(DOKAN_FIND_FILES_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_ReadFile(DOKAN_READ_FILE_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\\*\"\r\n"), TEXT(__FUNCTION__), pEventInfo->PathName);
-	return GetFromContext(pEventInfo)->OnFindFiles(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnReadFile(eventInfo);
 }
-NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_FindStreams(DOKAN_FIND_STREAMS_EVENT* pEventInfo)
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_WriteFile(DOKAN_WRITE_FILE_EVENT* eventInfo)
 {
-	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), pEventInfo->FileName);
-	return GetFromContext(pEventInfo)->OnFindStreams(pEventInfo);
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnWriteFile(eventInfo);
+}
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_FlushFileBuffers(DOKAN_FLUSH_BUFFERS_EVENT* eventInfo)
+{
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnFlushFileBuffers(eventInfo);
+}
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_SetEndOfFile(DOKAN_SET_EOF_EVENT* eventInfo)
+{
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnSetEndOfFile(eventInfo);
+}
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_SetAllocationSize(DOKAN_SET_ALLOCATION_SIZE_EVENT* eventInfo)
+{
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnSetAllocationSize(eventInfo);
+}
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_GetFileInfo(DOKAN_GET_FILE_INFO_EVENT* eventInfo)
+{
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnGetFileInfo(eventInfo);
+}
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_SetBasicFileInfo(DOKAN_SET_FILE_BASIC_INFO_EVENT* eventInfo)
+{
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnSetBasicFileInfo(eventInfo);
+}
+
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_FindFiles(DOKAN_FIND_FILES_EVENT* eventInfo)
+{
+	KxVFSDebugPrint(TEXT("%s: \"%s\\*\"\r\n"), TEXT(__FUNCTION__), eventInfo->PathName);
+	return GetFromContext(eventInfo)->OnFindFiles(eventInfo);
+}
+NTSTATUS DOKAN_CALLBACK KxVFSBase::Dokan_FindStreams(DOKAN_FIND_STREAMS_EVENT* eventInfo)
+{
+	KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), eventInfo->FileName);
+	return GetFromContext(eventInfo)->OnFindStreams(eventInfo);
 }

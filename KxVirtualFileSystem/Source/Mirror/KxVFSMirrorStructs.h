@@ -18,8 +18,8 @@ class KxVFSMirror_FileHandle
 		KxVFSMirror* self = NULL;
 
 	public:
-		KxVFSMirror_FileHandle(KxVFSMirror* pMirror)
-			:self(pMirror)
+		KxVFSMirror_FileHandle(KxVFSMirror* mirror)
+			:self(mirror)
 		{
 		}
 };

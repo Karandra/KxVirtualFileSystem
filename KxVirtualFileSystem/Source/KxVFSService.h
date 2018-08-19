@@ -15,10 +15,10 @@ class KxVFS_API KxVFSService
 		static const WCHAR* GetDokanVersion();
 
 	private:
-		static DWORD GetServiceStatus(SC_HANDLE hService);
-		static SC_HANDLE CreateService(SC_HANDLE hServiceManager, const WCHAR* sDriverPath, const WCHAR* sServiceName, const WCHAR* sDisplayName, const WCHAR* sDescription);
-		static bool ReconfigureService(SC_HANDLE hService, const WCHAR* sDriverPath, const WCHAR* sDisplayName, const WCHAR* sDescription);
-		static bool SetServiceDescription(SC_HANDLE hService, const WCHAR* sDescription);
+		static DWORD GetServiceStatus(SC_HANDLE serviceHandle);
+		static SC_HANDLE CreateService(SC_HANDLE serviceManagerHandle, const WCHAR* driverPath, const WCHAR* serviceName, const WCHAR* displayName, const WCHAR* description);
+		static bool ReconfigureService(SC_HANDLE serviceHandle, const WCHAR* driverPath, const WCHAR* displayName, const WCHAR* description);
+		static bool SetServiceDescription(SC_HANDLE serviceHandle, const WCHAR* description);
 
 	public:
 		static const WORD DefualtThreadsCount = 4;
@@ -37,13 +37,13 @@ class KxVFS_API KxVFSService
 		{
 			return m_VFSList;
 		}
-		void AddVFS(KxVFSBase* pVFS);
-		void RemoveVFS(KxVFSBase* pVFS);
+		void AddVFS(KxVFSBase* vfs);
+		void RemoveVFS(KxVFSBase* vfs);
 
 		bool AddSeSecurityNamePrivilege();
 
 	public:
-		KxVFSService(const WCHAR* sServiceName);
+		KxVFSService(const WCHAR* serviceName);
 		virtual ~KxVFSService();
 
 	public:
@@ -58,6 +58,6 @@ class KxVFS_API KxVFSService
 
 		bool Start();
 		bool Stop();
-		bool Install(const WCHAR* sDriverPath, const WCHAR* sDisplayName = NULL, const WCHAR* sDescription = NULL);
+		bool Install(const WCHAR* driverPath, const WCHAR* displayName = NULL, const WCHAR* description = NULL);
 		bool Uninstall();
 };

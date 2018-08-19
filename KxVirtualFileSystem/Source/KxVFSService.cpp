@@ -14,66 +14,66 @@ const WCHAR* KxVFSService::GetDokanVersion()
 	static std::wstring ms_DokanVersion;
 	if (ms_DokanVersion.empty())
 	{
-		WCHAR sTemp1[8] = {0};
-		WCHAR sTemp2[8] = {0};
-		wsprintfW(sTemp1, L"%d", DOKAN_VERSION);
-		int nSize = wsprintfW(sTemp2, L"%c.%c.%c", sTemp1[0], sTemp1[1], sTemp1[2]);
+		WCHAR temp1[8] = {0};
+		WCHAR temp2[8] = {0};
+		wsprintfW(temp1, L"%d", DOKAN_VERSION);
+		int size = wsprintfW(temp2, L"%c.%c.%c", temp1[0], temp1[1], temp1[2]);
 
-		ms_DokanVersion.reserve(nSize);
-		ms_DokanVersion = sTemp2;
+		ms_DokanVersion.reserve(size);
+		ms_DokanVersion = temp2;
 	}
 	return ms_DokanVersion.c_str();
 }
 
-DWORD KxVFSService::GetServiceStatus(SC_HANDLE hService)
+DWORD KxVFSService::GetServiceStatus(SC_HANDLE serviceHandle)
 {
-	SERVICE_STATUS_PROCESS tStatus = {0};
-	DWORD nReqSize = 0;
-	::QueryServiceStatusEx(hService, SC_STATUS_PROCESS_INFO, (BYTE*)&tStatus, sizeof(tStatus), &nReqSize);
+	SERVICE_STATUS_PROCESS status = {0};
+	DWORD reqSize = 0;
+	::QueryServiceStatusEx(serviceHandle, SC_STATUS_PROCESS_INFO, (BYTE*)&status, sizeof(status), &reqSize);
 
-	return tStatus.dwCurrentState;
+	return status.dwCurrentState;
 }
-SC_HANDLE KxVFSService::CreateService(SC_HANDLE hServiceManager, const WCHAR* sDriverPath, const WCHAR* sServiceName, const WCHAR* sDisplayName, const WCHAR* sDescription)
+SC_HANDLE KxVFSService::CreateService(SC_HANDLE serviceManagerHandle, const WCHAR* driverPath, const WCHAR* serviceName, const WCHAR* displayName, const WCHAR* description)
 {
-	SC_HANDLE hService = CreateServiceW
+	SC_HANDLE serviceHandle = CreateServiceW
 	(
-		hServiceManager,
-		sServiceName,
-		sDisplayName,
+		serviceManagerHandle,
+		serviceName,
+		displayName,
 		SERVICE_ALL_ACCESS,
 		SERVICE_FILE_SYSTEM_DRIVER,
 		ServiceStartType,
 		SERVICE_ERROR_IGNORE,
-		sDriverPath,
+		driverPath,
 		NULL, NULL, NULL, NULL, NULL
 	);
 
-	if (hService)
+	if (serviceHandle)
 	{
-		SetServiceDescription(hService, sDescription);
+		SetServiceDescription(serviceHandle, description);
 	}
-	return hService;
+	return serviceHandle;
 }
-bool KxVFSService::ReconfigureService(SC_HANDLE hService, const WCHAR* sDriverPath, const WCHAR* sDisplayName, const WCHAR* sDescription)
+bool KxVFSService::ReconfigureService(SC_HANDLE serviceHandle, const WCHAR* driverPath, const WCHAR* displayName, const WCHAR* description)
 {
 	bool b1 = ChangeServiceConfigW
 	(
-		hService,
+		serviceHandle,
 		SERVICE_FILE_SYSTEM_DRIVER,
 		ServiceStartType,
 		SERVICE_ERROR_IGNORE,
-		sDriverPath,
+		driverPath,
 		NULL, NULL, NULL, NULL, NULL, NULL
 	);
-	bool b2 = SetServiceDescription(hService, sDescription);
+	bool b2 = SetServiceDescription(serviceHandle, description);
 
 	return b1 && b2;
 }
-bool KxVFSService::SetServiceDescription(SC_HANDLE hService, const WCHAR* sDescription)
+bool KxVFSService::SetServiceDescription(SC_HANDLE serviceHandle, const WCHAR* description)
 {
-	SERVICE_DESCRIPTION tDesc = {0};
-	tDesc.lpDescription = const_cast<LPWSTR>(sDescription);
-	return ChangeServiceConfig2W(hService, SERVICE_CONFIG_DESCRIPTION, &tDesc);
+	SERVICE_DESCRIPTION desc = {0};
+	desc.lpDescription = const_cast<LPWSTR>(description);
+	return ChangeServiceConfig2W(serviceHandle, SERVICE_CONFIG_DESCRIPTION, &desc);
 }
 
 bool KxVFSService::AddSeSecurityNamePrivilege()
@@ -166,8 +166,8 @@ bool KxVFSService::AddSeSecurityNamePrivilege()
 	return TRUE;
 }
 
-KxVFSService::KxVFSService(const WCHAR* sServiceName)
-	:m_ServiceName(sServiceName), m_ServiceManager(SERVICE_START|SERVICE_STOP|SERVICE_QUERY_STATUS|SERVICE_CHANGE_CONFIG)
+KxVFSService::KxVFSService(const WCHAR* serviceName)
+	:m_ServiceName(serviceName), m_ServiceManager(SERVICE_START|SERVICE_STOP|SERVICE_QUERY_STATUS|SERVICE_CHANGE_CONFIG)
 {
 	m_ServiceHandle = ::OpenServiceW(m_ServiceManager, m_ServiceName.c_str(), SERVICE_ALL_ACCESS|DELETE);
 	m_HasSeSecurityNamePrivilege = AddSeSecurityNamePrivilege();
@@ -203,22 +203,21 @@ bool KxVFSService::Start()
 }
 bool KxVFSService::Stop()
 {
-	SERVICE_STATUS tStatus = {0};
-	return ControlService(m_ServiceHandle, SERVICE_STOP, &tStatus);
+	SERVICE_STATUS status = {0};
+	return ControlService(m_ServiceHandle, SERVICE_STOP, &status);
 }
-bool KxVFSService::Install(const WCHAR* sDriverPath, const WCHAR* sDisplayName, const WCHAR* sDescription)
+bool KxVFSService::Install(const WCHAR* driverPath, const WCHAR* displayName, const WCHAR* description)
 {
-	bool bSuccess = false;
-	if (GetFileAttributesW(sDriverPath) != INVALID_FILE_ATTRIBUTES)
+	if (GetFileAttributesW(driverPath) != INVALID_FILE_ATTRIBUTES)
 	{
 		// Create new service or reconfigure existing
 		if (m_ServiceHandle)
 		{
-			return ReconfigureService(m_ServiceHandle, sDriverPath, sDisplayName, sDescription);
+			return ReconfigureService(m_ServiceHandle, driverPath, displayName, description);
 		}
 		else
 		{
-			m_ServiceHandle = CreateService(m_ServiceManager, sDriverPath, m_ServiceName.c_str(), sDisplayName ? sDisplayName : m_ServiceName.c_str(), sDescription ? sDescription : L"");
+			m_ServiceHandle = CreateService(m_ServiceManager, driverPath, m_ServiceName.c_str(), displayName ? displayName : m_ServiceName.c_str(), description ? description : L"");
 			return m_ServiceHandle != NULL;
 		}
 	}
@@ -229,18 +228,18 @@ bool KxVFSService::Uninstall()
 	return ::DeleteService(m_ServiceHandle);
 }
 
-void KxVFSService::AddVFS(KxVFSBase* pVFS)
+void KxVFSService::AddVFS(KxVFSBase* vfs)
 {
-	GetVFSList().emplace_back(pVFS);
+	GetVFSList().emplace_back(vfs);
 }
-void KxVFSService::RemoveVFS(KxVFSBase* pVFS)
+void KxVFSService::RemoveVFS(KxVFSBase* vfs)
 {
-	GetVFSList().remove(pVFS);
+	GetVFSList().remove(vfs);
 }
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD nReason, LPVOID pReserved)
+BOOL WINAPI DllMain(HMODULE moduleHandle, DWORD event, LPVOID pReserved)
 {
-	switch (nReason)
+	switch (event)
 	{
 		case DLL_PROCESS_ATTACH:
 		{
