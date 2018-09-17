@@ -334,7 +334,7 @@ class KxBasicDynamicString
 			{
 				return data()[index];
 			}
-			ThrowInvalidIndex();
+			throw std::out_of_range();
 		}
 		const CharT& at(size_t index) const
 		{
