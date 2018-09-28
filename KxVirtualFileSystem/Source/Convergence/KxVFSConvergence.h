@@ -22,6 +22,7 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		using DispatcherIndexT = std::unordered_map<KxDynamicString, KxDynamicString>;
 		using NonExistentINIMapT = std::unordered_set<KxDynamicString>;
 		using SearchDispatcherIndexT = std::unordered_map<KxDynamicString, SearchDispatcherVectorT>;
+		using ExternalDispatcherIndexT = std::vector<std::pair<KxDynamicStringRef, KxDynamicStringRef>>;
 
 	private:
 		RedirectionPathsListT m_RedirectionPaths;
@@ -57,8 +58,21 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 
 		// KxVFSIDispatcher
 		virtual KxDynamicString GetTargetPath(const WCHAR* requestedPath) override;
-		bool UpdateDispatcherIndex(const KxDynamicString& requestedPath, const KxDynamicString& targetPath);
-		void UpdateDispatcherIndex(const KxDynamicString& requestedPath);
+
+		bool UpdateDispatcherIndexUnlocked(const KxDynamicString& requestedPath, const KxDynamicString& targetPath);
+		void UpdateDispatcherIndexUnlocked(const KxDynamicString& requestedPath);
+
+		bool UpdateDispatcherIndex(const KxDynamicString& requestedPath, const KxDynamicString& targetPath)
+		{
+			KxVFSCriticalSectionLocker lock(m_DispatcherIndexCS);
+			return UpdateDispatcherIndexUnlocked(requestedPath, targetPath);
+		}
+		void UpdateDispatcherIndex(const KxDynamicString& requestedPath)
+		{
+			KxVFSCriticalSectionLocker lock(m_DispatcherIndexCS);
+			UpdateDispatcherIndexUnlocked(requestedPath);
+		}
+		
 		KxDynamicString TryDispatchRequest(const KxDynamicString& requestedPath) const;
 
 		// KxVFSISearchDispatcher
@@ -119,7 +133,8 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		}
 		bool SetCanDeleteInVirtualFolder(bool value);
 
-		void RefreshDispatcherIndex();
+		void BuildDispatcherIndex();
+		void SetDispatcherIndex(const ExternalDispatcherIndexT& index);
 
 	protected:
 		virtual NTSTATUS OnMount(DOKAN_MOUNTED_INFO* eventInfo) override;

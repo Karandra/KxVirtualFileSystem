@@ -29,6 +29,7 @@
     <ClInclude Include="Source\KxVFSIncludeDokan.h" />
     <ClInclude Include="Source\Mirror\KxVFSMirror.h" />
     <ClInclude Include="Source\Mirror\KxVFSMirrorStructs.h" />
+    <ClInclude Include="Source\Utility\KxCallAtScopeExit.h" />
     <ClInclude Include="Source\Utility\KxDynamicString.h" />
     <ClInclude Include="Source\Utility\KxFileFinder.h" />
     <ClInclude Include="Source\Utility\KxVFSContext.h" />

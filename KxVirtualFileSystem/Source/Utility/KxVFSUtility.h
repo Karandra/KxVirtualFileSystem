@@ -11,7 +11,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 class KxVFSUtility
 {
 	public:
-		typedef std::unordered_set<size_t> StringSearcherHash;
+		using StringSearcherHash = std::unordered_set<size_t>;
 
 	public:
 		static std::wstring ToUTF16(const char* text);

@@ -84,6 +84,9 @@
     <ClInclude Include="Source\KxVFSISearchDispatcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Utility\KxCallAtScopeExit.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Mirror\KxVFSMirror.cpp">

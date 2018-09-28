@@ -13,6 +13,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Utility/KxVFSUtility.h"
 #include "Utility/KxVFSFileHandle.h"
 #include "Utility/KxFileFinder.h"
+#include "Utility/KxCallAtScopeExit.h"
 #include <AclAPI.h>
 #pragma warning (disable: 4267)
 
@@ -128,12 +129,11 @@ KxDynamicString KxVFSConvergence::GetTargetPath(const WCHAR* requestedPath)
 		}
 	}
 }
-bool KxVFSConvergence::UpdateDispatcherIndex(const KxDynamicString& requestedPath, const KxDynamicString& targetPath)
+
+bool KxVFSConvergence::UpdateDispatcherIndexUnlocked(const KxDynamicString& requestedPath, const KxDynamicString& targetPath)
 {
 	if (!requestedPath.empty() && requestedPath != TEXT("\\"))
 	{
-		KxVFSCriticalSectionLocker lock(m_DispatcherIndexCS);
-
 		KxDynamicString key = requestedPath.to_lower();
 		NormalizePath(key);
 
@@ -142,15 +142,14 @@ bool KxVFSConvergence::UpdateDispatcherIndex(const KxDynamicString& requestedPat
 	}
 	return false;
 }
-void KxVFSConvergence::UpdateDispatcherIndex(const KxDynamicString& requestedPath)
+void KxVFSConvergence::UpdateDispatcherIndexUnlocked(const KxDynamicString& requestedPath)
 {
-	KxVFSCriticalSectionLocker lock(m_DispatcherIndexCS);
-
 	KxDynamicString key = requestedPath.to_lower();
 	NormalizePath(key);
 
 	m_DispathcerIndex.erase(key);
 }
+
 KxDynamicString KxVFSConvergence::TryDispatchRequest(const KxDynamicString& requestedPath) const
 {
 	KxDynamicString key = requestedPath.to_lower();
@@ -255,21 +254,19 @@ int KxVFSConvergence::Mount()
 {
 	if (!IsMounted())
 	{
-		m_DispathcerIndex.clear();
 		m_DispathcerIndex.reserve(m_RedirectionPaths.size() * 32);
-
-		m_SearchDispathcerIndex.clear();
 		m_SearchDispathcerIndex.reserve(m_RedirectionPaths.size() * 128);
 
-		m_NonExistentINIFiles.clear();
-
-		RefreshDispatcherIndex();
 		return KxVFSMirror::Mount();
 	}
 	return DOKAN_ERROR;
 }
 bool KxVFSConvergence::UnMount()
 {
+	m_DispathcerIndex.clear();
+	m_SearchDispathcerIndex.clear();
+	m_NonExistentINIFiles.clear();
+
 	return KxVFSMirror::UnMount();
 }
 
@@ -308,7 +305,7 @@ bool KxVFSConvergence::SetCanDeleteInVirtualFolder(bool value)
 	}
 	return false;
 }
-void KxVFSConvergence::RefreshDispatcherIndex()
+void KxVFSConvergence::BuildDispatcherIndex()
 {
 	m_DispathcerIndex.clear();
 	m_SearchDispathcerIndex.clear();
@@ -339,7 +336,7 @@ void KxVFSConvergence::RefreshDispatcherIndex()
 				// Save to file dispatcher index
 				KxDynamicString targetPath(L"\\\\?\\");
 				targetPath += item.GetFullPath();
-				UpdateDispatcherIndex(ExtractRequestPath(virtualFolder, item.GetFullPath()), targetPath);
+				UpdateDispatcherIndexUnlocked(ExtractRequestPath(virtualFolder, item.GetFullPath()), targetPath);
 
 				if (item.IsDirectory())
 				{
@@ -387,6 +384,19 @@ void KxVFSConvergence::RefreshDispatcherIndex()
 		Recurse(*i, *i);
 	}
 }
+void KxVFSConvergence::SetDispatcherIndex(const ExternalDispatcherIndexT& index)
+{
+	m_DispathcerIndex.clear();
+	m_SearchDispathcerIndex.clear();
+
+	m_DispathcerIndex.reserve(index.size());
+	for (const auto& value: index)
+	{
+		KxDynamicString targetPath(L"\\\\?\\");
+		targetPath += value.second;
+		UpdateDispatcherIndexUnlocked(value.first, targetPath);
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////
 NTSTATUS KxVFSConvergence::OnMount(DOKAN_MOUNTED_INFO* eventInfo)
@@ -400,14 +410,8 @@ NTSTATUS KxVFSConvergence::OnUnMount(DOKAN_UNMOUNTED_INFO* eventInfo)
 
 NTSTATUS KxVFSConvergence::OnCreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo)
 {
-	// Non-existent INI files optimization (1)
-	const HRESULT nINIOptimizationReturnCode = STATUS_OBJECT_PATH_NOT_FOUND;
-	#if 0
-	if (!eventInfo->DokanFileInfo->IsDirectory && IsINIFileNonExistent(eventInfo->FileName))
-	{
-		return nINIOptimizationReturnCode;
-	}
-	#endif
+	// Non-existent INI files optimization
+	const HRESULT iniOptimizationReturnCode = STATUS_OBJECT_PATH_NOT_FOUND;
 
 	DWORD errorCode = 0;
 	NTSTATUS statusCode = STATUS_SUCCESS;
@@ -444,6 +448,14 @@ NTSTATUS KxVFSConvergence::OnCreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo)
 	#endif
 
 	SECURITY_DESCRIPTOR* fileSecurity = NULL;
+	KxCallAtScopeExit destroyFileSecurityAtExit([&fileSecurity]()
+	{
+		if (fileSecurity)
+		{
+			::DestroyPrivateObjectSecurity(reinterpret_cast<PSECURITY_DESCRIPTOR*>(&fileSecurity));
+		}
+	});
+
 	if (wcscmp(eventInfo->FileName, L"\\") != 0 && wcscmp(eventInfo->FileName, L"/") != 0	&& creationDisposition != OPEN_EXISTING && creationDisposition != TRUNCATE_EXISTING)
 	{
 		// We only need security information if there's a possibility a new file could be created
@@ -550,7 +562,7 @@ NTSTATUS KxVFSConvergence::OnCreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo)
 				genericDesiredAccess |= GENERIC_WRITE;
 			}
 
-			// Non-existent INI files optimization (2)
+			// Non-existent INI files optimization
 			if ((creationDisposition == OPEN_ALWAYS || creationDisposition == OPEN_EXISTING) && IsINIFile(eventInfo->FileName))
 			{
 				// If file doesn't exist
@@ -562,8 +574,10 @@ NTSTATUS KxVFSConvergence::OnCreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo)
 						AddINIFile(eventInfo->FileName);
 					}
 
-					statusCode = nINIOptimizationReturnCode;
-					goto CleanUp;
+					statusCode = iniOptimizationReturnCode;
+					
+					// destroyFileSecurityAtExit will take care of everything else
+					return statusCode;
 				}
 			}
 
@@ -630,11 +644,6 @@ NTSTATUS KxVFSConvergence::OnCreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo)
 		}
 	}
 
-	CleanUp:
-	if (fileSecurity)
-	{
-		DestroyPrivateObjectSecurity(reinterpret_cast<PSECURITY_DESCRIPTOR*>(&fileSecurity));
-	}
 	return statusCode;
 }
 NTSTATUS KxVFSConvergence::OnCloseFile(DOKAN_CLOSE_FILE_EVENT* eventInfo)

@@ -52,7 +52,7 @@ int _tmain()
 			}
 			case 'c':
 			{
-				mainVFS->RefreshDispatcherIndex();
+				mainVFS->BuildDispatcherIndex();
 				break;
 			}
 			case 'r':
