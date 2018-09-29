@@ -10,37 +10,41 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Utility/KxVFSContext.h"
 class KxVFSMirror;
 
-class KxVFSMirror_FileHandle
+namespace KxVFSMirrorNS
 {
-	public:
-		HANDLE FileHandle = NULL;
-		#if KxVFS_USE_ASYNC_IO
-		PTP_IO IoCompletion = NULL;
-		#endif
+	class FileHandle
+	{
+		public:
+			HANDLE m_FileHandle = NULL;
+			#if KxVFS_USE_ASYNC_IO
+			PTP_IO m_IOCompletion = NULL;
+			#endif
 
-		KxVFSCriticalSection Lock;
-		bool IsCleanedUp = false;
-		bool IsClosed = false;
-		KxVFSMirror* self = NULL;
+			KxVFSCriticalSection m_Lock;
+			bool m_IsCleanedUp = false;
+			bool m_IsClosed = false;
+			KxVFSMirror* m_MirrorInstance = NULL;
 
-	public:
-		KxVFSMirror_FileHandle(KxVFSMirror* mirror)
-			:self(mirror)
-		{
-		}
-};
+		public:
+			FileHandle(KxVFSMirror* mirror)
+				:m_MirrorInstance(mirror)
+			{
+			}
+	};
 
-enum KxVFSMirror_IOOperationType
-{
-	MIRROR_IOTYPE_UNKNOWN = 0,
-	MIRROR_IOTYPE_READ,
-	MIRROR_IOTYPE_WRITE
-};
-class KxVFSMirror_Overlapped
-{
-	public:
-		OVERLAPPED InternalOverlapped = {0};
-		KxVFSMirror_FileHandle* FileHandle = NULL;
-		KxVFSMirror_IOOperationType IoType = MIRROR_IOTYPE_UNKNOWN;
-		void* Context = NULL;
-};
+	enum IOOperationType: int
+	{
+		MIRROR_IOTYPE_UNKNOWN = 0,
+		MIRROR_IOTYPE_READ,
+		MIRROR_IOTYPE_WRITE
+	};
+	class Overlapped
+	{
+		public:
+			OVERLAPPED m_InternalOverlapped = {0};
+			FileHandle* m_FileHandle = NULL;
+			IOOperationType m_IOType = MIRROR_IOTYPE_UNKNOWN;
+			void* m_Context = NULL;
+	};
+
+}

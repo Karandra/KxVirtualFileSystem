@@ -22,6 +22,8 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		using DispatcherIndexT = std::unordered_map<KxDynamicString, KxDynamicString>;
 		using NonExistentINIMapT = std::unordered_set<KxDynamicString>;
 		using SearchDispatcherIndexT = std::unordered_map<KxDynamicString, SearchDispatcherVectorT>;
+
+	public:
 		using ExternalDispatcherIndexT = std::vector<std::pair<KxDynamicStringRef, KxDynamicStringRef>>;
 
 	private:
@@ -106,6 +108,20 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		KxDynamicString& NormalizePath(KxDynamicString& requestedPath) const;
 		KxDynamicString NormalizePath(const KxDynamicStringRef& requestedPath) const;
 
+		template<class T> void SetDispatcherIndexT(const T& index)
+		{
+			m_DispathcerIndex.clear();
+			m_SearchDispathcerIndex.clear();
+
+			m_DispathcerIndex.reserve(index.size());
+			for (const auto& value: index)
+			{
+				KxDynamicString targetPath(L"\\\\?\\");
+				targetPath += KxDynamicStringRef(value.second.data(), value.second.size());
+				UpdateDispatcherIndexUnlocked(KxDynamicStringRef(value.first.data(), value.first.size()), targetPath);
+			}
+		}
+
 	public:
 		KxVFSConvergence(KxVFSService* vfsService, const WCHAR* mountPoint, const WCHAR* writeTarget, ULONG falgs = DefFlags, ULONG requestTimeout = DefRequestTimeout);
 		virtual ~KxVFSConvergence();
@@ -134,24 +150,31 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		bool SetCanDeleteInVirtualFolder(bool value);
 
 		void BuildDispatcherIndex();
-		void SetDispatcherIndex(const ExternalDispatcherIndexT& index);
+		void SetDispatcherIndex(const ExternalDispatcherIndexT& index)
+		{
+			SetDispatcherIndexT(index);
+		}
+		template<class T> void SetDispatcherIndex(const T& index)
+		{
+			SetDispatcherIndexT(index);
+		}
 
 	protected:
-		virtual NTSTATUS OnMount(DOKAN_MOUNTED_INFO* eventInfo) override;
-		virtual NTSTATUS OnUnMount(DOKAN_UNMOUNTED_INFO* eventInfo) override;
+		virtual NTSTATUS OnMount(EvtMounted& eventInfo) override;
+		virtual NTSTATUS OnUnMount(EvtUnMounted& eventInfo) override;
 
-		virtual NTSTATUS OnCreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo) override;
-		virtual NTSTATUS OnCloseFile(DOKAN_CLOSE_FILE_EVENT* eventInfo) override;
-		virtual NTSTATUS OnCleanUp(DOKAN_CLEANUP_EVENT* eventInfo) override;
-		virtual NTSTATUS OnMoveFile(DOKAN_MOVE_FILE_EVENT* eventInfo) override;
-		virtual NTSTATUS OnCanDeleteFile(DOKAN_CAN_DELETE_FILE_EVENT* eventInfo) override;
+		virtual NTSTATUS OnCreateFile(EvtCreateFile& eventInfo) override;
+		virtual NTSTATUS OnCloseFile(EvtCloseFile& eventInfo) override;
+		virtual NTSTATUS OnCleanUp(EvtCleanUp& eventInfo) override;
+		virtual NTSTATUS OnMoveFile(EvtMoveFile& eventInfo) override;
+		virtual NTSTATUS OnCanDeleteFile(EvtCanDeleteFile& eventInfo) override;
 
-		virtual NTSTATUS OnGetFileSecurity(DOKAN_GET_FILE_SECURITY_EVENT* eventInfo) override;
-		virtual NTSTATUS OnSetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* eventInfo) override;
+		virtual NTSTATUS OnGetFileSecurity(EvtGetFileSecurity& eventInfo) override;
+		virtual NTSTATUS OnSetFileSecurity(EvtSetFileSecurity& eventInfo) override;
 
-		virtual NTSTATUS OnReadFile(DOKAN_READ_FILE_EVENT* eventInfo) override;
-		virtual NTSTATUS OnWriteFile(DOKAN_WRITE_FILE_EVENT* eventInfo) override;
+		virtual NTSTATUS OnReadFile(EvtReadFile& eventInfo) override;
+		virtual NTSTATUS OnWriteFile(EvtWriteFile& eventInfo) override;
 
-		DWORD OnFindFilesAux(const KxDynamicString& path, DOKAN_FIND_FILES_EVENT* eventInfo, KxVFSUtility::StringSearcherHash& hashStore, SearchDispatcherVectorT* searchIndex);
-		virtual NTSTATUS OnFindFiles(DOKAN_FIND_FILES_EVENT* eventInfo) override;
+		DWORD OnFindFilesAux(const KxDynamicString& path, EvtFindFiles& eventInfo, KxVFSUtility::StringSearcherHash& hashStore, SearchDispatcherVectorT* searchIndex);
+		virtual NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
 };

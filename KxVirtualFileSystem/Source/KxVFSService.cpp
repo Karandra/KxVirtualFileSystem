@@ -13,7 +13,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 const WCHAR* KxVFSService::GetLibraryVersion()
 {
-	return L"1.1";
+	return L"1.1.1";
 }
 const WCHAR* KxVFSService::GetDokanVersion()
 {
@@ -178,12 +178,12 @@ KxVFSService::KxVFSService(const WCHAR* serviceName)
 	m_ServiceHandle = ::OpenServiceW(m_ServiceManager, m_ServiceName.c_str(), SERVICE_ALL_ACCESS|DELETE);
 	m_HasSeSecurityNamePrivilege = AddSeSecurityNamePrivilege();
 
-	DokanInit(NULL);
+	Dokany2::DokanInit(NULL);
 }
 KxVFSService::~KxVFSService()
 {
 	CloseServiceHandle(m_ServiceHandle);
-	DokanShutdown();
+	Dokany2::DokanShutdown();
 }
 
 bool KxVFSService::IsOK() const

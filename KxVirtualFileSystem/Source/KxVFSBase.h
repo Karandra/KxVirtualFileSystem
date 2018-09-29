@@ -13,12 +13,17 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Utility/KxVFSCriticalSection.h"
 
 class KxVFSService;
-class KxVFS_API KxVFSBase: public KxVFSIDispatcher
+class KxVFS_API KxVFSBase: public KxVFSEvents, public KxVFSIDispatcher
 {
 	public:
 		static bool UnMountDirectory(const WCHAR* mountPoint);
 		static bool IsCodeSuccess(int errorCode);
 		static KxDynamicString GetErrorCodeMessage(int errorCode);
+
+		static constexpr bool IsUnsingAsyncIO()
+		{
+			return KxVFS_USE_ASYNC_IO;
+		}
 
 		// Writes a string 'source' into specified buffer but no more than 'maxDestLength' CHARS.
 		// Returns number of BYTES written.
@@ -26,9 +31,9 @@ class KxVFS_API KxVFSBase: public KxVFSIDispatcher
 
 	private:
 		KxVFSService* m_ServiceInstance = NULL;
-		DOKAN_OPTIONS m_Options = {0};
-		DOKAN_OPERATIONS m_Operations = {0};
-		DOKAN_HANDLE m_Handle = NULL;
+		Dokany2::DOKAN_OPTIONS m_Options = {0};
+		Dokany2::DOKAN_OPERATIONS m_Operations = {0};
+		Dokany2::DOKAN_HANDLE m_Handle = NULL;
 
 		std::wstring m_MountPoint;
 		bool m_IsMounted = false;
@@ -76,77 +81,77 @@ class KxVFS_API KxVFSBase: public KxVFSIDispatcher
 		NTSTATUS GetNtStatusByWin32LastErrorCode() const;
 
 	private:
-		NTSTATUS OnMountInternal(DOKAN_MOUNTED_INFO* eventInfo);
-		NTSTATUS OnUnMountInternal(DOKAN_UNMOUNTED_INFO* eventInfo);
+		NTSTATUS OnMountInternal(EvtMounted& eventInfo);
+		NTSTATUS OnUnMountInternal(EvtUnMounted& eventInfo);
 
 	protected:
 		// For OnMount, OnUnMount, OnCloseFile, OnCleanUp return 'STATUS_NOT_SUPPORTED'
 		// as underlaying function has void as its return type.
-		virtual NTSTATUS OnMount(DOKAN_MOUNTED_INFO* eventInfo) = 0;
-		virtual NTSTATUS OnUnMount(DOKAN_UNMOUNTED_INFO* eventInfo) = 0;
+		virtual NTSTATUS OnMount(EvtMounted& eventInfo) = 0;
+		virtual NTSTATUS OnUnMount(EvtUnMounted& eventInfo) = 0;
 
-		virtual NTSTATUS OnGetVolumeFreeSpace(DOKAN_GET_DISK_FREE_SPACE_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnGetVolumeInfo(DOKAN_GET_VOLUME_INFO_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnGetVolumeAttributes(DOKAN_GET_VOLUME_ATTRIBUTES_EVENT* eventInfo) = 0;
+		virtual NTSTATUS OnGetVolumeFreeSpace(EvtGetVolumeFreeSpace& eventInfo) = 0;
+		virtual NTSTATUS OnGetVolumeInfo(EvtGetVolumeInfo& eventInfo) = 0;
+		virtual NTSTATUS OnGetVolumeAttributes(EvtGetVolumeAttributes& eventInfo) = 0;
 
-		virtual NTSTATUS OnCreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnCloseFile(DOKAN_CLOSE_FILE_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnCleanUp(DOKAN_CLEANUP_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnMoveFile(DOKAN_MOVE_FILE_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnCanDeleteFile(DOKAN_CAN_DELETE_FILE_EVENT* eventInfo) = 0;
+		virtual NTSTATUS OnCreateFile(EvtCreateFile& eventInfo) = 0;
+		virtual NTSTATUS OnCloseFile(EvtCloseFile& eventInfo) = 0;
+		virtual NTSTATUS OnCleanUp(EvtCleanUp& eventInfo) = 0;
+		virtual NTSTATUS OnMoveFile(EvtMoveFile& eventInfo) = 0;
+		virtual NTSTATUS OnCanDeleteFile(EvtCanDeleteFile& eventInfo) = 0;
 
-		virtual NTSTATUS OnLockFile(DOKAN_LOCK_FILE_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnUnlockFile(DOKAN_UNLOCK_FILE_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnGetFileSecurity(DOKAN_GET_FILE_SECURITY_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnSetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* eventInfo) = 0;
+		virtual NTSTATUS OnLockFile(EvtLockFile& eventInfo) = 0;
+		virtual NTSTATUS OnUnlockFile(EvtUnlockFile& eventInfo) = 0;
+		virtual NTSTATUS OnGetFileSecurity(EvtGetFileSecurity& eventInfo) = 0;
+		virtual NTSTATUS OnSetFileSecurity(EvtSetFileSecurity& eventInfo) = 0;
 
-		virtual NTSTATUS OnReadFile(DOKAN_READ_FILE_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnWriteFile(DOKAN_WRITE_FILE_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnFlushFileBuffers(DOKAN_FLUSH_BUFFERS_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnSetEndOfFile(DOKAN_SET_EOF_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnSetAllocationSize(DOKAN_SET_ALLOCATION_SIZE_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnGetFileInfo(DOKAN_GET_FILE_INFO_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnSetBasicFileInfo(DOKAN_SET_FILE_BASIC_INFO_EVENT* eventInfo) = 0;
+		virtual NTSTATUS OnReadFile(EvtReadFile& eventInfo) = 0;
+		virtual NTSTATUS OnWriteFile(EvtWriteFile& eventInfo) = 0;
+		virtual NTSTATUS OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo) = 0;
+		virtual NTSTATUS OnSetEndOfFile(EvtSetEndOfFile& eventInfo) = 0;
+		virtual NTSTATUS OnSetAllocationSize(EvtSetAllocationSize& eventInfo) = 0;
+		virtual NTSTATUS OnGetFileInfo(EvtGetFileInfo& eventInfo) = 0;
+		virtual NTSTATUS OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo) = 0;
 
-		virtual NTSTATUS OnFindFiles(DOKAN_FIND_FILES_EVENT* eventInfo) = 0;
-		virtual NTSTATUS OnFindStreams(DOKAN_FIND_STREAMS_EVENT* eventInfo) = 0;
+		virtual NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) = 0;
+		virtual NTSTATUS OnFindStreams(EvtFindStreams& eventInfo) = 0;
 
 	private:
-		inline static KxVFSBase* GetFromContext(DOKAN_OPTIONS* pDokanOptions)
+		inline static KxVFSBase* GetFromContext(Dokany2::DOKAN_OPTIONS* pDokanOptions)
 		{
 			return reinterpret_cast<KxVFSBase*>(pDokanOptions->GlobalContext);
 		}
-		template<class EventInfoT> inline static KxVFSBase* GetFromContext(const EventInfoT* eventInfo)
+		template<class T> inline static KxVFSBase* GetFromContext(const T* eventInfo)
 		{
 			return GetFromContext(eventInfo->DokanFileInfo->DokanOptions);
 		}
 
-		static void DOKAN_CALLBACK Dokan_Mount(DOKAN_MOUNTED_INFO* eventInfo);
-		static void DOKAN_CALLBACK Dokan_Unmount(DOKAN_UNMOUNTED_INFO* eventInfo);
+		static void DOKAN_CALLBACK Dokan_Mount(EvtMounted* eventInfo);
+		static void DOKAN_CALLBACK Dokan_Unmount(EvtUnMounted* eventInfo);
 
-		static NTSTATUS DOKAN_CALLBACK Dokan_GetVolumeFreeSpace(DOKAN_GET_DISK_FREE_SPACE_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_GetVolumeInfo(DOKAN_GET_VOLUME_INFO_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_GetVolumeAttributes(DOKAN_GET_VOLUME_ATTRIBUTES_EVENT* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_GetVolumeFreeSpace(EvtGetVolumeFreeSpace* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_GetVolumeInfo(EvtGetVolumeInfo* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_GetVolumeAttributes(EvtGetVolumeAttributes* eventInfo);
 
-		static NTSTATUS DOKAN_CALLBACK Dokan_CreateFile(DOKAN_CREATE_FILE_EVENT* eventInfo);
-		static void DOKAN_CALLBACK Dokan_CloseFile(DOKAN_CLOSE_FILE_EVENT* eventInfo);
-		static void DOKAN_CALLBACK Dokan_CleanUp(DOKAN_CLEANUP_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_MoveFile(DOKAN_MOVE_FILE_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_CanDeleteFile(DOKAN_CAN_DELETE_FILE_EVENT* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_CreateFile(EvtCreateFile* eventInfo);
+		static void DOKAN_CALLBACK Dokan_CloseFile(EvtCloseFile* eventInfo);
+		static void DOKAN_CALLBACK Dokan_CleanUp(EvtCleanUp* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_MoveFile(EvtMoveFile* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_CanDeleteFile(EvtCanDeleteFile* eventInfo);
 
-		static NTSTATUS DOKAN_CALLBACK Dokan_LockFile(DOKAN_LOCK_FILE_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_UnlockFile(DOKAN_UNLOCK_FILE_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_GetFileSecurity(DOKAN_GET_FILE_SECURITY_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_SetFileSecurity(DOKAN_SET_FILE_SECURITY_EVENT* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_LockFile(EvtLockFile* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_UnlockFile(EvtUnlockFile* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_GetFileSecurity(EvtGetFileSecurity* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_SetFileSecurity(EvtSetFileSecurity* eventInfo);
 
-		static NTSTATUS DOKAN_CALLBACK Dokan_ReadFile(DOKAN_READ_FILE_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_WriteFile(DOKAN_WRITE_FILE_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_FlushFileBuffers(DOKAN_FLUSH_BUFFERS_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_SetEndOfFile(DOKAN_SET_EOF_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_SetAllocationSize(DOKAN_SET_ALLOCATION_SIZE_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_GetFileInfo(DOKAN_GET_FILE_INFO_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_SetBasicFileInfo(DOKAN_SET_FILE_BASIC_INFO_EVENT* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_ReadFile(EvtReadFile* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_WriteFile(EvtWriteFile* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_FlushFileBuffers(EvtFlushFileBuffers* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_SetEndOfFile(EvtSetEndOfFile* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_SetAllocationSize(EvtSetAllocationSize* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_GetFileInfo(EvtGetFileInfo* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_SetBasicFileInfo(EvtSetBasicFileInfo* eventInfo);
 
-		static NTSTATUS DOKAN_CALLBACK Dokan_FindFiles(DOKAN_FIND_FILES_EVENT* eventInfo);
-		static NTSTATUS DOKAN_CALLBACK Dokan_FindStreams(DOKAN_FIND_STREAMS_EVENT* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_FindFiles(EvtFindFiles* eventInfo);
+		static NTSTATUS DOKAN_CALLBACK Dokan_FindStreams(EvtFindStreams* eventInfo);
 };
