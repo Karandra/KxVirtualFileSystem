@@ -125,4 +125,9 @@
       <Filter>Resource Files</Filter>
     </Natvis>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\ChangeLog.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

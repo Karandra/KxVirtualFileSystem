@@ -1,0 +1,11 @@
+Version 1.1.1 - 29.09.2018
+- Added possibility to set file mappings.
+
+Version 1.1.0 - 11.05.2018
+- Added pre-caching.
+
+Version 1.0 - 10.01.2018
+- Added to caching dispatcher.
+
+Version 1.0a - 19.07.2017
+ - Initial release
