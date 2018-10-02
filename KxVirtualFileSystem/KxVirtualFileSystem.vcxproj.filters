@@ -31,6 +31,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\MultiMirror">
+      <UniqueIdentifier>{2b16b820-c233-448d-bc53-71026e6efc6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MultiMirror">
+      <UniqueIdentifier>{5f6ffab6-217f-479d-8008-130263d9e32c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Mirror\KxVFSMirror.h">
@@ -87,6 +93,12 @@
     <ClInclude Include="Source\Utility\KxCallAtScopeExit.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="Source\MultiMirror\KxVFSMultiMirror.h">
+      <Filter>Header Files\MultiMirror</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Mirror\KxVFSMirror.cpp">
@@ -119,6 +131,9 @@
     <ClCompile Include="Source\Utility\KxVFSFileHandle.cpp">
       <Filter>Source Files\Utility</Filter>
     </ClCompile>
+    <ClCompile Include="Source\MultiMirror\KxVFSMultiMirror.cpp">
+      <Filter>Source Files\MultiMirror</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="KxDynamicString.natvis">
@@ -129,5 +144,10 @@
     <Text Include="..\ChangeLog.txt">
       <Filter>Resource Files</Filter>
     </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="KxVirtualFileSystem.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Source\Convergence\KxVFSConvergence.h" />
     <ClInclude Include="Source\KxVFSIDispatcher.h" />
     <ClInclude Include="Source\KxVFSISearchDispatcher.h" />
@@ -29,6 +30,7 @@
     <ClInclude Include="Source\KxVFSIncludeDokan.h" />
     <ClInclude Include="Source\Mirror\KxVFSMirror.h" />
     <ClInclude Include="Source\Mirror\KxVFSMirrorStructs.h" />
+    <ClInclude Include="Source\MultiMirror\KxVFSMultiMirror.h" />
     <ClInclude Include="Source\Utility\KxCallAtScopeExit.h" />
     <ClInclude Include="Source\Utility\KxDynamicString.h" />
     <ClInclude Include="Source\Utility\KxFileFinder.h" />
@@ -61,6 +63,7 @@
       </ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="Source\Mirror\KxVFSMirror.cpp" />
+    <ClCompile Include="Source\MultiMirror\KxVFSMultiMirror.cpp" />
     <ClCompile Include="Source\Utility\KxDynamicString.cpp" />
     <ClCompile Include="Source\Utility\KxFileFinder.cpp" />
     <ClCompile Include="Source\Utility\KxVFSFileHandle.cpp" />
@@ -71,6 +74,9 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\ChangeLog.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="KxVirtualFileSystem.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F79583B3-ED13-48F1-BC7F-AFAC9756FD7C}</ProjectGuid>

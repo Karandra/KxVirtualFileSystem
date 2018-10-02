@@ -13,7 +13,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 const WCHAR* KxVFSService::GetLibraryVersion()
 {
-	return L"1.1.1";
+	return L"1.2";
 }
 const WCHAR* KxVFSService::GetDokanVersion()
 {

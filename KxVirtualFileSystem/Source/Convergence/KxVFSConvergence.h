@@ -96,7 +96,6 @@ class KxVFS_API KxVFSConvergence: public KxVFSMirror, public KxVFSISearchDispatc
 		bool IsINIFileNonExistent(const KxDynamicStringRef& requestedPath) const;
 		void AddINIFile(const KxDynamicStringRef& requestedPath);
 
-	private:
 		const RedirectionPathsListT& GetPaths() const
 		{
 			return m_RedirectionPaths;
