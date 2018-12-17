@@ -167,7 +167,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem.h</PrecompiledHeaderFile>
@@ -187,7 +187,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem.h</PrecompiledHeaderFile>
@@ -209,7 +209,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem.h</PrecompiledHeaderFile>
@@ -236,7 +236,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem.h</PrecompiledHeaderFile>
