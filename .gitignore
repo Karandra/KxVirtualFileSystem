@@ -1,0 +1,14 @@
+# VisualStudio files
+.vs/*
+*.vcxproj.user
+
+# Output binaries
+KxVirtualFileSystem/Bin/*
+KxVirtualFileSystem/Junk/*
+KxVirtualFileSystem/Release/*
+KxVirtualFileSystem/Debug/*
+
+# Other files
+*.pdb
+*.7z
+*.VC.db
