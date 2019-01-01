@@ -18,7 +18,7 @@ class KxVFS_API KxVFSService
 
 	public:
 		static const WCHAR* GetLibraryVersion();
-		static const WCHAR* GetDokanVersion();
+		static const WCHAR* GetDokanyVersion();
 
 	private:
 		static DWORD GetServiceStatus(SC_HANDLE serviceHandle);
