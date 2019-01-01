@@ -406,8 +406,8 @@ NTSTATUS KxVFSConvergence::OnCreateFile(EvtCreateFile& eventInfo)
 
 	DWORD fileAttributesAndFlags = 0;
 	DWORD creationDisposition = 0;
-	ACCESS_MASK genericDesiredAccess = Dokany2::DokanMapStandardToGenericAccess(eventInfo.DesiredAccess);
-	DokanMapKernelToUserCreateFileFlags(&eventInfo, &fileAttributesAndFlags, &creationDisposition);
+	ACCESS_MASK genericDesiredAccess = 0;
+	Dokany2::DokanMapKernelToUserCreateFileFlags(&eventInfo, &genericDesiredAccess, &fileAttributesAndFlags, &creationDisposition);
 
 	// When filePath is a directory, needs to change the flag so that the file can be opened.
 	DWORD fileAttributes = ::GetFileAttributesW(targetPath);

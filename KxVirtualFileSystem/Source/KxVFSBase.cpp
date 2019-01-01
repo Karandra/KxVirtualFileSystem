@@ -102,7 +102,7 @@ int KxVFSBase::DoMount()
 		// Allow mount to empty folders
 		if (KxVFSUtility::IsFolderEmpty(GetMountPoint()))
 		{
-			return DokanCreateFileSystem(&m_Options, &m_Operations, &m_Handle);
+			return Dokany2::DokanCreateFileSystem(&m_Options, &m_Operations, &m_Handle);
 		}
 		return DOKAN_MOUNT_ERROR;
 	}

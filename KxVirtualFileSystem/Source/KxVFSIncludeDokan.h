@@ -8,6 +8,8 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 #pragma warning(disable: 4005) // Macro redefinition
 
+#define _DOKANY2_STATIC_LIB 1
+
 extern "C"
 {
 	#pragma warning(push)
@@ -16,10 +18,13 @@ extern "C"
 	// Define _EXPORTING to link statically
 	namespace Dokany2
 	{
-		#define _EXPORTING
+		#define _EXPORTING 1
+
 		#include "Dokan/dokan.h"
 		#include "Dokan/fileinfo.h"
+
 		#undef _EXPORTING
+
 	}
 	#pragma warning(pop)
 }
