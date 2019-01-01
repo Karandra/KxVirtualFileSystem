@@ -13,22 +13,27 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 const WCHAR* KxVFSService::GetLibraryVersion()
 {
-	return L"1.2";
+	return L"1.2.0.1";
 }
-const WCHAR* KxVFSService::GetDokanVersion()
+const WCHAR* KxVFSService::GetDokanyVersion()
 {
-	static std::wstring ms_DokanVersion;
-	if (ms_DokanVersion.empty())
+	static std::wstring ms_DokanyVersion;
+	if (ms_DokanyVersion.empty())
 	{
 		WCHAR temp1[8] = {0};
 		WCHAR temp2[8] = {0};
-		wsprintfW(temp1, L"%d", DOKAN_VERSION);
-		int size = wsprintfW(temp2, L"%c.%c.%c", temp1[0], temp1[1], temp1[2]);
 
-		ms_DokanVersion.reserve(size);
-		ms_DokanVersion = temp2;
+		//wsprintfW(temp1, L"%d", DOKAN_VERSION);
+
+		// Return 2.0 for now because this is the used version of Dokany.
+		// It seems that 'DOKAN_VERSION' constant hasn't updated (maybe because it's beta).
+		wsprintfW(temp1, L"%d", 200);
+
+		int size = wsprintfW(temp2, L"%c.%c.%c", temp1[0], temp1[1], temp1[2]);
+		ms_DokanyVersion.reserve(size);
+		ms_DokanyVersion = temp2;
 	}
-	return ms_DokanVersion.c_str();
+	return ms_DokanyVersion.c_str();
 }
 
 DWORD KxVFSService::GetServiceStatus(SC_HANDLE serviceHandle)
