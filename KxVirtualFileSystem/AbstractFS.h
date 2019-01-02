@@ -38,6 +38,7 @@ namespace KxVFS
 
 			KxDynamicStringW m_MountPoint;
 			CriticalSection m_UnmountCS;
+			uint32_t m_Flags = 0;
 			bool m_IsMounted = false;
 
 		private:
@@ -49,7 +50,7 @@ namespace KxVFS
 			static const size_t MaxPathLength = 32768;
 			static const uint32_t DefFlags = 0;
 
-			AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t falgs = DefFlags);
+			AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t flags = DefFlags);
 			virtual ~AbstractFS();
 
 		public:
@@ -71,7 +72,7 @@ namespace KxVFS
 			bool SetMountPoint(KxDynamicStringRefW mountPoint);
 		
 			uint32_t GetFlags() const;
-			bool SetFlags(uint32_t falgs);
+			bool SetFlags(uint32_t flags);
 
 			NTSTATUS GetNtStatusByWin32ErrorCode(DWORD nWin32ErrorCode) const;
 			NTSTATUS GetNtStatusByWin32LastErrorCode() const;
