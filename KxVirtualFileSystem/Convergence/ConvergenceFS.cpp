@@ -258,8 +258,8 @@ namespace KxVFS
 		return requestedPath;
 	}
 
-	ConvergenceFS::ConvergenceFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t falgs)
-		:MirrorFS(vfsService, mountPoint, writeTarget, falgs)
+	ConvergenceFS::ConvergenceFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t flags)
+		:MirrorFS(vfsService, mountPoint, writeTarget, flags)
 	{
 	}
 	ConvergenceFS::~ConvergenceFS()

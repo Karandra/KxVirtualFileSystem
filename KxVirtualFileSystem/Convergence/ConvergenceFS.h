@@ -114,7 +114,7 @@ namespace KxVFS
 			}
 
 		public:
-			ConvergenceFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t falgs = DefFlags);
+			ConvergenceFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t flags = DefFlags);
 			virtual ~ConvergenceFS();
 
 		public:

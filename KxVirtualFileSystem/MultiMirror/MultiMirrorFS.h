@@ -46,7 +46,7 @@ namespace KxVFS
 			virtual void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 
 		public:
-			MultiMirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t falgs = DefFlags);
+			MultiMirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags = DefFlags);
 			virtual ~MultiMirrorFS();
 
 		protected:

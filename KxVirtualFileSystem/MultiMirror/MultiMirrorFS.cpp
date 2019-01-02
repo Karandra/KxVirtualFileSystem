@@ -36,8 +36,8 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	MultiMirrorFS::MultiMirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t falgs)
-		:ConvergenceFS(vfsService, mountPoint, source, falgs)
+	MultiMirrorFS::MultiMirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags)
+		:ConvergenceFS(vfsService, mountPoint, source, flags)
 	{
 	}
 	MultiMirrorFS::~MultiMirrorFS()
