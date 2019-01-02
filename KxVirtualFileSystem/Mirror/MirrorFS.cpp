@@ -895,7 +895,7 @@ namespace KxVFS
 		Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlapped->m_InternalOverlapped);
 		overlapped->m_FileHandle = mirrorContext;
 		overlapped->m_Context = &eventInfo;
-		overlapped->m_IOType = Mirror::Read;
+		overlapped->m_IOType = Mirror::IOOperationType::Read;
 
 		StartThreadpoolIo(mirrorContext->m_IOCompletion);
 		if (!ReadFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, (LPOVERLAPPED)overlapped))
@@ -994,7 +994,7 @@ namespace KxVFS
 		Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlapped->m_InternalOverlapped);
 		overlapped->m_FileHandle = mirrorContext;
 		overlapped->m_Context = &eventInfo;
-		overlapped->m_IOType = Mirror::Write;
+		overlapped->m_IOType = Mirror::IOOperationType::Write;
 
 		StartThreadpoolIo(mirrorContext->m_IOCompletion);
 		if (!WriteFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, (LPOVERLAPPED)overlapped))
@@ -1437,14 +1437,14 @@ namespace KxVFS
 
 		switch (overlapped->m_IOType)
 		{
-			case Mirror::Read:
+			case Mirror::IOOperationType::Read:
 			{
 				readFileEvent = (EvtReadFile*)overlapped->m_Context;
 				readFileEvent->NumberOfBytesRead = (DWORD)numberOfBytesTransferred;
 				DokanEndDispatchRead(readFileEvent, Dokany2::DokanNtStatusFromWin32(resultIO));
 				break;
 			}
-			case Mirror::Write:
+			case Mirror::IOOperationType::Write:
 			{
 				writeFileEvent = (EvtWriteFile*)overlapped->m_Context;
 				writeFileEvent->NumberOfBytesWritten = (DWORD)numberOfBytesTransferred;
