@@ -8,22 +8,25 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include <utility>
 #include <functional>
 
-template<class T> class KxCallAtScopeExit
+namespace KxVFS
 {
-	private:
-		T m_Functor;
+	template<class T> class KxCallAtScopeExit
+	{
+		private:
+			T m_Functor;
 
-	public:
-		KxCallAtScopeExit(const T& functor)
-			:m_Functor(functor)
-		{
-		}
-		KxCallAtScopeExit(T&& functor)
-			:m_Functor(std::move(functor))
-		{
-		}
-		~KxCallAtScopeExit()
-		{
-			(void)std::invoke(m_Functor);
-		}
-};
+		public:
+			KxCallAtScopeExit(const T& functor)
+				:m_Functor(functor)
+			{
+			}
+			KxCallAtScopeExit(T&& functor)
+				:m_Functor(std::move(functor))
+			{
+			}
+			~KxCallAtScopeExit()
+			{
+				(void)std::invoke(m_Functor);
+			}
+	};
+}

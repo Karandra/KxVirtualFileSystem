@@ -20,34 +20,37 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Source\Convergence\KxVFSConvergence.h" />
-    <ClInclude Include="Source\KxVFSIDispatcher.h" />
-    <ClInclude Include="Source\KxVFSISearchDispatcher.h" />
+    <ClInclude Include="Source\Convergence\ConvergenceFS.h" />
+    <ClInclude Include="Source\IRequestDispatcher.h" />
+    <ClInclude Include="Source\IEnumerationDispatcher.h" />
     <ClInclude Include="Source\KxVirtualFileSystem.h" />
-    <ClInclude Include="Source\KxVFSIncludeWindows.h" />
-    <ClInclude Include="Source\KxVFSBase.h" />
-    <ClInclude Include="Source\KxVFSService.h" />
-    <ClInclude Include="Source\KxVFSIncludeDokan.h" />
-    <ClInclude Include="Source\Mirror\KxVFSMirror.h" />
-    <ClInclude Include="Source\Mirror\KxVFSMirrorStructs.h" />
-    <ClInclude Include="Source\MultiMirror\KxVFSMultiMirror.h" />
+    <ClInclude Include="Source\IncludeWindows.h" />
+    <ClInclude Include="Source\BaseFS.h" />
+    <ClInclude Include="Source\Service.h" />
+    <ClInclude Include="Source\IncludeDokan.h" />
+    <ClInclude Include="Source\Mirror\MirrorFS.h" />
+    <ClInclude Include="Source\Mirror\MirrorStructs.h" />
+    <ClInclude Include="Source\MultiMirror\MultiMirrorFS.h" />
+    <ClInclude Include="Source\Utility.h" />
     <ClInclude Include="Source\Utility\KxCallAtScopeExit.h" />
-    <ClInclude Include="Source\Utility\KxDynamicString.h" />
+    <ClInclude Include="Source\Utility\KxComparator.h" />
+    <ClInclude Include="Source\Utility\KxDynamicString\KxBasicDynamicString.h" />
+    <ClInclude Include="Source\Utility\KxDynamicString\KxDynamicString.h" />
     <ClInclude Include="Source\Utility\KxFileFinder.h" />
-    <ClInclude Include="Source\Utility\KxVFSContext.h" />
-    <ClInclude Include="Source\Utility\KxVFSCriticalSection.h" />
-    <ClInclude Include="Source\Utility\KxVFSFileHandle.h" />
-    <ClInclude Include="Source\Utility\KxVFSServiceManager.h" />
-    <ClInclude Include="Source\Utility\KxVFSUtility.h" />
+    <ClInclude Include="Source\Utility\IContext.h" />
+    <ClInclude Include="Source\Utility\CriticalSection.h" />
+    <ClInclude Include="Source\Utility\FileHandle.h" />
+    <ClInclude Include="Source\Utility\ServiceManager.h" />
+    <ClInclude Include="Source\Utility\Common.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Convergence\KxVFSConvergence.cpp" />
+    <ClCompile Include="Source\Convergence\ConvergenceFS.cpp" />
     <ClCompile Include="Source\KxVirtualFileSystemMain.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source\KxVFSBase.cpp" />
-    <ClCompile Include="Source\KxVFSService.cpp" />
+    <ClCompile Include="Source\AbstractFS.cpp" />
+    <ClCompile Include="Source\Service.cpp" />
     <ClCompile Include="Source\KxVirtualFileSystem.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -62,21 +65,21 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
       </ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="Source\Mirror\KxVFSMirror.cpp" />
-    <ClCompile Include="Source\MultiMirror\KxVFSMultiMirror.cpp" />
-    <ClCompile Include="Source\Utility\KxDynamicString.cpp" />
+    <ClCompile Include="Source\Mirror\MirrorFS.cpp" />
+    <ClCompile Include="Source\MultiMirror\MultiMirrorFS.cpp" />
+    <ClCompile Include="Source\Utility\KxDynamicString\KxDynamicString.cpp" />
     <ClCompile Include="Source\Utility\KxFileFinder.cpp" />
-    <ClCompile Include="Source\Utility\KxVFSFileHandle.cpp" />
-    <ClCompile Include="Source\Utility\KxVFSUtility.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="KxDynamicString.natvis" />
+    <ClCompile Include="Source\Utility\FileHandle.cpp" />
+    <ClCompile Include="Source\Utility\Common.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\ChangeLog.txt" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KxVirtualFileSystem.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Source\Utility\KxDynamicString\KxBasicDynamicString.natvis" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F79583B3-ED13-48F1-BC7F-AFAC9756FD7C}</ProjectGuid>
@@ -131,14 +134,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>
+    </LinkIncremental>
     <IntDir>$(ProjectDir)Junk\$(Configuration) $(PlatformShortName)\</IntDir>
     <LibraryPath>$(ProjectDir)LibsD;$(LibraryPath)</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)Bin\Debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>
+    </LinkIncremental>
     <IntDir>$(ProjectDir)Junk\$(Configuration) $(PlatformShortName)\</IntDir>
     <LibraryPath>$(ProjectDir)Libs64D;$(LibraryPath)</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
@@ -146,7 +151,8 @@
     <TargetName>$(ProjectName) x64</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>
+    </LinkIncremental>
     <IntDir>$(ProjectDir)Junk\$(Configuration) $(PlatformShortName)\</IntDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
@@ -154,7 +160,8 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LinkIncremental>false</LinkIncremental>
+    <LinkIncremental>
+    </LinkIncremental>
     <IntDir>$(ProjectDir)Junk\$(Configuration) $(PlatformShortName)\</IntDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
@@ -168,7 +175,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -188,9 +195,9 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -210,7 +217,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -237,9 +244,9 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalOptions>/std:c++latest %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(ProjectDir)Source;$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
