@@ -14,7 +14,7 @@ namespace KxVFS
 {
 	class Service;
 
-	class KxVFS_API AbstractFS: public KxVFSEvents, public IRequestDispatcher
+	class KxVFS_API AbstractFS: public IRequestDispatcher
 	{
 		public:
 			static bool UnMountDirectory(const WCHAR* mountPoint);

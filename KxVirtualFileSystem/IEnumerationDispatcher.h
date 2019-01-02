@@ -17,7 +17,7 @@ namespace KxVFS
 			using TEnumerationVector = std::vector<WIN32_FIND_DATA>;
 
 		protected:
-			void SendEnumerationVector(KxVFSEvents::EvtFindFiles* eventInfo, const TEnumerationVector& items)
+			void SendEnumerationVector(EvtFindFiles* eventInfo, const TEnumerationVector& items)
 			{
 				for (const WIN32_FIND_DATA& item: items)
 				{
