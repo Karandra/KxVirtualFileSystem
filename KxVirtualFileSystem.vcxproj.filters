@@ -90,9 +90,6 @@
     <ClInclude Include="KxVirtualFileSystem\Convergence\ConvergenceFS.h">
       <Filter>Header Files\Convergence</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\BaseFS.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\Service.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -116,6 +113,9 @@
     </ClInclude>
     <ClInclude Include="Resource.h">
       <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\AbstractFS.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

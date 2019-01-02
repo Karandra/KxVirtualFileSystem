@@ -19,13 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="KxVirtualFileSystem\AbstractFS.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="KxVirtualFileSystem\Convergence\ConvergenceFS.h" />
     <ClInclude Include="KxVirtualFileSystem\IRequestDispatcher.h" />
     <ClInclude Include="KxVirtualFileSystem\IEnumerationDispatcher.h" />
     <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h" />
     <ClInclude Include="KxVirtualFileSystem\IncludeWindows.h" />
-    <ClInclude Include="KxVirtualFileSystem\BaseFS.h" />
     <ClInclude Include="KxVirtualFileSystem\Service.h" />
     <ClInclude Include="KxVirtualFileSystem\IncludeDokan.h" />
     <ClInclude Include="KxVirtualFileSystem\Mirror\MirrorFS.h" />
