@@ -28,11 +28,11 @@ int _tmain()
 
 	//MirrorFS* mirror = new MirrorFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim", 0, ULONG_MAX);
 	
-	MirrorFS* mirrorGC = new MirrorFS(service, L"C:\\Users\\Kerber\\Documents\\My Games\\Skyrim", L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\VirtualGameConfig", 0, ULONG_MAX);
-	MirrorFS* mirrorPL = new MirrorFS(service, L"C:\\Users\\Kerber\\AppData\\Local\\Skyrim", L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\PluginsOrder", 0, ULONG_MAX);
+	MirrorFS* mirrorGC = new MirrorFS(service, L"C:\\Users\\Kerber\\Documents\\My Games\\Skyrim", L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\VirtualGameConfig");
+	MirrorFS* mirrorPL = new MirrorFS(service, L"C:\\Users\\Kerber\\AppData\\Local\\Skyrim", L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\PluginsOrder");
 
-	ConvergenceFS* mainVFS = new ConvergenceFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite", 0, ULONG_MAX);
-	mainVFS->SetCanDeleteInVirtualFolder(true);
+	ConvergenceFS* mainVFS = new ConvergenceFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
+	mainVFS->AllowDeleteInVirtualFolder(true);
 	mainVFS->AddVirtualFolder(L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
 	//mainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\TestData");
 	mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\979ba932bb6d9e9b8049c2fda6fc255d\\ModFiles");

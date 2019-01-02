@@ -47,7 +47,7 @@ namespace KxVFS
 			virtual void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 
 		public:
-			MirrorFS(Service* vfsService, const WCHAR* mountPoint, const WCHAR* source, ULONG falgs = DefFlags, ULONG requestTimeout = DefRequestTimeout);
+			MirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t falgs = DefFlags);
 			virtual ~MirrorFS();
 
 		public:

@@ -48,9 +48,8 @@ namespace KxVFS
 		public:
 			static const size_t MaxPathLength = 32768;
 			static const uint32_t DefFlags = 0;
-			static const uint32_t DefRequestTimeout = 0;
 
-			AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t falgs = DefFlags, uint32_t requestTimeout = DefRequestTimeout);
+			AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t falgs = DefFlags);
 			virtual ~AbstractFS();
 
 		public:

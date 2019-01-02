@@ -238,8 +238,8 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	MirrorFS::MirrorFS(Service* vfsService, const WCHAR* mountPoint, const WCHAR* source, ULONG falgs, ULONG requestTimeout)
-		:AbstractFS(vfsService, mountPoint, falgs, requestTimeout), m_Source(source)
+	MirrorFS::MirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t falgs)
+		:AbstractFS(vfsService, mountPoint, falgs), m_Source(source)
 	{
 	}
 	MirrorFS::~MirrorFS()

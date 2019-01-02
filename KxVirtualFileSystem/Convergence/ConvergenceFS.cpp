@@ -261,8 +261,8 @@ namespace KxVFS
 		return requestedPath;
 	}
 
-	ConvergenceFS::ConvergenceFS(Service* vfsService, const WCHAR* mountPoint, const WCHAR* writeTarget, ULONG falgs, ULONG requestTimeout)
-		:MirrorFS(vfsService, mountPoint, writeTarget, falgs, requestTimeout)
+	ConvergenceFS::ConvergenceFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t falgs)
+		:MirrorFS(vfsService, mountPoint, writeTarget, falgs)
 	{
 	}
 	ConvergenceFS::~ConvergenceFS()
@@ -319,11 +319,11 @@ namespace KxVFS
 		return false;
 	}
 
-	bool ConvergenceFS::SetCanDeleteInVirtualFolder(bool value)
+	bool ConvergenceFS::AllowDeleteInVirtualFolder(bool value)
 	{
 		if (!IsMounted())
 		{
-			m_AllowDeleteInVirtualFolders = value;
+			m_IsDeleteInVirtualFoldersAllowed = value;
 			return true;
 		}
 		return false;
@@ -675,7 +675,7 @@ namespace KxVFS
 					CloseHandle(mirrorContext->m_FileHandle);
 					mirrorContext->m_FileHandle = nullptr;
 
-					if (CanDeleteInVirtualFolder() || !IsPathInVirtualFolder(eventInfo.FileName))
+					if (IsDeleteInVirtualFoldersAllowed() || !IsPathInVirtualFolder(eventInfo.FileName))
 					{
 						if (eventInfo.DokanFileInfo->DeleteOnClose)
 						{
@@ -721,7 +721,7 @@ namespace KxVFS
 				mirrorContext->m_FileHandle = nullptr;
 				mirrorContext->m_IsCleanedUp = TRUE;
 
-				if (CanDeleteInVirtualFolder() || !IsPathInVirtualFolder(eventInfo.FileName))
+				if (IsDeleteInVirtualFoldersAllowed() || !IsPathInVirtualFolder(eventInfo.FileName))
 				{
 					if (eventInfo.DokanFileInfo->DeleteOnClose)
 					{
@@ -783,7 +783,7 @@ namespace KxVFS
 
 			if (eventInfo.DokanFileInfo->IsDirectory)
 			{
-				if (CanDeleteInVirtualFolder() || !IsPathInVirtualFolder(eventInfo.FileName))
+				if (IsDeleteInVirtualFoldersAllowed() || !IsPathInVirtualFolder(eventInfo.FileName))
 				{
 					KxDynamicStringW targetPath;
 					ResolveLocation(eventInfo.FileName, targetPath);

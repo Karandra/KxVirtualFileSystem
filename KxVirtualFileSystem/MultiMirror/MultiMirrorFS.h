@@ -19,9 +19,6 @@ namespace KxVFS
 	class KxVFS_API MultiMirrorFS: public ConvergenceFS
 	{
 		private:
-			using RedirectionPathsListT = std::vector<std::wstring>;
-
-		private:
 			bool UpdateDispatcherIndexUnlocked(const KxDynamicStringW& requestedPath, const KxDynamicStringW& targetPath) = delete;
 			void UpdateDispatcherIndexUnlocked(const KxDynamicStringW& requestedPath) = delete;
 			bool UpdateDispatcherIndex(const KxDynamicStringW& requestedPath, const KxDynamicStringW& targetPath) = delete;
@@ -33,8 +30,8 @@ namespace KxVFS
 			bool IsINIFileNonExistent(KxDynamicStringRefW requestedPath) const = delete;
 			void AddINIFile(KxDynamicStringRefW requestedPath) = delete;
 
-			bool CanDeleteInVirtualFolder() const = delete;
-			bool SetCanDeleteInVirtualFolder(bool value) = delete;
+			bool IsDeleteInVirtualFoldersAllowed() const = delete;
+			bool AllowDeleteInVirtualFolder(bool value) = delete;
 
 			void BuildDispatcherIndex() = delete;
 			void SetDispatcherIndex(const ExternalDispatcherIndexT& index) = delete;
@@ -49,7 +46,7 @@ namespace KxVFS
 			virtual void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 
 		public:
-			MultiMirrorFS(Service* vfsService, const WCHAR* mountPoint, const WCHAR* source, ULONG falgs = DefFlags, ULONG requestTimeout = DefRequestTimeout);
+			MultiMirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t falgs = DefFlags);
 			virtual ~MultiMirrorFS();
 
 		protected:

@@ -29,7 +29,7 @@ namespace KxVFS
 
 		private:
 			RedirectionPathsListT m_VirtualFolders;
-			bool m_AllowDeleteInVirtualFolders = false;
+			bool m_IsDeleteInVirtualFoldersAllowed = false;
 
 			DispatcherIndexT m_RequestDispatcherIndex;
 			mutable CriticalSection m_RequestDispatcherIndexCS;
@@ -114,7 +114,7 @@ namespace KxVFS
 			}
 
 		public:
-			ConvergenceFS(Service* vfsService, const WCHAR* mountPoint, const WCHAR* writeTarget, ULONG falgs = DefFlags, ULONG requestTimeout = DefRequestTimeout);
+			ConvergenceFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t falgs = DefFlags);
 			virtual ~ConvergenceFS();
 
 		public:
@@ -130,11 +130,11 @@ namespace KxVFS
 			bool AddVirtualFolder(KxDynamicStringRefW path);
 			bool ClearVirtualFolders();
 
-			bool CanDeleteInVirtualFolder() const
+			bool IsDeleteInVirtualFoldersAllowed() const
 			{
-				return m_AllowDeleteInVirtualFolders;
+				return m_IsDeleteInVirtualFoldersAllowed;
 			}
-			bool SetCanDeleteInVirtualFolder(bool value);
+			bool AllowDeleteInVirtualFolder(bool value);
 
 			void BuildDispatcherIndex();
 			void SetDispatcherIndex(const ExternalDispatcherIndexT& index)

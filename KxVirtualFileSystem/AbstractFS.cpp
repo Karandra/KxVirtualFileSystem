@@ -127,7 +127,7 @@ namespace KxVFS
 		return false;
 	}
 
-	AbstractFS::AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t falgs, uint32_t requestTimeout)
+	AbstractFS::AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t falgs)
 		:m_ServiceInstance(vfsService), m_MountPoint(mountPoint)
 	{
 		// Options
@@ -136,7 +136,7 @@ namespace KxVFS
 		m_Options.ThreadCount = 0;
 		m_Options.MountPoint = mountPoint.data();
 		m_Options.Options = falgs;
-		m_Options.Timeout = requestTimeout;
+		m_Options.Timeout = 0;
 
 		// Operations
 		m_Operations.Mounted = Dokan_Mount;
