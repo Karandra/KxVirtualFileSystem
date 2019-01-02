@@ -11,6 +11,26 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/Utility.h"
 #pragma comment(lib, "Dokan2.lib")
 
+namespace
+{
+	void InitDokany()
+	{
+		Dokany2::DokanInit(nullptr);
+	}
+	void UninitDokany()
+	{
+		// If VFS fails, it will uninitialize itself. I have no way to tell if it failed, so just ignore that.
+		__try
+		{
+			Dokany2::DokanShutdown();
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			// DOKAN_EXCEPTION_NOT_INITIALIZED was thrown
+		}
+	}
+}
+
 namespace KxVFS
 {
 	KxDynamicStringW Service::GetLibraryVersion()
@@ -173,12 +193,12 @@ namespace KxVFS
 		m_ServiceHandle = ::OpenServiceW(m_ServiceManager, m_ServiceName.c_str(), SERVICE_ALL_ACCESS|DELETE);
 		m_HasSeSecurityNamePrivilege = AddSeSecurityNamePrivilege();
 
-		Dokany2::DokanInit(nullptr);
+		InitDokany();
 	}
 	Service::~Service()
 	{
 		CloseServiceHandle(m_ServiceHandle);
-		Dokany2::DokanShutdown();
+		UninitDokany();
 	}
 
 	bool Service::IsOK() const
