@@ -91,21 +91,27 @@ namespace KxVFS
 	{
 		OutputDebugStringA(__FUNCTION__);
 		OutputDebugStringA(": ");
-		OutputDebugStringA(IsMounted() ? "allowed" : "disallowed");
+		OutputDebugStringA(!IsMounted() ? "allowed" : "disallowed");
 		OutputDebugStringA("\r\n");
 
 		if (!IsMounted())
 		{
 			// Mount point is not a drive, remove folder if empty and create a new one
-			if (m_MountPoint.length() > 2)
+			if (m_MountPoint.length() > 2 && ::RemoveDirectoryW(m_MountPoint.data()))
 			{
-				::RemoveDirectoryW(m_MountPoint.data());
 				Utility::CreateFolderTree(m_MountPoint);
 			}
 
 			// Allow mount to empty folders
 			if (Utility::IsFolderEmpty(m_MountPoint))
 			{
+				// Update options
+				m_Options.ThreadCount = 0;
+				m_Options.MountPoint = m_MountPoint.data();
+				m_Options.Options = m_Flags;
+				m_Options.Timeout = 0;
+
+				// Create file system
 				return Dokany2::DokanCreateFileSystem(&m_Options, &m_Operations, &m_Handle);
 			}
 			return DOKAN_MOUNT_ERROR;
@@ -127,16 +133,12 @@ namespace KxVFS
 		return false;
 	}
 
-	AbstractFS::AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t falgs)
-		:m_ServiceInstance(vfsService), m_MountPoint(mountPoint)
+	AbstractFS::AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t flags)
+		:m_ServiceInstance(vfsService), m_MountPoint(mountPoint), m_Flags(flags)
 	{
 		// Options
 		m_Options.GlobalContext = reinterpret_cast<ULONG64>(this);
 		m_Options.Version = DOKAN_VERSION;
-		m_Options.ThreadCount = 0;
-		m_Options.MountPoint = mountPoint.data();
-		m_Options.Options = falgs;
-		m_Options.Timeout = 0;
 
 		// Operations
 		m_Operations.Mounted = Dokan_Mount;
@@ -232,13 +234,13 @@ namespace KxVFS
 
 	uint32_t AbstractFS::GetFlags() const
 	{
-		return m_Options.Options;
+		return m_Flags;
 	}
-	bool AbstractFS::SetFlags(uint32_t falgs)
+	bool AbstractFS::SetFlags(uint32_t flags)
 	{
 		if (!IsMounted())
 		{
-			m_Options.Options = falgs;
+			m_Flags = flags;
 			return true;
 		}
 		return false;
