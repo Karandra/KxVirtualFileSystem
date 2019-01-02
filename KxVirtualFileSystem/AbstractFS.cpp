@@ -97,8 +97,9 @@ namespace KxVFS
 		if (!IsMounted())
 		{
 			// Mount point is not a drive, remove folder if empty and create a new one
-			if (m_MountPoint.length() > 2 && ::RemoveDirectoryW(m_MountPoint.data()))
+			if (m_MountPoint.length() > 2)
 			{
+				::RemoveDirectoryW(m_MountPoint.data());
 				Utility::CreateFolderTree(m_MountPoint);
 			}
 
