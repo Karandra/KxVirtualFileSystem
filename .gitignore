@@ -3,10 +3,10 @@
 *.vcxproj.user
 
 # Output binaries
-KxVirtualFileSystem/Bin/*
-KxVirtualFileSystem/Junk/*
-KxVirtualFileSystem/Release/*
-KxVirtualFileSystem/Debug/*
+Bin/*
+Junk/*
+Release/*
+Debug/*
 
 # Other files
 *.pdb
