@@ -5,11 +5,11 @@ You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
 #pragma once
-#include "KxVirtualFileSystem.h"
-#include "AbstractFS.h"
+#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/AbstractFS.h"
+#include "KxVirtualFileSystem/IRequestDispatcher.h"
+#include "KxVirtualFileSystem/Utility.h"
 #include "MirrorStructs.h"
-#include "IRequestDispatcher.h"
-#include "Utility.h"
 
 namespace KxVFS
 {

@@ -4,12 +4,12 @@ Copyright © 2018 Kerber. All rights reserved.
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
-#include "KxVirtualFileSystem.h"
-#include "AbstractFS.h"
-#include "Service.h"
+#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/AbstractFS.h"
+#include "KxVirtualFileSystem/Service.h"
+#include "KxVirtualFileSystem/Utility.h"
 #include "MirrorFS.h"
 #include "MirrorStructs.h"
-#include "Utility.h"
 #include <AclAPI.h>
 #pragma warning (disable: 4267)
 

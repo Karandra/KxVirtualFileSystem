@@ -1,4 +1,4 @@
-#include "KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxDynamicString.h"
 
 namespace KxVFS

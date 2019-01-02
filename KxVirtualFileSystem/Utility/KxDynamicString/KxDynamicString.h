@@ -1,6 +1,6 @@
 #pragma once
-#include "KxVirtualFileSystem.h"
-#include "Utility/KxDynamicString/KxBasicDynamicString.h"
+#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Utility/KxDynamicString/KxBasicDynamicString.h"
 
 namespace KxVFS
 {

@@ -5,9 +5,9 @@ You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
 #pragma once
-#include "KxVirtualFileSystem.h"
-#include "IncludeWindows.h"
-#include "Utility.h"
+#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/IncludeWindows.h"
+#include "KxVirtualFileSystem/Utility.h"
 
 namespace KxVFS
 {
@@ -74,13 +74,7 @@ namespace KxVFS
 				return false;
 			}
 		
-			bool SetDeleteOnClose(bool deleteOnClose)
-			{
-				FILE_DISPOSITION_INFO fileDispositionInfo = {0};
-				fileDispositionInfo.DeleteFile = deleteOnClose;
-
-				return ::SetFileInformationByHandle(m_Handle, FileDispositionInfo, &fileDispositionInfo, sizeof(FILE_DISPOSITION_INFO));
-			}
+			bool SetDeleteOnClose(bool deleteOnClose);
 			int64_t GetSize() const
 			{
 				LARGE_INTEGER size = {0};
