@@ -24,7 +24,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "IncludeWindows.h"
 #pragma warning(disable: 4251) // DLL interface
 
-#define KxVFS_USE_ASYNC_IO 0
+#define KxVFS_USE_ASYNC_IO 1
 
 #if defined KxVFS_EXPORTS
 	#define KxVFS_CEXPORT extern "C" __declspec(dllexport)
