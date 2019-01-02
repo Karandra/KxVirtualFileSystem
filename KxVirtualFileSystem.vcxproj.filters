@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Mirror">
+      <UniqueIdentifier>{1b87be39-8fa9-4edd-9603-e19b1fd6132b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Convergence">
+      <UniqueIdentifier>{9b657c18-f311-4a10-90f9-fdae7c786c15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utility">
+      <UniqueIdentifier>{739a5c77-f200-405b-beae-03cf455a6d6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Mirror">
+      <UniqueIdentifier>{35e27e12-1131-4185-bd25-bd8a270ca5ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Convergence">
+      <UniqueIdentifier>{1989ea99-c474-4f90-ba4a-144a906b125a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utility">
+      <UniqueIdentifier>{474bcaa3-e6fd-4afa-8ee9-686e785842e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\MultiMirror">
+      <UniqueIdentifier>{2b16b820-c233-448d-bc53-71026e6efc6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MultiMirror">
+      <UniqueIdentifier>{5f6ffab6-217f-479d-8008-130263d9e32c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utility\KxDynamicString">
+      <UniqueIdentifier>{a9ab3b06-ffff-4b25-b353-fdd58a63feff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utility\KxDynamicString">
+      <UniqueIdentifier>{678dc3ac-d319-4ac3-814c-4191414497fe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\KxDynamicString">
+      <UniqueIdentifier>{7e4d1825-621d-4234-8b9a-82c36c7c960a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileFinder.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxCallAtScopeExit.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxComparator.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\ServiceManager.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\FileHandle.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\Common.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\CriticalSection.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\IContext.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Mirror\MirrorStructs.h">
+      <Filter>Header Files\Mirror</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Mirror\MirrorFS.h">
+      <Filter>Header Files\Mirror</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\MultiMirror\MultiMirrorFS.h">
+      <Filter>Header Files\MultiMirror</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Convergence\ConvergenceFS.h">
+      <Filter>Header Files\Convergence</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\BaseFS.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Service.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\IncludeWindows.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\IncludeDokan.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\IEnumerationDispatcher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\IRequestDispatcher.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxDynamicString\KxBasicDynamicString.h">
+      <Filter>Header Files\Utility\KxDynamicString</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxDynamicString\KxDynamicString.h">
+      <Filter>Header Files\Utility\KxDynamicString</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystemMain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileFinder.cpp">
+      <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\FileHandle.cpp">
+      <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\Common.cpp">
+      <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Mirror\MirrorFS.cpp">
+      <Filter>Source Files\Mirror</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\MultiMirror\MultiMirrorFS.cpp">
+      <Filter>Source Files\MultiMirror</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Convergence\ConvergenceFS.cpp">
+      <Filter>Source Files\Convergence</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Service.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\AbstractFS.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\KxDynamicString\KxDynamicString.cpp">
+      <Filter>Source Files\Utility\KxDynamicString</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\ChangeLog.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="KxVirtualFileSystem.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="KxVirtualFileSystem\Utility\KxDynamicString\KxBasicDynamicString.natvis">
+      <Filter>Resource Files\KxDynamicString</Filter>
+    </Natvis>
+  </ItemGroup>
+</Project>
