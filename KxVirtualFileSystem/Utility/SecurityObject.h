@@ -9,7 +9,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/IncludeWindows.h"
 #include "KxVirtualFileSystem/Utility.h"
 
-namespace KxVFS
+namespace KxVFS::Utility
 {
 	class [[nodiscard]] SecurityObject
 	{
