@@ -6,6 +6,8 @@ along with KxFramework. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
 #pragma once
 #include "KxVirtualFileSystem/Utility.h"
+#include <unordered_set>
+#include <unordered_map>
 
 namespace KxVFS::Utility::Comparator::Internal
 {
@@ -90,4 +92,13 @@ namespace KxVFS::Utility::Comparator
 			return hashValue;
 		}
 	};
+}
+
+namespace KxVFS::Utility::Comparator
+{
+	using UnorderedMap = std::unordered_map<KxDynamicStringW, KxDynamicStringW, StringHash, StringEqualTo>;
+	using UnorderedMapNoCase = std::unordered_map<KxDynamicStringW, KxDynamicStringW, StringHashOnCase, StringEqualToNoCase>;
+
+	using UnorderedSet = std::unordered_set<KxDynamicStringW, StringHash, StringEqualTo>;
+	using UnorderedSetNoCase = std::unordered_set<KxDynamicStringW, StringHashOnCase, StringEqualToNoCase>;
 }
