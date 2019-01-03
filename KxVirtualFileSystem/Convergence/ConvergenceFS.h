@@ -29,7 +29,6 @@ namespace KxVFS
 
 		private:
 			RedirectionPathsListT m_VirtualFolders;
-			bool m_IsDeleteInVirtualFoldersAllowed = false;
 
 			DispatcherIndexT m_RequestDispatcherIndex;
 			mutable CriticalSection m_RequestDispatcherIndexCS;
@@ -60,7 +59,8 @@ namespace KxVFS
 			void ProcessSESecurityPrivilege(bool hasSESecurityPrivilege, PSECURITY_INFORMATION securityInformation) const;
 
 			// IRequestDispatcher
-			virtual void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
+			void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
+			bool TryDispatchRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) const;
 
 			bool UpdateDispatcherIndexUnlocked(KxDynamicStringRefW, KxDynamicStringRefW targetPath);
 			void UpdateDispatcherIndexUnlocked(KxDynamicStringRefW);
@@ -75,8 +75,6 @@ namespace KxVFS
 				CriticalSectionLocker lock(m_RequestDispatcherIndexCS);
 				UpdateDispatcherIndexUnlocked(requestedPath);
 			}
-		
-			bool TryDispatchRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) const;
 
 			// IEnumerationDispatcher
 			TEnumerationVector* GetEnumerationVector(KxDynamicStringRefW requestedPath) override;
@@ -118,7 +116,7 @@ namespace KxVFS
 			virtual ~ConvergenceFS();
 
 		public:
-			virtual int Mount() override;
+			virtual FSError Mount() override;
 			virtual bool UnMount() override;
 
 			KxDynamicStringRefW GetWriteTarget() const
@@ -129,12 +127,6 @@ namespace KxVFS
 		
 			bool AddVirtualFolder(KxDynamicStringRefW path);
 			bool ClearVirtualFolders();
-
-			bool IsDeleteInVirtualFoldersAllowed() const
-			{
-				return m_IsDeleteInVirtualFoldersAllowed;
-			}
-			bool AllowDeleteInVirtualFolder(bool value);
 
 			void BuildDispatcherIndex();
 			void SetDispatcherIndex(const ExternalDispatcherIndexT& index)
@@ -147,19 +139,33 @@ namespace KxVFS
 			}
 
 		protected:
-			virtual NTSTATUS OnMount(EvtMounted& eventInfo) override;
-			virtual NTSTATUS OnUnMount(EvtUnMounted& eventInfo) override;
+			template<class TEventInfo> void OnEvent(TEventInfo& eventInfo)
+			{
+				UpdateDispatcherIndex(eventInfo.FileName);
+				InvalidateSearchDispatcherVectorForFile(eventInfo.FileName);
+			}
 
-			virtual NTSTATUS OnCreateFile(EvtCreateFile& eventInfo) override;
-			virtual NTSTATUS OnCloseFile(EvtCloseFile& eventInfo) override;
-			virtual NTSTATUS OnCleanUp(EvtCleanUp& eventInfo) override;
-			virtual NTSTATUS OnMoveFile(EvtMoveFile& eventInfo) override;
-			virtual NTSTATUS OnCanDeleteFile(EvtCanDeleteFile& eventInfo) override;
+			void OnFileClosed(EvtCloseFile& eventInfo, const KxDynamicStringW& tergetPath) override
+			{
+				OnEvent(eventInfo);
+			}
+			void OnFileCleanedUp(EvtCleanUp& eventInfo, const KxDynamicStringW& tergetPath) override
+			{
+				OnEvent(eventInfo);
+			}
+			void OnDirectoryDeleted(EvtCanDeleteFile& eventInfo, const KxDynamicStringW& tergetPath) override
+			{
+				OnEvent(eventInfo);
+			}
 
-			virtual NTSTATUS OnReadFile(EvtReadFile& eventInfo) override;
-			virtual NTSTATUS OnWriteFile(EvtWriteFile& eventInfo) override;
+		protected:
+			NTSTATUS OnCreateFile(EvtCreateFile& eventInfo) override;
+			NTSTATUS OnMoveFile(EvtMoveFile& eventInfo) override;
+
+			NTSTATUS OnReadFile(EvtReadFile& eventInfo) override;
+			NTSTATUS OnWriteFile(EvtWriteFile& eventInfo) override;
 
 			DWORD OnFindFilesAux(const KxDynamicStringW& path, EvtFindFiles& eventInfo, Utility::StringSearcherHash& hashStore, TEnumerationVector* searchIndex);
-			virtual NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
+			NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
 	};
 }
