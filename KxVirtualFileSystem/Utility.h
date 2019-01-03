@@ -18,6 +18,8 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Utility/KxComparator.h"
 
 #include "Utility/IContext.h"
+#include "Utility/HandleWrapper.h"
 #include "Utility/FileHandle.h"
+#include "Utility/TokenHandle.h"
 #include "Utility/ServiceManager.h"
 #include "Utility/CriticalSection.h"
