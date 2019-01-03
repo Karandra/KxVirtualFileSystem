@@ -87,7 +87,7 @@ namespace KxVFS::Utility::Comparator
 			size_t hashValue = 0;
 			for (wchar_t c: value)
 			{
-				hash_combine(hashValue, reinterpret_cast<wchar_t>(::CharLowerW(reinterpret_cast<LPWSTR>(c))));
+				hash_combine(hashValue, Utility::CharToLower(c));
 			}
 			return hashValue;
 		}

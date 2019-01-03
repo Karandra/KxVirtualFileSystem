@@ -102,13 +102,43 @@ namespace KxVFS::Utility
 
 namespace KxVFS::Utility
 {
+	inline char CharToLower(char c)
+	{
+		#pragma warning(suppress: 4312) // 'operation' : conversion from 'type1' to 'type2' of greater size
+		#pragma warning(suppress: 4302) // 'conversion' : truncation from 'type 1' to 'type 2'
+		return reinterpret_cast<char>(::CharLowerA(reinterpret_cast<LPSTR>(c)));
+	}
+	inline char CharToUpper(char c)
+	{
+		#pragma warning(suppress: 4312) // 'operation' : conversion from 'type1' to 'type2' of greater size
+		#pragma warning(suppress: 4302) // 'conversion' : truncation from 'type 1' to 'type 2'
+		return reinterpret_cast<char>(::CharLowerA(reinterpret_cast<LPSTR>(c)));
+	}
+	inline wchar_t CharToLower(wchar_t c)
+	{
+		#pragma warning(suppress: 4312) // 'operation' : conversion from 'type1' to 'type2' of greater size
+		#pragma warning(suppress: 4302) // 'conversion' : truncation from 'type 1' to 'type 2'
+		return reinterpret_cast<wchar_t>(::CharLowerW(reinterpret_cast<LPWSTR>(c)));
+	}
+	inline wchar_t CharToUpper(wchar_t c)
+	{
+		#pragma warning(suppress: 4312) // 'operation' : conversion from 'type1' to 'type2' of greater size
+		#pragma warning(suppress: 4302) // 'conversion' : truncation from 'type 1' to 'type 2'
+		return reinterpret_cast<wchar_t>(::CharLowerW(reinterpret_cast<LPWSTR>(c)));
+	}
+}
+
+namespace KxVFS::Utility
+{
 	template<class... Args> size_t DebugPrint(const wchar_t* fmt, Args&&... arg)
 	{
 		KxDynamicStringW output = KxDynamicStringW::Format(fmt, std::forward<Args>(arg)...);
 
 		output += L"\r\n";
 		::OutputDebugStringW(output.data());
-		::_putws(output.data());
+
+		DWORD writtenCount = 0;
+		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), output.data(), output.size(), &writtenCount, nullptr);
 		return output.length();
 	}
 };
