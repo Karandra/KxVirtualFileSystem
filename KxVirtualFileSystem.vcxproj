@@ -22,6 +22,7 @@
     <ClInclude Include="KxVirtualFileSystem\AbstractFS.h" />
     <ClInclude Include="KxVirtualFileSystem\FSError.h" />
     <ClInclude Include="KxVirtualFileSystem\UndefWindows.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\DispatcherMapBuilder.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\HandleWrapper.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileFinder.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.h" />
@@ -77,6 +78,7 @@
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\Mirror\MirrorFS.cpp" />
     <ClCompile Include="KxVirtualFileSystem\MultiMirror\MultiMirrorFS.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\DispatcherMapBuilder.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\KxDynamicString\KxDynamicString.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\FileHandle.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\Common.cpp" />

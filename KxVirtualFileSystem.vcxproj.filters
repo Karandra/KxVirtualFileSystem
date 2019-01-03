@@ -147,6 +147,9 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.h">
       <Filter>Header Files\Utility\KxFileSystem</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\DispatcherMapBuilder.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
@@ -190,6 +193,9 @@
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileFinder.cpp">
       <Filter>Source Files\Utility\KxFileSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\DispatcherMapBuilder.cpp">
+      <Filter>Source Files\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
