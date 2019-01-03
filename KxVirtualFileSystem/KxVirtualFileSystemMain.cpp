@@ -6,8 +6,8 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Service.h"
-#include "KxVirtualFileSystem/Mirror/MirrorFS.h"
 #include "KxVirtualFileSystem/Convergence/ConvergenceFS.h"
+#include "KxVirtualFileSystem/Mirror/MirrorFS.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include <iostream>
 #include <thread>
@@ -32,6 +32,7 @@ int _tmain()
 	//mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\7cacfd93a9caea44cacfd86e614cd348\\ModFiles");
 
 	MirrorFS* mainVFS = new MirrorFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
+	//MirrorFS* mainVFS = new MirrorFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
 
 	wchar_t fileName[1024] = L"\"C:\\Users\\Kerber\\Desktop\\Test\\WolfTime x64.exe\"";
 	wchar_t workingDir[1024] = L"C:\\Users\\Kerber\\Desktop\\Test";
@@ -61,7 +62,7 @@ int _tmain()
 
 		wchar_t buffer[1024] = {0};
 		options.lpstrFile = buffer;
-		options.nMaxFile = std::size(buffer);
+		options.nMaxFile = static_cast<DWORD>(std::size(buffer));
 
 		options.lpstrInitialDir = workingDir;
 		options.Flags = OFN_DONTADDTORECENT|OFN_ENABLESIZING|OFN_NOCHANGEDIR;
@@ -80,8 +81,8 @@ int _tmain()
 		{
 			case 'm':
 			{
-				int error = mainVFS->Mount();
-				fwprintf(stdout, L"%d: %s\r\n", error, MirrorFS::GetErrorCodeMessage(error).data());
+				FSError error = mainVFS->Mount();
+				fwprintf(stdout, L"%d: %s\r\n", error.GetCode(), error.GetMessage().data());
 				break;
 			}
 			case 'r':
@@ -109,6 +110,27 @@ int _tmain()
 
 				s2.erase(s2.size() - 1, 1);
 				
+
+				break;
+			}
+			case 'k':
+			{
+				auto f1 = []()
+				{
+					puts("Inside f1, begin");
+
+					auto ax1 = KxCallAtScopeExit([]()
+					{
+						puts("ax1");
+					});
+
+					puts("Inside f1, end");
+					return ax1;
+				};
+
+				puts("Before f1");
+				auto ax1 = f1();
+				puts("After f1");
 
 				break;
 			}

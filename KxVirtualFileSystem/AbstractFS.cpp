@@ -11,73 +11,18 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	bool AbstractFS::UnMountDirectory(const WCHAR* mountPoint)
+	bool AbstractFS::UnMountDirectory(KxDynamicStringRefW mountPoint)
 	{
-		return Dokany2::DokanRemoveMountPoint(mountPoint);
+		return Dokany2::DokanRemoveMountPoint(mountPoint.data());
 	}
-	bool AbstractFS::IsCodeSuccess(int errorCode)
-	{
-		return DOKAN_SUCCEEDED(errorCode);
-	}
-	KxDynamicStringW AbstractFS::GetErrorCodeMessage(int errorCode)
-	{
-		const WCHAR* message = nullptr;
-		switch (errorCode)
-		{
-			case DOKAN_SUCCESS:
-			{
-				message = L"Success";
-				break;
-			}
-			case DOKAN_ERROR:
-			{
-				message = L"Mount error";
-				break;
-			}
-			case DOKAN_DRIVE_LETTER_ERROR:
-			{
-				message = L"Bad Drive letter";
-				break;
-			}
-			case DOKAN_DRIVER_INSTALL_ERROR:
-			{
-				message = L"Can't install driver";
-				break;
-			}
-			case DOKAN_START_ERROR:
-			{
-				message = L"Driver answer that something is wrong";
-				break;
-			}
-			case DOKAN_MOUNT_ERROR:
-			{
-				message = L"Can't assign a drive letter or mount point, probably already used by another volume";
-				break;
-			}
-			case DOKAN_MOUNT_POINT_ERROR:
-			{
-				message = L"Mount point is invalid";
-				break;
-			}
-			case DOKAN_VERSION_ERROR:
-			{
-				message = L"Requested an incompatible version";
-				break;
-			}
-			default:
-			{
-				return KxDynamicStringW::Format(L"Unknown error: %d", errorCode);
-			}
-		};
-		return message;
-	}
-	size_t AbstractFS::WriteString(const WCHAR* source, WCHAR* destination, size_t maxDestLength)
-	{
-		size_t maxNameLength = maxDestLength * sizeof(WCHAR);
-		size_t nameLength = std::min(maxNameLength, wcslen(source) * sizeof(WCHAR));
-		memcpy_s(destination, maxNameLength, source, nameLength);
 
-		return nameLength / sizeof(WCHAR);
+	size_t AbstractFS::WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength)
+	{
+		const size_t dstBytesLength = maxDstLength * sizeof(wchar_t);
+		const size_t srcBytesLength = std::min(dstBytesLength, source.length() * sizeof(wchar_t));
+
+		memcpy_s(destination, dstBytesLength, source.data(), srcBytesLength);
+		return srcBytesLength / sizeof(wchar_t);
 	}
 }
 
@@ -87,7 +32,7 @@ namespace KxVFS
 	{
 		m_IsMounted = value;
 	}
-	int AbstractFS::DoMount()
+	FSError AbstractFS::DoMount()
 	{
 		OutputDebugStringA(__FUNCTION__);
 		OutputDebugStringA(": ");
@@ -181,7 +126,7 @@ namespace KxVFS
 		DoUnMount();
 	}
 
-	int AbstractFS::Mount()
+	FSError AbstractFS::Mount()
 	{
 		return DoMount();
 	}

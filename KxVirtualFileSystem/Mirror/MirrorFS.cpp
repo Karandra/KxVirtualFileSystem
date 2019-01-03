@@ -13,9 +13,10 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include <AclAPI.h>
 #pragma warning (disable: 4267)
 
+// Security section
 namespace KxVFS
 {
-	DWORD MirrorFS::GetParentSecurity(const WCHAR* filePath, PSECURITY_DESCRIPTOR* parentSecurity) const
+	DWORD MirrorFS::GetParentSecurity(KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const
 	{
 		int lastPathSeparator = -1;
 		for (int i = 0; i < MaxPathLength && filePath[i]; ++i)
@@ -31,25 +32,23 @@ namespace KxVFS
 		}
 
 		WCHAR parentPath[MaxPathLength];
-		memcpy_s(parentPath, MaxPathLength * sizeof(WCHAR), filePath, lastPathSeparator * sizeof(WCHAR));
+		memcpy_s(parentPath, MaxPathLength * sizeof(WCHAR), filePath.data(), lastPathSeparator * sizeof(WCHAR));
 		parentPath[lastPathSeparator] = 0;
 
 		// Must LocalFree() parentSecurity
-		return GetNamedSecurityInfoW
-		(
-			parentPath,
-			SE_FILE_OBJECT,
-			BACKUP_SECURITY_INFORMATION, // give us everything
-			nullptr,
-			nullptr,
-			nullptr,
-			nullptr,
-			parentSecurity
+		return GetNamedSecurityInfoW(parentPath,
+									 SE_FILE_OBJECT,
+									 BACKUP_SECURITY_INFORMATION, // give us everything
+									 nullptr,
+									 nullptr,
+									 nullptr,
+									 nullptr,
+									 parentSecurity
 		);
 	}
-	DWORD MirrorFS::CreateNewSecurity(EvtCreateFile& eventInfo, const WCHAR* filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const
+	DWORD MirrorFS::CreateNewSecurity(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const
 	{
-		if (!filePath || !requestedSecurity || !newSecurity)
+		if (filePath.empty() || !requestedSecurity || !newSecurity)
 		{
 			return ERROR_INVALID_PARAMETER;
 		}
@@ -66,88 +65,106 @@ namespace KxVFS
 				FILE_ALL_ACCESS
 			};
 
-			HANDLE aaccessTokenHandle = DokanOpenRequestorToken(eventInfo.DokanFileInfo);
-			if (aaccessTokenHandle && aaccessTokenHandle != INVALID_HANDLE_VALUE)
+			HANDLE accessTokenHandle = Dokany2::DokanOpenRequestorToken(eventInfo.DokanFileInfo);
+			if (accessTokenHandle != nullptr && accessTokenHandle != INVALID_HANDLE_VALUE)
 			{
-				if (!CreatePrivateObjectSecurity(parentDescriptor,
+				if (!::CreatePrivateObjectSecurity(parentDescriptor,
 												 eventInfo.SecurityContext.AccessState.SecurityDescriptor,
 												 newSecurity,
 												 eventInfo.DokanFileInfo->IsDirectory,
-												 aaccessTokenHandle,
+												 accessTokenHandle,
 												 &g_GenericMapping))
 				{
-					errorCode = GetLastError();
+					errorCode = ::GetLastError();
 				}
-				CloseHandle(aaccessTokenHandle);
+				::CloseHandle(accessTokenHandle);
 			}
 			else
 			{
-				errorCode = GetLastError();
+				errorCode = ::GetLastError();
 			}
-			LocalFree(parentDescriptor);
+			::LocalFree(parentDescriptor);
 		}
 		return errorCode;
 	}
-
-	bool MirrorFS::CheckDeleteOnClose(Dokany2::PDOKAN_FILE_INFO fileInfo, const WCHAR* filePath) const
+	Utility::SecurityObject MirrorFS::CreateSecurityIfNeeded(EvtCreateFile& eventInfo, SECURITY_ATTRIBUTES& securityAttributes, KxDynamicStringRefW targetPath, DWORD creationDisposition)
 	{
-		if (fileInfo->DeleteOnClose)
-		{
-			KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), filePath);
+		securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+		securityAttributes.lpSecurityDescriptor = eventInfo.SecurityContext.AccessState.SecurityDescriptor;
+		securityAttributes.bInheritHandle = FALSE;
 
-			// Should already be deleted by CloseHandle
-			// if open with FILE_FLAG_DELETE_ON_CLOSE
-			if (fileInfo->IsDirectory)
+		// We only need security information if there's a possibility a new file could be created
+		if (wcscmp(eventInfo.FileName, L"\\") != 0 && wcscmp(eventInfo.FileName, L"/") != 0	&& creationDisposition != OPEN_EXISTING && creationDisposition != TRUNCATE_EXISTING)
+		{
+			PSECURITY_DESCRIPTOR newFileSecurity = nullptr;
+			if (CreateNewSecurity(eventInfo, targetPath, eventInfo.SecurityContext.AccessState.SecurityDescriptor, &newFileSecurity) == ERROR_SUCCESS)
 			{
-				RemoveDirectoryW(filePath);
+				securityAttributes.lpSecurityDescriptor = newFileSecurity;
+				return newFileSecurity;
+			}
+		}
+		return nullptr;
+	}
+}
+
+// ImpersonateCallerUser section
+namespace KxVFS
+{
+	TokenHandle MirrorFS::ImpersonateCallerUser(EvtCreateFile& eventInfo) const
+	{
+		TokenHandle userTokenHandle = Dokany2::DokanOpenRequestorToken(eventInfo.DokanFileInfo);
+		if (userTokenHandle)
+		{
+			KxVFSDebugPrint(L"DokanOpenRequestorToken: success\n");
+		}
+		else
+		{
+			// Should we return some error?
+			KxVFSDebugPrint(L"DokanOpenRequestorToken: failed\n");
+		}
+		return userTokenHandle;
+	}
+	bool MirrorFS::ImpersonateLoggedOnUser(TokenHandle& userTokenHandle) const
+	{
+		if (userTokenHandle)
+		{
+			if (::ImpersonateLoggedOnUser(userTokenHandle))
+			{
+				KxVFSDebugPrint(L"ImpersonateLoggedOnUser: success\n");
+				return true;
 			}
 			else
 			{
-				DeleteFileW(filePath);
+				KxVFSDebugPrint(L"ImpersonateLoggedOnUser: failed\n");
+				return false;
 			}
-			return true;
 		}
+
+		KxVFSDebugPrint(L"ImpersonateLoggedOnUser: invalid token\n");
 		return false;
 	}
-	NTSTATUS MirrorFS::CanDeleteDirectory(const WCHAR* filePath) const
+	void MirrorFS::CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NTSTATUS status) const
 	{
-		KxDynamicStringW filePathCopy = filePath;
-
-		size_t nFilePathLength = filePathCopy.length();
-		if (filePathCopy[nFilePathLength - 1] != L'\\')
+		if (userTokenHandle)
 		{
-			filePathCopy[nFilePathLength++] = L'\\';
-		}
+			// Clean Up operation for impersonate
+			const DWORD lastError = GetLastError();
 
-		filePathCopy[nFilePathLength] = L'*';
-		filePathCopy[nFilePathLength + 1] = L'\0';
-
-		WIN32_FIND_DATAW findData = {0};
-		HANDLE findHandle = FindFirstFileW(filePathCopy, &findData);
-		if (findHandle == INVALID_HANDLE_VALUE)
-		{
-			return GetNtStatusByWin32LastErrorCode();
-		}
-
-		do
-		{
-			if (wcscmp(findData.cFileName, L"..") != 0 && wcscmp(findData.cFileName, L".") != 0)
+			// Keep the handle open for CreateFile
+			if (status != STATUS_SUCCESS)
 			{
-				FindClose(findHandle);
-				return STATUS_DIRECTORY_NOT_EMPTY;
+				userTokenHandle.Close();
 			}
-		}
-		while (FindNextFileW(findHandle, &findData) != 0);
+			::RevertToSelf();
 
-		DWORD errorCode = GetLastError();
-		if (errorCode != ERROR_NO_MORE_FILES)
-		{
-			return GetNtStatusByWin32ErrorCode(errorCode);
+			SetLastError(lastError);
 		}
-
-		FindClose(findHandle);
-		return STATUS_SUCCESS;
 	}
+}
+
+// Sync Read/Write section
+namespace KxVFS
+{
 	NTSTATUS MirrorFS::ReadFileSynchronous(EvtReadFile& eventInfo, HANDLE fileHandle) const
 	{
 		LARGE_INTEGER distanceToMove;
@@ -227,7 +244,73 @@ namespace KxVFS
 		}
 		return GetNtStatusByWin32LastErrorCode();
 	}
+}
 
+namespace KxVFS
+{
+	bool MirrorFS::CheckDeleteOnClose(Dokany2::PDOKAN_FILE_INFO fileInfo, KxDynamicStringRefW filePath) const
+	{
+		if (fileInfo->DeleteOnClose)
+		{
+			KxVFSDebugPrint(TEXT("%s: \"%s\"\r\n"), TEXT(__FUNCTION__), filePath);
+
+			// Should already be deleted by CloseHandle if open with 'FILE_FLAG_DELETE_ON_CLOSE'.
+			if (fileInfo->IsDirectory)
+			{
+				::RemoveDirectoryW(filePath.data());
+			}
+			else
+			{
+				::DeleteFileW(filePath.data());
+			}
+			return true;
+		}
+		return false;
+	}
+	NTSTATUS MirrorFS::CanDeleteDirectory(KxDynamicStringRefW filePath) const
+	{
+		KxDynamicStringW filePathCopy = filePath;
+
+		size_t nFilePathLength = filePathCopy.length();
+		if (filePathCopy[nFilePathLength - 1] != L'\\')
+		{
+			filePathCopy[nFilePathLength++] = L'\\';
+		}
+
+		filePathCopy[nFilePathLength] = L'*';
+		filePathCopy[nFilePathLength + 1] = L'\0';
+
+		WIN32_FIND_DATAW findData = {0};
+		HANDLE findHandle = FindFirstFileW(filePathCopy, &findData);
+		if (findHandle == INVALID_HANDLE_VALUE)
+		{
+			return GetNtStatusByWin32LastErrorCode();
+		}
+
+		do
+		{
+			if (wcscmp(findData.cFileName, L"..") != 0 && wcscmp(findData.cFileName, L".") != 0)
+			{
+				FindClose(findHandle);
+				return STATUS_DIRECTORY_NOT_EMPTY;
+			}
+		}
+		while (FindNextFileW(findHandle, &findData) != 0);
+
+		DWORD errorCode = GetLastError();
+		if (errorCode != ERROR_NO_MORE_FILES)
+		{
+			return GetNtStatusByWin32ErrorCode(errorCode);
+		}
+
+		FindClose(findHandle);
+		return STATUS_SUCCESS;
+	}
+}
+
+// IRequestDispatcher
+namespace KxVFS
+{
 	void MirrorFS::ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath)
 	{
 		targetPath = L"\\\\?\\";
@@ -255,17 +338,28 @@ namespace KxVFS
 		}
 		return false;
 	}
+	bool MirrorFS::UseAsyncIO(bool value)
+	{
+		if (!IsMounted())
+		{
+			m_IsUnsingAsyncIO = value;
+			return true;
+		}
+		return false;
+	}
 
-	int MirrorFS::Mount()
+	FSError MirrorFS::Mount()
 	{
 		if (!m_Source.empty())
 		{
-			#if KxVFS_USE_ASYNC_IO
-			if (!InitializeAsyncIO())
+			if (IsUnsingAsyncIO())
 			{
-				return DOKAN_ERROR;
+				if (!InitializeAsyncIO())
+				{
+					return DOKAN_ERROR;
+				}
 			}
-			#endif
+
 			InitializeMirrorFileHandles();
 			return AbstractFS::Mount();
 		}
@@ -282,9 +376,10 @@ namespace KxVFS
 	NTSTATUS MirrorFS::OnUnMount(EvtUnMounted& eventInfo)
 	{
 		CleanupMirrorFileHandles();
-		#if KxVFS_USE_ASYNC_IO
-		CleanupAsyncIO();
-		#endif
+		if (IsUnsingAsyncIO())
+		{
+			CleanupAsyncIO();
+		}
 
 		return STATUS_NOT_SUPPORTED;
 	}
@@ -307,12 +402,12 @@ namespace KxVFS
 	}
 	NTSTATUS MirrorFS::OnGetVolumeAttributes(EvtGetVolumeAttributes& eventInfo)
 	{
-		size_t maxFileSystemNameLengthInBytes = eventInfo.MaxFileSystemNameLengthInChars * sizeof(WCHAR);
+		size_t maxFileSystemNameLengthInBytes = eventInfo.MaxFileSystemNameLengthInChars * sizeof(wchar_t);
 
 		eventInfo.Attributes->FileSystemAttributes = FILE_CASE_SENSITIVE_SEARCH|FILE_CASE_PRESERVED_NAMES|FILE_SUPPORTS_REMOTE_STORAGE|FILE_UNICODE_ON_DISK|FILE_PERSISTENT_ACLS|FILE_NAMED_STREAMS;
 		eventInfo.Attributes->MaximumComponentNameLength = 256; // Not 255, this means Dokan doesn't support long file names?
 
-		WCHAR volumeRoot[4];
+		wchar_t volumeRoot[4];
 		volumeRoot[0] = m_Source[0];
 		volumeRoot[1] = L':';
 		volumeRoot[2] = L'\\';
@@ -322,7 +417,7 @@ namespace KxVFS
 		DWORD maximumComponentLength = 0;
 
 		KxDynamicStringRefW fileSystemName;
-		WCHAR fileSystemNameBuffer[255] = {0};
+		wchar_t fileSystemNameBuffer[255] = {0};
 		if (GetVolumeInformationW(volumeRoot, nullptr, 0, nullptr, &maximumComponentLength, &fileSystemFlags, fileSystemNameBuffer, std::size(fileSystemNameBuffer)))
 		{
 			eventInfo.Attributes->MaximumComponentNameLength = maximumComponentLength;
@@ -357,7 +452,7 @@ namespace KxVFS
 				if (!(eventInfo.CreateOptions & FILE_NON_DIRECTORY_FILE))
 				{
 					// Needed by FindFirstFile to list files in it
-					// TODO: use ReOpenFile in MirrorFindFiles to set share read temporary
+					// TODO: use ReOpenFile in 'OnFindFiles' to set share read temporary
 					eventInfo.DokanFileInfo->IsDirectory = TRUE;
 					eventInfo.ShareAccess |= FILE_SHARE_READ;
 				}
@@ -369,36 +464,25 @@ namespace KxVFS
 			}
 		}
 
-		#if KxVFS_USE_ASYNC_IO
-		fileAttributesAndFlags |= FILE_FLAG_OVERLAPPED;
-		#endif
-
-		SECURITY_DESCRIPTOR* fileSecurity = nullptr;
-		KxCallAtScopeExit destroyFileSecurityAtExit([&fileSecurity]()
+		if (IsUnsingAsyncIO())
 		{
-			if (fileSecurity)
-			{
-				::DestroyPrivateObjectSecurity(reinterpret_cast<PSECURITY_DESCRIPTOR*>(&fileSecurity));
-				fileSecurity = nullptr;
-			}
-		});
-
-		if (wcscmp(eventInfo.FileName, L"\\") != 0 && wcscmp(eventInfo.FileName, L"/") != 0	&& creationDisposition != OPEN_EXISTING && creationDisposition != TRUNCATE_EXISTING)
-		{
-			// We only need security information if there's a possibility a new file could be created
-			CreateNewSecurity(eventInfo, targetPath, eventInfo.SecurityContext.AccessState.SecurityDescriptor, reinterpret_cast<PSECURITY_DESCRIPTOR*>(&fileSecurity));
+			fileAttributesAndFlags |= FILE_FLAG_OVERLAPPED;
 		}
 
-		SECURITY_ATTRIBUTES securityAttributes;
-		securityAttributes.nLength = sizeof(securityAttributes);
-		securityAttributes.lpSecurityDescriptor = fileSecurity;
-		securityAttributes.bInheritHandle = FALSE;
+		// This is for Impersonate Caller User Option
+		TokenHandle userTokenHandle = ImpersonateCallerUserIfNeeded(eventInfo);
+
+		// Security
+		SECURITY_ATTRIBUTES securityAttributes = {0};
+		Utility::SecurityObject newFileSecurity = CreateSecurityIfNeeded(eventInfo, securityAttributes, targetPath, creationDisposition);
 
 		if (eventInfo.DokanFileInfo->IsDirectory)
 		{
 			// It is a create directory request
 			if (creationDisposition == CREATE_NEW || creationDisposition == OPEN_ALWAYS)
 			{
+				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
+
 				// We create folder
 				if (!CreateDirectoryW(targetPath, &securityAttributes))
 				{
@@ -410,6 +494,8 @@ namespace KxVFS
 						statusCode = GetNtStatusByWin32ErrorCode(errorCode);
 					}
 				}
+
+				CleanupImpersonateCallerUserIfNeeded(userTokenHandle, statusCode);
 			}
 
 			if (statusCode == STATUS_SUCCESS)
@@ -419,18 +505,18 @@ namespace KxVFS
 				{
 					return STATUS_NOT_A_DIRECTORY;
 				}
+				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
 				// FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
-				FileHandle fileHandle = CreateFileW
-				(
-					targetPath,
-					genericDesiredAccess,
-					eventInfo.ShareAccess,
-					&securityAttributes,
-					OPEN_EXISTING,
-					fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
-					nullptr
+				FileHandle fileHandle = CreateFileW(targetPath,
+													genericDesiredAccess,
+													eventInfo.ShareAccess,
+													&securityAttributes,
+													OPEN_EXISTING,
+													fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
+													nullptr
 				);
+				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);
 
 				if (fileHandle.IsOK())
 				{
@@ -480,16 +566,19 @@ namespace KxVFS
 				{
 					genericDesiredAccess |= GENERIC_WRITE;
 				}
+				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
 				KxVFSDebugPrint(L"Trying to create/open file: %s", targetPath.data());
 				FileHandle fileHandle = CreateFileW(targetPath,
-														 genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
-														 eventInfo.ShareAccess,
-														 &securityAttributes,
-														 creationDisposition,
-														 fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
-														 nullptr
+													genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
+													eventInfo.ShareAccess,
+													&securityAttributes,
+													creationDisposition,
+													fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
+													nullptr
 				);
+
+				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);
 				errorCode = GetLastError();
 
 				if (!fileHandle.IsOK())
@@ -515,7 +604,7 @@ namespace KxVFS
 					{
 						// Save the file handle in m_Context
 						fileHandle.Release();
-						eventInfo.DokanFileInfo->Context = (ULONG64)mirrorContext;
+						eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(mirrorContext);
 
 						if (creationDisposition == OPEN_ALWAYS || creationDisposition == CREATE_ALWAYS)
 						{
@@ -537,9 +626,8 @@ namespace KxVFS
 		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
 		if (mirrorContext)
 		{
+			if (CriticalSectionLocker lock(mirrorContext->m_Lock); true)
 			{
-				CriticalSectionLocker lock(mirrorContext->m_Lock);
-
 				mirrorContext->m_IsClosed = true;
 				if (mirrorContext->m_FileHandle && mirrorContext->m_FileHandle != INVALID_HANDLE_VALUE)
 				{
@@ -548,7 +636,10 @@ namespace KxVFS
 
 					KxDynamicStringW targetPath;
 					ResolveLocation(eventInfo.FileName, targetPath);
-					CheckDeleteOnClose(eventInfo.DokanFileInfo, targetPath);
+					if (CheckDeleteOnClose(eventInfo.DokanFileInfo, targetPath))
+					{
+						OnFileClosed(eventInfo, targetPath);
+					}
 				}
 			}
 
@@ -576,9 +667,8 @@ namespace KxVFS
 		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
 		if (mirrorContext)
 		{
+			if (CriticalSectionLocker lock(mirrorContext->m_Lock); true)
 			{
-				CriticalSectionLocker lock(mirrorContext->m_Lock);
-
 				CloseHandle(mirrorContext->m_FileHandle);
 
 				mirrorContext->m_FileHandle = nullptr;
@@ -586,7 +676,10 @@ namespace KxVFS
 
 				KxDynamicStringW targetPath;
 				ResolveLocation(eventInfo.FileName, targetPath);
-				CheckDeleteOnClose(eventInfo.DokanFileInfo, targetPath);
+				if (CheckDeleteOnClose(eventInfo.DokanFileInfo, targetPath))
+				{
+					OnFileCleanedUp(eventInfo, targetPath);
+				}
 			}
 			return STATUS_SUCCESS;
 		}
@@ -624,9 +717,7 @@ namespace KxVFS
 			renameInfo->FileNameLength = (DWORD)targetPathNew.length() * sizeof(targetPathNew[0]); // They want length in bytes
 			wcscpy_s(renameInfo->FileName, targetPathNew.length() + 1, targetPathNew);
 
-			BOOL result = SetFileInformationByHandle(mirrorContext->m_FileHandle, FileRenameInfo, renameInfo, bufferSize);
-			
-
+			const BOOL result = SetFileInformationByHandle(mirrorContext->m_FileHandle, FileRenameInfo, renameInfo, bufferSize);
 			if (result)
 			{
 				return STATUS_SUCCESS;
@@ -644,11 +735,11 @@ namespace KxVFS
 		if (mirrorContext)
 		{
 			BY_HANDLE_FILE_INFORMATION fileInfo = {0};
-			if (!GetFileInformationByHandle(mirrorContext->m_FileHandle, &fileInfo))
+			if (!::GetFileInformationByHandle(mirrorContext->m_FileHandle, &fileInfo))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
-			if ((fileInfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY)
+			if ((fileInfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
 			{
 				return STATUS_CANNOT_DELETE;
 			}
@@ -657,7 +748,12 @@ namespace KxVFS
 			{
 				KxDynamicStringW targetPath;
 				ResolveLocation(eventInfo.FileName, targetPath);
-				return CanDeleteDirectory(targetPath);
+				
+				const NTSTATUS status = CanDeleteDirectory(targetPath);
+				if (status == STATUS_SUCCESS)
+				{
+					OnDirectoryDeleted(eventInfo, targetPath);
+				}
 			}
 			return STATUS_SUCCESS;
 		}
@@ -885,33 +981,36 @@ namespace KxVFS
 			return GetNtStatusByWin32LastErrorCode();
 		}
 
-		#if KxVFS_USE_ASYNC_IO
-		Mirror::OverlappedContext* overlapped = PopMirrorOverlapped();
-		if (!overlapped)
+		if (IsUnsingAsyncIO())
 		{
-			return STATUS_MEMORY_NOT_ALLOCATED;
-		}
-
-		Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlapped->m_InternalOverlapped);
-		overlapped->m_FileHandle = mirrorContext;
-		overlapped->m_Context = &eventInfo;
-		overlapped->m_IOType = Mirror::IOOperationType::Read;
-
-		StartThreadpoolIo(mirrorContext->m_IOCompletion);
-		if (!ReadFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, (LPOVERLAPPED)overlapped))
-		{
-			DWORD errorCode = GetLastError();
-			if (errorCode != ERROR_IO_PENDING)
+			Mirror::OverlappedContext* overlapped = PopMirrorOverlapped();
+			if (!overlapped)
 			{
-				CancelThreadpoolIo(mirrorContext->m_IOCompletion);
-				return GetNtStatusByWin32ErrorCode(errorCode);
+				return STATUS_MEMORY_NOT_ALLOCATED;
 			}
-		}
 
-		return STATUS_PENDING;
-		#else
-		return ReadFileSynchronous(eventInfo, mirrorContext->m_FileHandle);
-		#endif
+			Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlapped->m_InternalOverlapped);
+			overlapped->m_FileHandle = mirrorContext;
+			overlapped->m_Context = &eventInfo;
+			overlapped->m_IOType = Mirror::IOOperationType::Read;
+
+			StartThreadpoolIo(mirrorContext->m_IOCompletion);
+			if (!ReadFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, (LPOVERLAPPED)overlapped))
+			{
+				DWORD errorCode = GetLastError();
+				if (errorCode != ERROR_IO_PENDING)
+				{
+					CancelThreadpoolIo(mirrorContext->m_IOCompletion);
+					return GetNtStatusByWin32ErrorCode(errorCode);
+				}
+			}
+
+			return STATUS_PENDING;
+		}
+		else
+		{
+			return ReadFileSynchronous(eventInfo, mirrorContext->m_FileHandle);
+		}
 	}
 	NTSTATUS MirrorFS::OnWriteFile(EvtWriteFile& eventInfo)
 	{
@@ -960,56 +1059,58 @@ namespace KxVFS
 		}
 		fileSize = ((UINT64)fileSizeHigh << 32) | fileSizeLow;
 
-		#if KxVFS_USE_ASYNC_IO
-
-		if (eventInfo.DokanFileInfo->PagingIo)
+		if (IsUnsingAsyncIO())
 		{
-			if ((UINT64)eventInfo.Offset >= fileSize)
+			if (eventInfo.DokanFileInfo->PagingIo)
 			{
-				eventInfo.NumberOfBytesWritten = 0;
-				return STATUS_SUCCESS;
-			}
-
-			if (((UINT64)eventInfo.Offset + eventInfo.NumberOfBytesToWrite) > fileSize)
-			{
-				UINT64 bytes = fileSize - eventInfo.Offset;
-				if (bytes >> 32)
+				if ((UINT64)eventInfo.Offset >= fileSize)
 				{
-					eventInfo.NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
+					eventInfo.NumberOfBytesWritten = 0;
+					return STATUS_SUCCESS;
 				}
-				else
+
+				if (((UINT64)eventInfo.Offset + eventInfo.NumberOfBytesToWrite) > fileSize)
 				{
-					eventInfo.NumberOfBytesToWrite = (DWORD)bytes;
+					UINT64 bytes = fileSize - eventInfo.Offset;
+					if (bytes >> 32)
+					{
+						eventInfo.NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
+					}
+					else
+					{
+						eventInfo.NumberOfBytesToWrite = (DWORD)bytes;
+					}
 				}
 			}
-		}
 
-		Mirror::OverlappedContext* overlapped = PopMirrorOverlapped();
-		if (!overlapped)
-		{
-			return STATUS_MEMORY_NOT_ALLOCATED;
-		}
-
-
-		Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlapped->m_InternalOverlapped);
-		overlapped->m_FileHandle = mirrorContext;
-		overlapped->m_Context = &eventInfo;
-		overlapped->m_IOType = Mirror::IOOperationType::Write;
-
-		StartThreadpoolIo(mirrorContext->m_IOCompletion);
-		if (!WriteFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, (LPOVERLAPPED)overlapped))
-		{
-			DWORD errorCode = GetLastError();
-			if (errorCode != ERROR_IO_PENDING)
+			Mirror::OverlappedContext* overlapped = PopMirrorOverlapped();
+			if (!overlapped)
 			{
-				CancelThreadpoolIo(mirrorContext->m_IOCompletion);
-				return GetNtStatusByWin32ErrorCode(errorCode);
+				return STATUS_MEMORY_NOT_ALLOCATED;
 			}
+
+
+			Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlapped->m_InternalOverlapped);
+			overlapped->m_FileHandle = mirrorContext;
+			overlapped->m_Context = &eventInfo;
+			overlapped->m_IOType = Mirror::IOOperationType::Write;
+
+			StartThreadpoolIo(mirrorContext->m_IOCompletion);
+			if (!WriteFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, (LPOVERLAPPED)overlapped))
+			{
+				DWORD errorCode = GetLastError();
+				if (errorCode != ERROR_IO_PENDING)
+				{
+					CancelThreadpoolIo(mirrorContext->m_IOCompletion);
+					return GetNtStatusByWin32ErrorCode(errorCode);
+				}
+			}
+			return STATUS_PENDING;
 		}
-		return STATUS_PENDING;
-		#else
-		return WriteFileSynchronous(eventInfo, mirrorContext->m_FileHandle, fileSize);
-		#endif
+		else
+		{
+			return WriteFileSynchronous(eventInfo, mirrorContext->m_FileHandle, fileSize);
+		}
 	}
 	NTSTATUS MirrorFS::OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo)
 	{
@@ -1222,20 +1323,15 @@ namespace KxVFS
 	{
 		if (fileHandle)
 		{
-			#if KxVFS_USE_ASYNC_IO
-			if (fileHandle->m_IOCompletion)
+			if (IsUnsingAsyncIO() && fileHandle->m_IOCompletion)
 			{
+				CriticalSectionLocker lock(m_ThreadPoolCS);
+				if (m_ThreadPoolCleanupGroup && fileHandle->m_IOCompletion)
 				{
-					CriticalSectionLocker lock(m_ThreadPoolCS);
-					if (m_ThreadPoolCleanupGroup)
-					{
-						CloseThreadpoolIo(fileHandle->m_IOCompletion);
-					}
+					CloseThreadpoolIo(fileHandle->m_IOCompletion);
+					fileHandle->m_IOCompletion = nullptr;
 				}
-				fileHandle->m_IOCompletion = nullptr;
 			}
-			#endif
-
 			delete fileHandle;
 		}
 	}
@@ -1243,8 +1339,7 @@ namespace KxVFS
 	{
 		fileHandle->m_VFSInstance = this;
 
-		#if KxVFS_USE_ASYNC_IO
-		if (fileHandle->m_IOCompletion)
+		if (IsUnsingAsyncIO() && fileHandle->m_IOCompletion)
 		{
 			{
 				CriticalSectionLocker lock(m_ThreadPoolCS);
@@ -1255,7 +1350,6 @@ namespace KxVFS
 			}
 			fileHandle->m_IOCompletion = nullptr;
 		}
-		#endif
 
 		CriticalSectionLocker lock(m_FileHandlePoolCS);
 		{
@@ -1288,21 +1382,22 @@ namespace KxVFS
 		mirrorContext->m_IsCleanedUp = false;
 		mirrorContext->m_IsClosed = false;
 
-		#if KxVFS_USE_ASYNC_IO
+		if (IsUnsingAsyncIO())
 		{
-			CriticalSectionLocker lock(m_ThreadPoolCS);
-			if (m_ThreadPoolCleanupGroup)
 			{
-				mirrorContext->m_IOCompletion = CreateThreadpoolIo(actualFileHandle, MirrorIoCallback, mirrorContext, &m_ThreadPoolEnvironment);
+				CriticalSectionLocker lock(m_ThreadPoolCS);
+				if (m_ThreadPoolCleanupGroup)
+				{
+					mirrorContext->m_IOCompletion = CreateThreadpoolIo(actualFileHandle, MirrorIoCallback, mirrorContext, &m_ThreadPoolEnvironment);
+				}
+			}
+
+			if (!mirrorContext->m_IOCompletion)
+			{
+				PushMirrorFileHandle(mirrorContext);
+				mirrorContext = nullptr;
 			}
 		}
-
-		if (!mirrorContext->m_IOCompletion)
-		{
-			PushMirrorFileHandle(mirrorContext);
-			mirrorContext = nullptr;
-		}
-		#endif
 		return mirrorContext;
 	}
 	void MirrorFS::GetMirrorFileHandleState(Mirror::FileContext* fileHandle, bool* isCleanedUp, bool* isClosed) const
@@ -1340,7 +1435,6 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	#if KxVFS_USE_ASYNC_IO
 	void MirrorFS::FreeMirrorOverlapped(Mirror::OverlappedContext* overlapped) const
 	{
 		delete overlapped;
@@ -1417,14 +1511,12 @@ namespace KxVFS
 			DokanVector_Free(&m_OverlappedPool);
 		}
 	}
-	void CALLBACK MirrorFS::MirrorIoCallback
-	(
-		PTP_CALLBACK_INSTANCE instance,
-		PVOID context,
-		PVOID overlappedBuffer,
-		ULONG resultIO,
-		ULONG_PTR numberOfBytesTransferred,
-		PTP_IO portIO
+	void CALLBACK MirrorFS::MirrorIoCallback(PTP_CALLBACK_INSTANCE instance,
+											 PVOID context,
+											 PVOID overlappedBuffer,
+											 ULONG resultIO,
+											 ULONG_PTR numberOfBytesTransferred,
+											 PTP_IO portIO
 	)
 	{
 		UNREFERENCED_PARAMETER(instance);
@@ -1454,5 +1546,4 @@ namespace KxVFS
 		};
 		mirrorContext->m_VFSInstance->PushMirrorOverlapped(overlapped);
 	}
-	#endif
 }

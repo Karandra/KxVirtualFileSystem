@@ -10,9 +10,9 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/Utility.h"
 #include "MultiMirrorFS.h"
 
+// IRequestDispatcher
 namespace KxVFS
 {
-	// IRequestDispatcher
 	void MultiMirrorFS::ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath)
 	{
 		// Search file in write target and in all virtual folders

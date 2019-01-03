@@ -8,6 +8,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem.h"
 #include "IncludeDokan.h"
 #include "IRequestDispatcher.h"
+#include "FSError.h"
 #include "Utility.h"
 
 namespace KxVFS
@@ -17,18 +18,11 @@ namespace KxVFS
 	class KxVFS_API AbstractFS: public IRequestDispatcher
 	{
 		public:
-			static bool UnMountDirectory(const WCHAR* mountPoint);
-			static bool IsCodeSuccess(int errorCode);
-			static KxDynamicStringW GetErrorCodeMessage(int errorCode);
+			static bool UnMountDirectory(KxDynamicStringRefW mountPoint);
 
-			static constexpr bool IsUnsingAsyncIO()
-			{
-				return KxVFS_USE_ASYNC_IO;
-			}
-
-			// Writes a string 'source' into specified buffer but no more than 'maxDestLength' CHARS.
+			// Writes a string 'source' into specified buffer but no more than 'maxDstLength' CHARS.
 			// Returns number of BYTES written.
-			static size_t WriteString(const WCHAR* source, WCHAR* destination, size_t maxDestLength);
+			static size_t WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength);
 
 		private:
 			Service* m_ServiceInstance = nullptr;
@@ -44,7 +38,7 @@ namespace KxVFS
 
 		private:
 			void SetMounted(bool value);
-			int DoMount();
+			FSError DoMount();
 			bool DoUnMount();
 
 		public:
@@ -55,7 +49,7 @@ namespace KxVFS
 			virtual ~AbstractFS();
 
 		public:
-			virtual int Mount();
+			virtual FSError Mount();
 			virtual bool UnMount();
 
 			virtual KxDynamicStringRefW GetVolumeName() const;

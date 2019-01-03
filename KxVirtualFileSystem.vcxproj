@@ -20,6 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KxVirtualFileSystem\AbstractFS.h" />
+    <ClInclude Include="KxVirtualFileSystem\FSError.h" />
+    <ClInclude Include="KxVirtualFileSystem\UndefWindows.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\HandleWrapper.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\SecurityObject.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\TokenHandle.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="KxVirtualFileSystem\Convergence\ConvergenceFS.h" />
     <ClInclude Include="KxVirtualFileSystem\IRequestDispatcher.h" />
@@ -45,9 +50,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\Convergence\ConvergenceFS.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\FSError.cpp" />
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystemMain.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\AbstractFS.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Service.cpp" />
@@ -222,7 +230,7 @@
       <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -249,7 +257,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>

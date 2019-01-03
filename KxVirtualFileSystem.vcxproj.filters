@@ -117,6 +117,21 @@
     <ClInclude Include="KxVirtualFileSystem\AbstractFS.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\HandleWrapper.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\TokenHandle.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\SecurityObject.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\FSError.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\UndefWindows.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
@@ -151,6 +166,9 @@
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\Utility\KxDynamicString\KxDynamicString.cpp">
       <Filter>Source Files\Utility\KxDynamicString</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\FSError.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

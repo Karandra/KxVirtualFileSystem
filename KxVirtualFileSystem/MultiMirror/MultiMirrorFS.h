@@ -43,7 +43,7 @@ namespace KxVFS
 
 		protected:
 			// IRequestDispatcher
-			virtual void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
+			void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 
 		public:
 			MultiMirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags = DefFlags);
@@ -51,6 +51,6 @@ namespace KxVFS
 
 		protected:
 			DWORD OnFindFilesAux(const KxDynamicStringW& path, EvtFindFiles& eventInfo, KxVFS::Utility::StringSearcherHash& hashStore);
-			virtual NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
+			NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
 	};
 }

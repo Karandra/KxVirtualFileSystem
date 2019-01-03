@@ -15,10 +15,6 @@ namespace KxVFS
 
 namespace KxVFS::Mirror
 {
-	#if !KxVFS_USE_ASYNC_IO
-	using PTP_IO = const void*;
-	#endif
-
 	class FileContext
 	{
 		public:
