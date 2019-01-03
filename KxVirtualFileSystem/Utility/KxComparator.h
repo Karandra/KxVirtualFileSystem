@@ -96,8 +96,8 @@ namespace KxVFS::Utility::Comparator
 
 namespace KxVFS::Utility::Comparator
 {
-	using UnorderedMap = std::unordered_map<KxDynamicStringW, KxDynamicStringW, StringHash, StringEqualTo>;
-	using UnorderedMapNoCase = std::unordered_map<KxDynamicStringW, KxDynamicStringW, StringHashOnCase, StringEqualToNoCase>;
+	template<class TValue> using UnorderedMap = std::unordered_map<KxDynamicStringW, TValue, StringHash, StringEqualTo>;
+	template<class TValue> using UnorderedMapNoCase = std::unordered_map<KxDynamicStringW, TValue, StringHashOnCase, StringEqualToNoCase>;
 
 	using UnorderedSet = std::unordered_set<KxDynamicStringW, StringHash, StringEqualTo>;
 	using UnorderedSetNoCase = std::unordered_set<KxDynamicStringW, StringHashOnCase, StringEqualToNoCase>;
