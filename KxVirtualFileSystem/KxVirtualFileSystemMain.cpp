@@ -28,8 +28,8 @@ int _tmain()
 	#if 1
 	ConvergenceFS* mainVFS = new ConvergenceFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
 	mainVFS->AddVirtualFolder(L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
-	mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\979ba932bb6d9e9b8049c2fda6fc255d\\ModFiles");
-	mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\7cacfd93a9caea44cacfd86e614cd348\\ModFiles");
+	mainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\Mod Organizer 2");
+	mainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\Resources");
 	#endif
 
 	//MirrorFS* mainVFS = new MirrorFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
@@ -98,7 +98,8 @@ int _tmain()
 			}
 			case 'c':
 			{
-				mainVFS->BuildDispatcherIndex();
+				size_t count = mainVFS->BuildDispatcherIndex();
+				wprintf(L"BuildDispatcherIndex: %zu entries built\r\n", count);
 				break;
 			}
 			case 'f':
