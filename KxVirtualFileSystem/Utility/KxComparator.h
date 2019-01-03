@@ -63,4 +63,31 @@ namespace KxVFS::Utility::Comparator
 			return IsEqualNoCase(v1, v2);
 		}
 	};
+
+	struct StringHash
+	{
+		size_t operator()(KxDynamicStringRefW value) const
+		{
+			return std::hash<KxDynamicStringRefW>()(value);
+		}
+	};
+	struct StringHashOnCase
+	{
+		// From Boost
+		template<class T> static void hash_combine(size_t& seed, const T& v)
+		{
+			std::hash<T> hasher;
+			seed ^= hasher(v) + 0x9e3779b9u + (seed << 6) + (seed >> 2);
+		}
+
+		size_t operator()(KxDynamicStringRefW value) const
+		{
+			size_t hashValue = 0;
+			for (wchar_t c: value)
+			{
+				hash_combine(hashValue, reinterpret_cast<wchar_t>(::CharLowerW(reinterpret_cast<LPWSTR>(c))));
+			}
+			return hashValue;
+		}
+	};
 }
