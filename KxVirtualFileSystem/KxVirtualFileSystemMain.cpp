@@ -96,43 +96,21 @@ int _tmain()
 				OpenFileDialog();
 				break;
 			}
-			case 's':
+			case 'c':
 			{
-				KxDynamicStringW s(L"qwerty\r\n");
-				s = L"TestTestTest";
-				s.append(L"XYZCVT");
-				
-				s.erase(2, 6);
-
-				KxDynamicStringW spf = KxDynamicStringW::Format(L"%s, %d, 0x%p", s.data(), 45, mainVFS);
-
-				KxDynamicStringW s2 = L"\\Desktop\\f6c0ac810be991f2.kmpproj\\";
-				//s2.erase(0, 1);
-
-				s2.erase(s2.size() - 1, 1);
-				
-
+				mainVFS->BuildDispatcherIndex();
 				break;
 			}
-			case 'k':
+			case 'f':
 			{
-				auto f1 = []()
+				Utility::KxFileFinder finder(L"C:\\Users\\Kerber\\Desktop\\TestWrite", L"*");
+				for (Utility::KxFileItem item = finder.FindNext(); item.IsOK(); item = finder.FindNext())
 				{
-					puts("Inside f1, begin");
-
-					auto ax1 = KxCallAtScopeExit([]()
+					if (item.IsNormalItem())
 					{
-						puts("ax1");
-					});
-
-					puts("Inside f1, end");
-					return ax1;
-				};
-
-				puts("Before f1");
-				auto ax1 = f1();
-				puts("After f1");
-
+						wprintf(L"%s\r\n", item.GetFullPath().data());
+					}
+				}
 				break;
 			}
 
