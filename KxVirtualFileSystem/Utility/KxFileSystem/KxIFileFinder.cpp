@@ -21,6 +21,8 @@ namespace KxVFS::Utility
 			KxDynamicStringW out = source;
 			out += L'\\';
 			out += filter;
+
+			return out;
 		}
 		return source;
 	}
