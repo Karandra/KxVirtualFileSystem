@@ -133,8 +133,8 @@ namespace KxVFS::Utility
 	template<class... Args> size_t DebugPrint(const wchar_t* fmt, Args&&... arg)
 	{
 		KxDynamicStringW output = KxDynamicStringW::Format(fmt, std::forward<Args>(arg)...);
-
 		output += L"\r\n";
+
 		::OutputDebugStringW(output.data());
 
 		DWORD writtenCount = 0;

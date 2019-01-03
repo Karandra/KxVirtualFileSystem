@@ -271,7 +271,7 @@ namespace KxVFS
 			}
 			else
 			{
-				OutputDebugStringA("We are destructing, don't call 'OnUnMount'");
+				OutputDebugStringA("We are destructing, don't call 'OnUnMount'\r\n");
 				statusCode = STATUS_SUCCESS;
 			}
 		}
