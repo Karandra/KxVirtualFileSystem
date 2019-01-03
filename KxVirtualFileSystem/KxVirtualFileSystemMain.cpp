@@ -118,7 +118,6 @@ int _tmain()
 			case 'u':
 			{
 				mainVFS->UnMount();
-
 				fprintf(stderr, "%s\r\n", mainVFS->UnMount() ? "true" : "false");
 				break;
 			}

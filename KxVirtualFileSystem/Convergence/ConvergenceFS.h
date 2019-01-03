@@ -87,6 +87,7 @@ namespace KxVFS
 			bool IsINIFile(KxDynamicStringRefW requestedPath) const;
 			bool IsINIFileNonExistent(KxDynamicStringRefW requestedPath) const;
 			void AddINIFile(KxDynamicStringRefW requestedPath);
+			void RemoveINIFile(KxDynamicStringRefW requestedPath);
 
 			const TVirtualFoldersVector& GetVirtualFolders() const
 			{

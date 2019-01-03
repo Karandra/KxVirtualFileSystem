@@ -212,9 +212,17 @@ namespace KxVFS
 	}
 	void ConvergenceFS::AddINIFile(KxDynamicStringRefW requestedPath)
 	{
-		CriticalSectionLocker lockWrite(m_NonExistentINIFilesCS);
-
-		m_NonExistentINIFiles.insert(NormalizeFilePath(requestedPath));
+		if (CriticalSectionLocker lock(m_NonExistentINIFilesCS); true)
+		{
+			m_NonExistentINIFiles.insert(NormalizeFilePath(requestedPath));
+		}
+	}
+	void ConvergenceFS::RemoveINIFile(KxDynamicStringRefW requestedPath)
+	{
+		if (CriticalSectionLocker lock(m_NonExistentINIFilesCS); true)
+		{
+			m_NonExistentINIFiles.erase(NormalizeFilePath(requestedPath));
+		}
 	}
 }
 
@@ -302,9 +310,6 @@ namespace KxVFS
 {
 	NTSTATUS ConvergenceFS::OnCreateFile(EvtCreateFile& eventInfo)
 	{
-		// Non-existent INI files optimization
-		const HRESULT iniOptimizationReturnCode = STATUS_OBJECT_PATH_NOT_FOUND;
-
 		DWORD errorCode = 0;
 		NTSTATUS statusCode = STATUS_SUCCESS;
 
@@ -448,29 +453,29 @@ namespace KxVFS
 				}
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
-				// Non-existent INI files optimization
-				if ((creationDisposition == OPEN_ALWAYS || creationDisposition == OPEN_EXISTING) && IsINIFile(eventInfo.FileName))
-				{
-					// If file doesn't exist
-					bool isNotExist = IsINIFileNonExistent(eventInfo.FileName);
-					if (isNotExist || !Utility::IsFileExist(targetPath))
-					{
-						if (!isNotExist)
-						{
-							AddINIFile(eventInfo.FileName);
-						}
-
-						statusCode = iniOptimizationReturnCode;
-
-						// destroyFileSecurityAtExit will take care of everything else
-						return statusCode;
-					}
-				}
-
 				// If we are asked to create a file, try to create its folder first
-				if (IsWriteRequest(targetPath, genericDesiredAccess, creationDisposition))
+				const bool isWriteRequest = IsWriteRequest(targetPath, genericDesiredAccess, creationDisposition);
+				if (isWriteRequest)
 				{
 					Utility::CreateFolderTree(targetPath, true);
+				}
+
+				// Non-existent INI files optimization
+				if (IsINIFile(eventInfo.FileName))
+				{
+					const bool existOnDisk = Utility::IsFileExist(targetPath);
+					const bool knownAsInvalid = IsINIFileNonExistent(eventInfo.FileName);
+
+					// Remove that on write, the INI might be actually written.
+					if (isWriteRequest)
+					{
+						RemoveINIFile(eventInfo.FileName);
+					}
+					else if (!existOnDisk)
+					{
+						AddINIFile(eventInfo.FileName);
+						return STATUS_OBJECT_PATH_NOT_FOUND;
+					}
 				}
 
 				KxVFSDebugPrint(L"Trying to create/open file: %s", targetPath.data());
