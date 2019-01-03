@@ -46,13 +46,19 @@
     <Filter Include="Resource Files\KxDynamicString">
       <UniqueIdentifier>{7e4d1825-621d-4234-8b9a-82c36c7c960a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Utility\KxFileSystem">
+      <UniqueIdentifier>{df923850-1bcc-49fc-bb01-d20cad3e348c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utility\KxFileSystem">
+      <UniqueIdentifier>{818446b0-8821-4ee5-b351-23520dec05cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Misc">
+      <UniqueIdentifier>{3334941b-72d8-468d-ae67-9f3b40b77702}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileFinder.h">
-      <Filter>Header Files\Utility</Filter>
     </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\Utility\KxCallAtScopeExit.h">
       <Filter>Header Files\Utility</Filter>
@@ -93,12 +99,6 @@
     <ClInclude Include="KxVirtualFileSystem\Service.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\IncludeWindows.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\IncludeDokan.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\IEnumerationDispatcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -126,11 +126,26 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\SecurityObject.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\IncludeDokan.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\IncludeWindows.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\UndefWindows.h">
+      <Filter>Header Files\Misc</Filter>
+    </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\FSError.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\UndefWindows.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileFinder.h">
+      <Filter>Header Files\Utility\KxFileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.h">
+      <Filter>Header Files\Utility\KxFileSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.h">
+      <Filter>Header Files\Utility\KxFileSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -139,9 +154,6 @@
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystemMain.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileFinder.cpp">
-      <Filter>Source Files\Utility</Filter>
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\Utility\FileHandle.cpp">
       <Filter>Source Files\Utility</Filter>
@@ -169,6 +181,15 @@
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\FSError.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.cpp">
+      <Filter>Source Files\Utility\KxFileSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.cpp">
+      <Filter>Source Files\Utility\KxFileSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileFinder.cpp">
+      <Filter>Source Files\Utility\KxFileSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

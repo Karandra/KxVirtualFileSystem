@@ -5,8 +5,9 @@ You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
 #pragma once
-#include "KxVirtualFileSystem.h"
-#include "KxDynamicString/KxDynamicString.h"
+#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/IncludeWindows.h"
+#include "KxVirtualFileSystem/Utility/KxDynamicString/KxDynamicString.h"
 
 namespace KxVFS::Utility
 {
@@ -29,6 +30,27 @@ namespace KxVFS::Utility
 			return true;
 		}
 		return false;
+	}
+
+	template<class F, class V> static F ModFlag(F f, V v, bool set)
+	{
+		if (set)
+		{
+			f = static_cast<F>(f|static_cast<F>(v));
+		}
+		else
+		{
+			f = static_cast<F>(f & ~static_cast<F>(v));
+		}
+		return f;
+	}
+	template<class F, class V> static void ModFlagRef(F& f, V v, bool set)
+	{
+		f = ModFlag(f, v, set);
+	}
+	template<class F, class V> static bool HasFlag(F f, V v)
+	{
+		return f & v;
 	}
 
 	bool CreateFolderTree(KxDynamicStringRefW pathW, bool noLast = false, SECURITY_ATTRIBUTES* securityAttributes = nullptr, DWORD* errorCodeOut = nullptr);

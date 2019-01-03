@@ -25,13 +25,14 @@ int _tmain()
 	service->Install(L"C:\\Users\\Kerber\\Documents\\Visual Studio 2017\\Projects\\Kortex Mod Manager\\Kortex\\Bin\\Data\\VFS\\Drivers\\Win7 x64\\dokan2.sys");
 	service->Start();
 
-	//ConvergenceFS* mainVFS = new ConvergenceFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
-	//mainVFS->AllowDeleteInVirtualFolder(true);
-	//mainVFS->AddVirtualFolder(L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
-	//mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\979ba932bb6d9e9b8049c2fda6fc255d\\ModFiles");
-	//mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\7cacfd93a9caea44cacfd86e614cd348\\ModFiles");
+	#if 1
+	ConvergenceFS* mainVFS = new ConvergenceFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
+	mainVFS->AddVirtualFolder(L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
+	mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\979ba932bb6d9e9b8049c2fda6fc255d\\ModFiles");
+	mainVFS->AddVirtualFolder(L"D:\\Games\\Kortex Mod Manager\\Skyrim\\Default\\Mods\\7cacfd93a9caea44cacfd86e614cd348\\ModFiles");
+	#endif
 
-	MirrorFS* mainVFS = new MirrorFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
+	//MirrorFS* mainVFS = new MirrorFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
 	//MirrorFS* mainVFS = new MirrorFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
 
 	wchar_t fileName[1024] = L"\"C:\\Users\\Kerber\\Desktop\\Test\\WolfTime x64.exe\"";

@@ -14,8 +14,11 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 // Ported from KxFramework
 #include "Utility/KxCallAtScopeExit.h"
-#include "Utility/KxFileFinder.h"
 #include "Utility/KxComparator.h"
+
+#include "Utility/KxFileSystem/KxIFileFinder.h"
+#include "Utility/KxFileSystem/KxFileFinder.h"
+#include "Utility/KxFileSystem/KxFileItem.h"
 
 // Own classes
 #include "Utility/IContext.h"

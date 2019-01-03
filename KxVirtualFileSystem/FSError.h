@@ -12,7 +12,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	class FSError
+	class KxVFS_API FSError
 	{
 		private:
 			std::optional<int> m_Code;

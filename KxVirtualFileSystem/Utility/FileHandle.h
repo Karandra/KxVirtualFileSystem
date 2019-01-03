@@ -11,14 +11,14 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	enum class SeekMode
+	enum class KxVFS_API SeekMode
 	{
 		Current = FILE_CURRENT,
 		Start = FILE_BEGIN,
 		End = FILE_END,
 	};
 
-	class FileHandle: public HandleWrapper<size_t, std::numeric_limits<size_t>::max()>
+	class KxVFS_API FileHandle: public HandleWrapper<size_t, std::numeric_limits<size_t>::max()>
 	{
 		public:
 			FileHandle(THandle fileHandle = GetInvalidHandle())

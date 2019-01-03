@@ -23,6 +23,9 @@
     <ClInclude Include="KxVirtualFileSystem\FSError.h" />
     <ClInclude Include="KxVirtualFileSystem\UndefWindows.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\HandleWrapper.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileFinder.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\SecurityObject.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\TokenHandle.h" />
     <ClInclude Include="Resource.h" />
@@ -41,7 +44,6 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\KxComparator.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\KxDynamicString\KxBasicDynamicString.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\KxDynamicString\KxDynamicString.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileFinder.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\IContext.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\CriticalSection.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\FileHandle.h" />
@@ -76,9 +78,11 @@
     <ClCompile Include="KxVirtualFileSystem\Mirror\MirrorFS.cpp" />
     <ClCompile Include="KxVirtualFileSystem\MultiMirror\MultiMirrorFS.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\KxDynamicString\KxDynamicString.cpp" />
-    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileFinder.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\FileHandle.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\Common.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileFinder.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\ChangeLog.txt" />

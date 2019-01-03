@@ -5,12 +5,12 @@ You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
 #pragma once
-#include "KxVirtualFileSystem.h"
-#include "IncludeWindows.h"
+#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/IncludeWindows.h"
 
 namespace KxVFS
 {
-	class ServiceManager
+	class KxVFS_API ServiceManager
 	{
 		private:
 			SC_HANDLE m_Handle = nullptr;
