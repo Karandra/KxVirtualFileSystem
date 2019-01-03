@@ -283,78 +283,15 @@ namespace KxVFS
 		m_RequestDispatcherIndex.clear();
 		m_EnumerationDispatcherIndex.clear();
 
-		auto ExtractRequestPath = [](KxDynamicStringRefW virtualFolder, const KxDynamicStringW& targetPath)
+		Utility::SimpleDispatcherMapBuilder builder([this](KxDynamicStringRefW virtualFolder, KxDynamicStringRefW requestPath, KxDynamicStringRefW targetPath)
 		{
-			KxDynamicStringW requestedPath(targetPath);
-			size_t eraseOffset = 0;
-			if (requestedPath.length() >= virtualFolder.length() && requestedPath[virtualFolder.length()] == TEXT('\\'))
-			{
-				eraseOffset = 1;
-			}
-			requestedPath.erase(0, virtualFolder.length() + eraseOffset);
+			UpdateDispatcherIndexUnlocked(requestPath, targetPath);
+		});
 
-			return requestedPath;
-		};
-
-		std::function<void(const KxDynamicStringRefW virtualFolder, const KxDynamicStringW& path)> Recurse;
-		Recurse = [this, &Recurse, &ExtractRequestPath](const KxDynamicStringRefW virtualFolder, const KxDynamicStringW& path)
+		builder.Run(GetWriteTarget());
+		for (auto it = m_VirtualFolders.rbegin(); it != m_VirtualFolders.rend(); ++it)
 		{
-			Utility::KxFileFinder finder(path, TEXT("*"));
-
-			Utility::KxFileItem item = finder.FindNext();
-			while (item.IsOK())
-			{
-				if (item.IsNormalItem())
-				{
-					// Save to file dispatcher index
-					KxDynamicStringW targetPath(L"\\\\?\\");
-					targetPath += item.GetFullPath();
-					UpdateDispatcherIndexUnlocked(ExtractRequestPath(virtualFolder, item.GetFullPath()), targetPath);
-
-					if (item.IsDirectory())
-					{
-						// Makes game crash
-						#if 0
-						// Save directory list to search index
-						KxDynamicStringW sRequestPath = ExtractRequestPath(virtualFolder, item.GetFullPath());
-						TEnumerationVector* searchIndex = GetEnumerationVector(sRequestPath);
-						if (!searchIndex)
-						{
-							searchIndex = CreateEnumerationVector(sRequestPath);
-						}
-
-						// Enum this folder content
-						KxFileFinder tFolderFinder(item.GetFullPath(), TEXT("*"));
-						KxFileItem tFolderItem = tFolderFinder.FindNext();
-						while (tFolderItem.IsOK())
-						{
-							if (tFolderItem.IsNormalItem())
-							{
-								// Add only if there are no file or folder with such name
-								KxDynamicStringW sNameL = tFolderItem.GetName().to_lower();
-								if (std::none_of(searchIndex->begin(), searchIndex->end(), [&sNameL](const WIN32_FIND_DATAW& findData)
-								{
-									return sNameL == KxDynamicStringW(findData.cFileName).make_lower();
-								}))
-								{
-									searchIndex->push_back(tFolderItem.GetAsWIN32_FIND_DATA());
-								}
-							}
-							tFolderItem = tFolderFinder.FindNext();
-						}
-						#endif
-
-						Recurse(virtualFolder, item.GetFullPath());
-					}
-				}
-				item = finder.FindNext();
-			}
-		};
-
-		Recurse(GetWriteTarget(), GetWriteTarget());
-		for (auto i = m_VirtualFolders.rbegin(); i != m_VirtualFolders.rend(); ++i)
-		{
-			Recurse(*i, *i);
+			builder.Run(*it);
 		}
 	}
 }

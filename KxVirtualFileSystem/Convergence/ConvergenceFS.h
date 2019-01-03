@@ -20,7 +20,7 @@ namespace KxVFS
 	{
 		private:
 			using RedirectionPathsListT = std::vector<KxDynamicStringW>;
-			using DispatcherIndexT = std::unordered_map<KxDynamicStringW, KxDynamicStringW, std::hash<KxDynamicStringW>, Utility::Comparator::StringEqualToNoCase>;
+			using DispatcherIndexT = std::unordered_map<KxDynamicStringW, KxDynamicStringW, Utility::Comparator::StringHashOnCase, Utility::Comparator::StringEqualToNoCase>;
 			using NonExistentINIMapT = std::unordered_set<KxDynamicStringW>;
 			using SearchDispatcherIndexT = std::unordered_map<KxDynamicStringW, TEnumerationVector>;
 
@@ -144,15 +144,15 @@ namespace KxVFS
 				InvalidateSearchDispatcherVectorForFile(eventInfo.FileName);
 			}
 
-			void OnFileClosed(EvtCloseFile& eventInfo, const KxDynamicStringW& tergetPath) override
+			void OnFileClosed(EvtCloseFile& eventInfo, const KxDynamicStringW& targetPath) override
 			{
 				OnEvent(eventInfo);
 			}
-			void OnFileCleanedUp(EvtCleanUp& eventInfo, const KxDynamicStringW& tergetPath) override
+			void OnFileCleanedUp(EvtCleanUp& eventInfo, const KxDynamicStringW& targetPath) override
 			{
 				OnEvent(eventInfo);
 			}
-			void OnDirectoryDeleted(EvtCanDeleteFile& eventInfo, const KxDynamicStringW& tergetPath) override
+			void OnDirectoryDeleted(EvtCanDeleteFile& eventInfo, const KxDynamicStringW& targetPath) override
 			{
 				OnEvent(eventInfo);
 			}
