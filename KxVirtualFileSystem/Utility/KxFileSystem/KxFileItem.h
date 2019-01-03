@@ -167,6 +167,14 @@ namespace KxVFS::Utility
 				fullPath += m_Name;
 				return fullPath;
 			}
+			KxDynamicStringW GetFullPathWithNS() const
+			{
+				KxDynamicStringW fullPath = Utility::LongPathPrefix;
+				fullPath += m_Source;
+				fullPath += L'\\';
+				fullPath += m_Name;
+				return fullPath;
+			}
 			void SetFullPath(KxDynamicStringRefW fullPath)
 			{
 				m_Source = KxDynamicStringW(fullPath).before_last(L'\\', &m_Name);
