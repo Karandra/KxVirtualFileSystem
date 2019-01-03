@@ -116,9 +116,9 @@ namespace KxVFS
 
 		protected:
 			// Events for derived classes
-			virtual void OnFileClosed(EvtCloseFile& eventInfo, const KxDynamicStringW& tergetPath) { }
-			virtual void OnFileCleanedUp(EvtCleanUp& eventInfo, const KxDynamicStringW& tergetPath) { }
-			virtual void OnDirectoryDeleted(EvtCanDeleteFile& eventInfo, const KxDynamicStringW& tergetPath) { }
+			virtual void OnFileClosed(EvtCloseFile& eventInfo, const KxDynamicStringW& targetPath) { }
+			virtual void OnFileCleanedUp(EvtCleanUp& eventInfo, const KxDynamicStringW& targetPath) { }
+			virtual void OnDirectoryDeleted(EvtCanDeleteFile& eventInfo, const KxDynamicStringW& targetPath) { }
 
 		protected:
 			NTSTATUS OnMount(EvtMounted& eventInfo) override;
