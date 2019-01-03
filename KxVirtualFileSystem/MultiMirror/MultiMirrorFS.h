@@ -19,19 +19,15 @@ namespace KxVFS
 	class KxVFS_API MultiMirrorFS: public ConvergenceFS
 	{
 		private:
-			bool UpdateDispatcherIndexUnlocked(const KxDynamicStringW& requestedPath, const KxDynamicStringW& targetPath) = delete;
-			void UpdateDispatcherIndexUnlocked(const KxDynamicStringW& requestedPath) = delete;
-			bool UpdateDispatcherIndex(const KxDynamicStringW& requestedPath, const KxDynamicStringW& targetPath) = delete;
-			void UpdateDispatcherIndex(const KxDynamicStringW& requestedPath) = delete;
-			KxDynamicStringW TryDispatchRequest(const KxDynamicStringW& requestedPath) const = delete;
+			bool UpdateDispatcherIndexUnlocked(KxDynamicStringRefW, KxDynamicStringRefW targetPath) = delete;
+			void UpdateDispatcherIndexUnlocked(KxDynamicStringRefW requestedPath) = delete;
+			bool UpdateDispatcherIndex(KxDynamicStringRefW, KxDynamicStringRefW targetPath) = delete;
+			void UpdateDispatcherIndex(KxDynamicStringRefW requestedPath) = delete;
+			bool TryDispatchRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) const = delete;
 
-			// Non-existent INI-files
 			bool IsINIFile(KxDynamicStringRefW requestedPath) const = delete;
 			bool IsINIFileNonExistent(KxDynamicStringRefW requestedPath) const = delete;
 			void AddINIFile(KxDynamicStringRefW requestedPath) = delete;
-
-			bool IsDeleteInVirtualFoldersAllowed() const = delete;
-			bool AllowDeleteInVirtualFolder(bool value) = delete;
 
 			void BuildDispatcherIndex() = delete;
 			void SetDispatcherIndex(const ExternalDispatcherIndexT& index) = delete;
