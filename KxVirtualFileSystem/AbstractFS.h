@@ -43,7 +43,6 @@ namespace KxVFS
 			bool DoUnMount();
 
 		public:
-			static const size_t MaxPathLength = 32768;
 			static const uint32_t DefFlags = 0;
 
 			AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t flags = DefFlags);
