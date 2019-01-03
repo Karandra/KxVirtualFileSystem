@@ -104,7 +104,7 @@ namespace KxVFS
 				m_RequestDispatcherIndex.reserve(index.size());
 				for (const auto& value: index)
 				{
-					KxDynamicStringW targetPath(L"\\\\?\\");
+					KxDynamicStringW targetPath = Utility::LongPathPrefix;
 					targetPath += KxDynamicStringRefW(value.second.data(), value.second.size());
 					UpdateDispatcherIndexUnlocked(KxDynamicStringRefW(value.first.data(), value.first.size()), targetPath);
 				}
