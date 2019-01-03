@@ -18,7 +18,12 @@ namespace KxVFS
 	KxDynamicStringRefW& AbstractFS::NormalizeFilePath(KxDynamicStringRefW& path)
 	{
 		// See if path starts with '\' and remove it. Don't touch '\\?\'.
-		if (!path.empty() && path.find_first_of(Utility::LongPathPrefix, 0, std::size(Utility::LongPathPrefix)) == KxDynamicStringRefW::npos)
+		auto ExtractPrefix = [](KxDynamicStringRefW& path)
+		{
+			return path.substr(0, std::size(Utility::LongPathPrefix) - 1);
+		};
+
+		if (!path.empty() && ExtractPrefix(path) != Utility::LongPathPrefix)
 		{
 			size_t count = 0;
 			for (const auto& c: path)
