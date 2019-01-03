@@ -30,7 +30,7 @@ namespace KxVFS
 			void AddINIFile(KxDynamicStringRefW requestedPath) = delete;
 
 			void BuildDispatcherIndex() = delete;
-			void SetDispatcherIndex(const ExternalDispatcherIndexT& index) = delete;
+			void SetDispatcherIndex(const TExternalDispatcherMap& index) = delete;
 			template<class T> void SetDispatcherIndexT(const T& index) = delete;
 			template<class T> void SetDispatcherIndex(const T& index) = delete;
 

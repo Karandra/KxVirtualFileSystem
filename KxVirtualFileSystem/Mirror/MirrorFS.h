@@ -84,8 +84,8 @@ namespace KxVFS
 			}
 
 			// Sync Read/Write section
-			NTSTATUS ReadFileSynchronous(EvtReadFile& eventInfo, HANDLE fileHandle) const;
-			NTSTATUS WriteFileSynchronous(EvtWriteFile& eventInfo, HANDLE fileHandle, UINT64 fileSize) const;
+			NTSTATUS ReadFileSync(EvtReadFile& eventInfo, HANDLE fileHandle) const;
+			NTSTATUS WriteFileSync(EvtWriteFile& eventInfo, HANDLE fileHandle, UINT64 fileSize) const;
 			
 			// On delete
 			bool CheckDeleteOnClose(Dokany2::PDOKAN_FILE_INFO fileInfo, KxDynamicStringRefW filePath) const;
@@ -119,6 +119,14 @@ namespace KxVFS
 			virtual void OnFileClosed(EvtCloseFile& eventInfo, const KxDynamicStringW& targetPath) { }
 			virtual void OnFileCleanedUp(EvtCleanUp& eventInfo, const KxDynamicStringW& targetPath) { }
 			virtual void OnDirectoryDeleted(EvtCanDeleteFile& eventInfo, const KxDynamicStringW& targetPath) { }
+			
+			virtual void OnFileRead(EvtReadFile& eventInfo, const KxDynamicStringW& targetPath) { }
+			virtual void OnFileWritten(EvtWriteFile& eventInfo, const KxDynamicStringW& targetPath) { }
+
+			virtual void OnFileBuffersFlushed(EvtFlushFileBuffers& eventInfo, const KxDynamicStringW& targetPath) { }
+			virtual void OnAllocationSizeSet(EvtSetAllocationSize& eventInfo, const KxDynamicStringW& targetPath) { }
+			virtual void OnEndOfFileSet(EvtSetEndOfFile& eventInfo, const KxDynamicStringW& targetPath) { }
+			virtual void OnBasicFileInfoSet(EvtSetBasicFileInfo& eventInfo, const KxDynamicStringW& targetPath) { }
 
 		protected:
 			NTSTATUS OnMount(EvtMounted& eventInfo) override;
@@ -141,6 +149,7 @@ namespace KxVFS
 
 			NTSTATUS OnReadFile(EvtReadFile& eventInfo) override;
 			NTSTATUS OnWriteFile(EvtWriteFile& eventInfo) override;
+			
 			NTSTATUS OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo) override;
 			NTSTATUS OnSetEndOfFile(EvtSetEndOfFile& eventInfo) override;
 			NTSTATUS OnSetAllocationSize(EvtSetAllocationSize& eventInfo) override;
@@ -150,27 +159,28 @@ namespace KxVFS
 			NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
 			NTSTATUS OnFindStreams(EvtFindStreams& eventInfo) override;
 
+			// File context section
 		protected:
-			void FreeMirrorFileHandle(Mirror::FileContext* fileHandle);
-			void PushMirrorFileHandle(Mirror::FileContext* fileHandle);
-			Mirror::FileContext* PopMirrorFileHandle(HANDLE actualFileHandle);
-			void GetMirrorFileHandleState(Mirror::FileContext* fileHandle, bool* isCleanedUp, bool* isClosed) const;
+			void FreeMirrorFileHandle(Mirror::FileContext* fileContext);
+			void PushMirrorFileHandle(Mirror::FileContext* fileContext);
+			Mirror::FileContext* PopMirrorFileHandle(HANDLE fileHandle);
+			void GetMirrorFileHandleState(Mirror::FileContext* fileContext, bool* isCleanedUp, bool* isClosed) const;
 
-			BOOL InitializeMirrorFileHandles();
+			bool InitializeMirrorFileHandles();
 			void CleanupMirrorFileHandles();
 
 			// Async IO section
 		protected:
-			void FreeMirrorOverlapped(Mirror::OverlappedContext* overlappedBuffer) const;
-			void PushMirrorOverlapped(Mirror::OverlappedContext* overlappedBuffer);
+			void FreeMirrorOverlapped(Mirror::OverlappedContext* overlappedContext) const;
+			void PushMirrorOverlapped(Mirror::OverlappedContext* overlappedContext);
 			Mirror::OverlappedContext* PopMirrorOverlapped();
 
-			BOOL InitializeAsyncIO();
+			bool InitializeAsyncIO();
 			void CleanupPendingAsyncIO();
 			void CleanupAsyncIO();
 			static void CALLBACK MirrorIoCallback(PTP_CALLBACK_INSTANCE instance,
 												  PVOID context,
-												  PVOID overlappedBuffer,
+												  PVOID overlapped,
 												  ULONG resultIO,
 												  ULONG_PTR numberOfBytesTransferred,
 												  PTP_IO portIO

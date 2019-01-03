@@ -19,25 +19,26 @@ namespace KxVFS
 	class KxVFS_API ConvergenceFS: public MirrorFS, public IEnumerationDispatcher
 	{
 		private:
-			using RedirectionPathsListT = std::vector<KxDynamicStringW>;
-			using DispatcherIndexT = std::unordered_map<KxDynamicStringW, KxDynamicStringW, Utility::Comparator::StringHashOnCase, Utility::Comparator::StringEqualToNoCase>;
-			using NonExistentINIMapT = std::unordered_set<KxDynamicStringW>;
-			using SearchDispatcherIndexT = std::unordered_map<KxDynamicStringW, TEnumerationVector>;
+			using TVirtualFoldersVector = std::vector<KxDynamicStringW>;
+
+			using TRequestDispatcherMap = Utility::Comparator::UnorderedMapNoCase<KxDynamicStringW>;
+			using TSearchDispatcherMap = Utility::Comparator::UnorderedMapNoCase<TEnumerationVector>;
+			using TNonExistentINIMap = Utility::Comparator::UnorderedSetNoCase;
 
 		public:
-			using ExternalDispatcherIndexT = std::vector<std::pair<KxDynamicStringRefW, KxDynamicStringRefW>>;
+			using TExternalDispatcherMap = std::vector<std::pair<KxDynamicStringRefW, KxDynamicStringRefW>>;
 
 		private:
-			RedirectionPathsListT m_VirtualFolders;
+			TVirtualFoldersVector m_VirtualFolders;
 
-			DispatcherIndexT m_RequestDispatcherIndex;
+			TRequestDispatcherMap m_RequestDispatcherIndex;
 			mutable CriticalSection m_RequestDispatcherIndexCS;
 		
-			SearchDispatcherIndexT m_EnumerationDispatcherIndex;
+			TSearchDispatcherMap m_EnumerationDispatcherIndex;
 			mutable CriticalSection m_EnumerationDispatcherIndexCS;
 
 			mutable CriticalSection m_NonExistentINIFilesCS;
-			NonExistentINIMapT m_NonExistentINIFiles;
+			TNonExistentINIMap m_NonExistentINIFiles;
 
 		protected:
 			void MakeFilePath(KxDynamicStringW& outPath, KxDynamicStringRefW folder, KxDynamicStringRefW file) const;
@@ -80,18 +81,18 @@ namespace KxVFS
 			TEnumerationVector* GetEnumerationVector(KxDynamicStringRefW requestedPath) override;
 			TEnumerationVector& CreateEnumerationVector(KxDynamicStringRefW requestedPath) override;
 			void InvalidateEnumerationVector(KxDynamicStringRefW requestedPath) override;
-			void InvalidateSearchDispatcherVectorForFile(KxDynamicStringRefW requestedFilePath);
+			void InvalidateSearchDispatcherVectorUsingFile(KxDynamicStringRefW requestedFilePath);
 
 			// Non-existent INI-files
 			bool IsINIFile(KxDynamicStringRefW requestedPath) const;
 			bool IsINIFileNonExistent(KxDynamicStringRefW requestedPath) const;
 			void AddINIFile(KxDynamicStringRefW requestedPath);
 
-			const RedirectionPathsListT& GetVirtualFolders() const
+			const TVirtualFoldersVector& GetVirtualFolders() const
 			{
 				return m_VirtualFolders;
 			}
-			RedirectionPathsListT& GetVirtualFolders()
+			TVirtualFoldersVector& GetVirtualFolders()
 			{
 				return m_VirtualFolders;
 			}
@@ -127,8 +128,8 @@ namespace KxVFS
 			bool AddVirtualFolder(KxDynamicStringRefW path);
 			bool ClearVirtualFolders();
 
-			void BuildDispatcherIndex();
-			void SetDispatcherIndex(const ExternalDispatcherIndexT& index)
+			size_t BuildDispatcherIndex();
+			void SetDispatcherIndex(const TExternalDispatcherMap& index)
 			{
 				SetDispatcherIndexT(index);
 			}
@@ -141,7 +142,7 @@ namespace KxVFS
 			template<class TEventInfo> void OnEvent(TEventInfo& eventInfo)
 			{
 				UpdateDispatcherIndex(eventInfo.FileName);
-				InvalidateSearchDispatcherVectorForFile(eventInfo.FileName);
+				InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
 			}
 
 			void OnFileClosed(EvtCloseFile& eventInfo, const KxDynamicStringW& targetPath) override
@@ -156,13 +157,31 @@ namespace KxVFS
 			{
 				OnEvent(eventInfo);
 			}
+			
+			void OnFileWritten(EvtWriteFile& eventInfo, const KxDynamicStringW& targetPath) override
+			{
+				InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
+			}
+			void OnFileBuffersFlushed(EvtFlushFileBuffers& eventInfo, const KxDynamicStringW& targetPath)
+			{
+				InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
+			}
+			void OnAllocationSizeSet(EvtSetAllocationSize& eventInfo, const KxDynamicStringW& targetPath) override
+			{
+				InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
+			}
+			void OnEndOfFileSet(EvtSetEndOfFile& eventInfo, const KxDynamicStringW& targetPath)
+			{
+				InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
+			}
+			void OnBasicFileInfoSet(EvtSetBasicFileInfo& eventInfo, const KxDynamicStringW& targetPath)
+			{
+				InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
+			}
 
 		protected:
 			NTSTATUS OnCreateFile(EvtCreateFile& eventInfo) override;
 			NTSTATUS OnMoveFile(EvtMoveFile& eventInfo) override;
-
-			NTSTATUS OnReadFile(EvtReadFile& eventInfo) override;
-			NTSTATUS OnWriteFile(EvtWriteFile& eventInfo) override;
 
 			DWORD OnFindFilesAux(const KxDynamicStringW& path, EvtFindFiles& eventInfo, Utility::StringSearcherHash& hashStore, TEnumerationVector* searchIndex);
 			NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
