@@ -15,6 +15,42 @@ namespace KxVFS
 	{
 		return Dokany2::DokanRemoveMountPoint(mountPoint.data());
 	}
+	KxDynamicStringRefW& AbstractFS::NormalizeFilePath(KxDynamicStringRefW& path)
+	{
+		// See if path starts with '\' and remove it. Don't touch '\\?\'.
+		if (!path.empty() && path.find_first_of(Utility::LongPathPrefix, 0, std::size(Utility::LongPathPrefix)) == KxDynamicStringRefW::npos)
+		{
+			size_t count = 0;
+			for (const auto& c: path)
+			{
+				if (c == L'\\')
+				{
+					++count;
+				}
+				else
+				{
+					break;
+				}
+			}
+			path.remove_prefix(count);
+		}
+
+		// Remove any trailing '\\'
+		size_t count = 0;
+		for (auto it = path.rbegin(); it != path.rend(); ++it)
+		{
+			if (*it == L'\\')
+			{
+				++count;
+			}
+			else
+			{
+				break;
+			}
+		}
+		path.remove_suffix(count);
+		return path;
+	}
 
 	size_t AbstractFS::WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength)
 	{

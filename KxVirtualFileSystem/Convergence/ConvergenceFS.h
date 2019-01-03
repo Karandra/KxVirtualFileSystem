@@ -63,7 +63,7 @@ namespace KxVFS
 			bool TryDispatchRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) const;
 
 			bool UpdateDispatcherIndexUnlocked(KxDynamicStringRefW, KxDynamicStringRefW targetPath);
-			void UpdateDispatcherIndexUnlocked(KxDynamicStringRefW);
+			void UpdateDispatcherIndexUnlocked(KxDynamicStringRefW requestedPath);
 
 			bool UpdateDispatcherIndex(KxDynamicStringRefW requestedPath, KxDynamicStringRefW targetPath)
 			{
@@ -95,7 +95,6 @@ namespace KxVFS
 			{
 				return m_VirtualFolders;
 			}
-			KxDynamicStringRefW& NormalizePath(KxDynamicStringRefW& requestedPath) const;
 
 			template<class T> void SetDispatcherIndexT(const T& index)
 			{

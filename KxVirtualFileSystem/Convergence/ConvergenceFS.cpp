@@ -136,7 +136,7 @@ namespace KxVFS
 	}
 	bool ConvergenceFS::TryDispatchRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) const
 	{
-		auto it = m_RequestDispatcherIndex.find(NormalizePath(requestedPath));
+		auto it = m_RequestDispatcherIndex.find(NormalizeFilePath(requestedPath));
 		if (it != m_RequestDispatcherIndex.end())
 		{
 			targetPath = it->second;
@@ -149,14 +149,14 @@ namespace KxVFS
 	{
 		if (!requestedPath.empty() && requestedPath != L"\\")
 		{
-			const bool isInserted = m_RequestDispatcherIndex.insert_or_assign(NormalizePath(requestedPath), NormalizePath(targetPath)).second;
+			const bool isInserted = m_RequestDispatcherIndex.insert_or_assign(NormalizeFilePath(requestedPath), NormalizeFilePath(targetPath)).second;
 			return isInserted;
 		}
 		return false;
 	}
 	void ConvergenceFS::UpdateDispatcherIndexUnlocked(KxDynamicStringRefW requestedPath)
 	{
-		m_RequestDispatcherIndex.erase(NormalizePath(requestedPath));
+		m_RequestDispatcherIndex.erase(NormalizeFilePath(requestedPath));
 	}
 }
 
@@ -165,7 +165,7 @@ namespace KxVFS
 {
 	ConvergenceFS::TEnumerationVector* ConvergenceFS::GetEnumerationVector(KxDynamicStringRefW requestedPath)
 	{
-		auto it = m_EnumerationDispatcherIndex.find(NormalizePath(requestedPath));
+		auto it = m_EnumerationDispatcherIndex.find(NormalizeFilePath(requestedPath));
 		if (it != m_EnumerationDispatcherIndex.end())
 		{
 			return &(it->second);
@@ -174,7 +174,7 @@ namespace KxVFS
 	}
 	ConvergenceFS::TEnumerationVector& ConvergenceFS::CreateEnumerationVector(KxDynamicStringRefW requestedPath)
 	{
-		auto it = m_EnumerationDispatcherIndex.insert_or_assign(NormalizePath(requestedPath), TEnumerationVector());
+		auto it = m_EnumerationDispatcherIndex.insert_or_assign(NormalizeFilePath(requestedPath), TEnumerationVector());
 		return it.first->second;
 	}
 	
@@ -182,7 +182,7 @@ namespace KxVFS
 	{
 		CriticalSectionLocker lockWrite(m_EnumerationDispatcherIndexCS);
 		
-		m_EnumerationDispatcherIndex.erase(NormalizePath(requestedPath));
+		m_EnumerationDispatcherIndex.erase(NormalizeFilePath(requestedPath));
 	}
 	void ConvergenceFS::InvalidateSearchDispatcherVectorForFile(KxDynamicStringRefW requestedFilePath)
 	{
@@ -208,55 +208,18 @@ namespace KxVFS
 	}
 	bool ConvergenceFS::IsINIFileNonExistent(KxDynamicStringRefW requestedPath) const
 	{
-		return m_NonExistentINIFiles.count(NormalizePath(requestedPath)) != 0;
+		return m_NonExistentINIFiles.count(NormalizeFilePath(requestedPath)) != 0;
 	}
 	void ConvergenceFS::AddINIFile(KxDynamicStringRefW requestedPath)
 	{
 		CriticalSectionLocker lockWrite(m_NonExistentINIFilesCS);
 
-		m_NonExistentINIFiles.insert(NormalizePath(requestedPath));
+		m_NonExistentINIFiles.insert(NormalizeFilePath(requestedPath));
 	}
 }
 
 namespace KxVFS
 {
-	KxDynamicStringRefW& ConvergenceFS::NormalizePath(KxDynamicStringRefW& requestedPath) const
-	{
-		// See if path starts with '\' and remove it. Don't touch '\\?\'.
-		if (!requestedPath.empty() && requestedPath.find_first_of(Utility::LongPathPrefix, 0, std::size(Utility::LongPathPrefix)) == KxDynamicStringRefW::npos)
-		{
-			size_t count = 0;
-			for (const auto& c: requestedPath)
-			{
-				if (c == L'\\')
-				{
-					++count;
-				}
-				else
-				{
-					break;
-				}
-			}
-			requestedPath.remove_prefix(count);
-		}
-
-		// Remove any trailing '\\'
-		size_t count = 0;
-		for (auto it = requestedPath.rbegin(); it != requestedPath.rend(); ++it)
-		{
-			if (*it == L'\\')
-			{
-				++count;
-			}
-			else
-			{
-				break;
-			}
-		}
-		requestedPath.remove_suffix(count);
-		return requestedPath;
-	}
-
 	ConvergenceFS::ConvergenceFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t flags)
 		:MirrorFS(vfsService, mountPoint, writeTarget, flags)
 	{
@@ -299,7 +262,7 @@ namespace KxVFS
 	{
 		if (!IsMounted())
 		{
-			m_VirtualFolders.emplace_back(NormalizePath(path));
+			m_VirtualFolders.emplace_back(NormalizeFilePath(path));
 			return true;
 		}
 		return false;
@@ -336,9 +299,9 @@ namespace KxVFS
 		std::function<void(const KxDynamicStringRefW virtualFolder, const KxDynamicStringW& path)> Recurse;
 		Recurse = [this, &Recurse, &ExtractRequestPath](const KxDynamicStringRefW virtualFolder, const KxDynamicStringW& path)
 		{
-			KxFileFinder finder(path, TEXT("*"));
+			Utility::KxFileFinder finder(path, TEXT("*"));
 
-			KxFileItem item = finder.FindNext();
+			Utility::KxFileItem item = finder.FindNext();
 			while (item.IsOK())
 			{
 				if (item.IsNormalItem())

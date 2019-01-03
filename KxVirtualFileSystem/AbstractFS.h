@@ -19,6 +19,7 @@ namespace KxVFS
 	{
 		public:
 			static bool UnMountDirectory(KxDynamicStringRefW mountPoint);
+			static KxDynamicStringRefW& NormalizeFilePath(KxDynamicStringRefW& path);
 
 			// Writes a string 'source' into specified buffer but no more than 'maxDstLength' CHARS.
 			// Returns number of BYTES written.
