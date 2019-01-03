@@ -184,7 +184,7 @@ namespace KxVFS
 		
 		m_EnumerationDispatcherIndex.erase(NormalizeFilePath(requestedPath));
 	}
-	void ConvergenceFS::InvalidateSearchDispatcherVectorForFile(KxDynamicStringRefW requestedFilePath)
+	void ConvergenceFS::InvalidateSearchDispatcherVectorUsingFile(KxDynamicStringRefW requestedFilePath)
 	{
 		size_t pos = requestedFilePath.rfind(L'\\');
 		if (pos != KxDynamicStringRefW::npos)
@@ -278,7 +278,7 @@ namespace KxVFS
 		return false;
 	}
 
-	void ConvergenceFS::BuildDispatcherIndex()
+	size_t ConvergenceFS::BuildDispatcherIndex()
 	{
 		m_RequestDispatcherIndex.clear();
 		m_EnumerationDispatcherIndex.clear();
@@ -293,6 +293,8 @@ namespace KxVFS
 		{
 			builder.Run(*it);
 		}
+
+		return m_RequestDispatcherIndex.size();
 	}
 }
 
@@ -371,7 +373,7 @@ namespace KxVFS
 				else
 				{
 					// Invalidate containing folder content
-					InvalidateSearchDispatcherVectorForFile(eventInfo.FileName);
+					InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
 				}
 				CleanupImpersonateCallerUserIfNeeded(userTokenHandle, statusCode);
 			}
@@ -500,7 +502,7 @@ namespace KxVFS
 					// Invalidate folder content if file is created or overwritten
 					if (creationDisposition == CREATE_NEW || creationDisposition == CREATE_ALWAYS || creationDisposition == OPEN_ALWAYS || creationDisposition == TRUNCATE_EXISTING)
 					{
-						InvalidateSearchDispatcherVectorForFile(eventInfo.FileName);
+						InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
 					}
 
 					Mirror::FileContext* mirrorContext = PopMirrorFileHandle(fileHandle);
@@ -548,180 +550,14 @@ namespace KxVFS
 				UpdateDispatcherIndex(eventInfo.FileName);
 				UpdateDispatcherIndex(eventInfo.NewFileName);
 
-				InvalidateSearchDispatcherVectorForFile(eventInfo.FileName);
-				InvalidateSearchDispatcherVectorForFile(eventInfo.NewFileName);
+				InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
+				InvalidateSearchDispatcherVectorUsingFile(eventInfo.NewFileName);
 
 				return STATUS_SUCCESS;
 			}
 			return GetNtStatusByWin32LastErrorCode();
 		}
 		return STATUS_INVALID_HANDLE;
-	}
-
-	NTSTATUS ConvergenceFS::OnReadFile(EvtReadFile& eventInfo)
-	{
-		Mirror::FileContext *mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (!mirrorContext)
-		{
-			return STATUS_FILE_CLOSED;
-		}
-
-		bool isCleanedUp = false;
-		bool isClosed = false;
-		GetMirrorFileHandleState(mirrorContext, &isCleanedUp, &isClosed);
-
-		if (isClosed)
-		{
-			return STATUS_FILE_CLOSED;
-		}
-
-		if (isCleanedUp)
-		{
-			KxDynamicStringW targetPath;
-			ResolveLocation(eventInfo.FileName, targetPath);
-			KxVFSDebugPrint(L"File is cleaned up, reopening: %s", targetPath.data());
-
-			FileHandle tempFileHandle = CreateFileW(targetPath, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
-			if (tempFileHandle.IsOK())
-			{
-				return ReadFileSynchronous(eventInfo, tempFileHandle);
-			}
-			return GetNtStatusByWin32LastErrorCode();
-		}
-
-		if (IsUnsingAsyncIO())
-		{
-			Mirror::OverlappedContext* overlapped = PopMirrorOverlapped();
-			if (!overlapped)
-			{
-				return STATUS_MEMORY_NOT_ALLOCATED;
-			}
-
-			Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlapped->m_InternalOverlapped);
-			overlapped->m_FileHandle = mirrorContext;
-			overlapped->m_Context = &eventInfo;
-			overlapped->m_IOType = Mirror::IOOperationType::Read;
-
-			StartThreadpoolIo(mirrorContext->m_IOCompletion);
-			if (!ReadFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, (LPOVERLAPPED)overlapped))
-			{
-				DWORD errorCode = GetLastError();
-				if (errorCode != ERROR_IO_PENDING)
-				{
-					CancelThreadpoolIo(mirrorContext->m_IOCompletion);
-					return GetNtStatusByWin32ErrorCode(errorCode);
-				}
-			}
-
-			return STATUS_PENDING;
-		}
-		else
-		{
-			KxVFSDebugPrint(L"Reading file by handle: %s", eventInfo.FileName);
-			return ReadFileSynchronous(eventInfo, mirrorContext->m_FileHandle);
-		}
-	}
-	NTSTATUS ConvergenceFS::OnWriteFile(EvtWriteFile& eventInfo)
-	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (!mirrorContext)
-		{
-			return STATUS_FILE_CLOSED;
-		}
-
-		bool isCleanedUp = false;
-		bool isClosed = false;
-		GetMirrorFileHandleState(mirrorContext, &isCleanedUp, &isClosed);
-		if (isClosed)
-		{
-			return STATUS_FILE_CLOSED;
-		}
-
-		// This write most likely change file attributes
-		InvalidateSearchDispatcherVectorForFile(eventInfo.FileName);
-
-		DWORD fileSizeHigh = 0;
-		DWORD fileSizeLow = 0;
-		UINT64 fileSize = 0;
-		if (isCleanedUp)
-		{
-			KxDynamicStringW targetPath;
-			ResolveLocation(eventInfo.FileName, targetPath);
-			FileHandle tempFileHandle = CreateFileW(targetPath, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
-			if (!tempFileHandle.IsOK())
-			{
-				return GetNtStatusByWin32LastErrorCode();
-			}
-
-			fileSizeLow = ::GetFileSize(tempFileHandle, &fileSizeHigh);
-			if (fileSizeLow == INVALID_FILE_SIZE)
-			{
-				return GetNtStatusByWin32LastErrorCode();
-			}
-			fileSize = ((UINT64)fileSizeHigh << 32) | fileSizeLow;
-
-			// Need to check if its really needs to be 'mirrorContext->m_FileHandle' and not 'tempFileHandle'
-			return WriteFileSynchronous(eventInfo, mirrorContext->m_FileHandle, fileSize);
-		}
-
-		fileSizeLow = ::GetFileSize(mirrorContext->m_FileHandle, &fileSizeHigh);
-		if (fileSizeLow == INVALID_FILE_SIZE)
-		{
-			return GetNtStatusByWin32LastErrorCode();
-		}
-		fileSize = ((UINT64)fileSizeHigh << 32) | fileSizeLow;
-
-		if (IsUnsingAsyncIO())
-		{
-			if (eventInfo.DokanFileInfo->PagingIo)
-			{
-				if ((UINT64)eventInfo.Offset >= fileSize)
-				{
-					eventInfo.NumberOfBytesWritten = 0;
-					return STATUS_SUCCESS;
-				}
-
-				if (((UINT64)eventInfo.Offset + eventInfo.NumberOfBytesToWrite) > fileSize)
-				{
-					UINT64 bytes = fileSize - eventInfo.Offset;
-					if (bytes >> 32)
-					{
-						eventInfo.NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
-					}
-					else
-					{
-						eventInfo.NumberOfBytesToWrite = (DWORD)bytes;
-					}
-				}
-			}
-
-			Mirror::OverlappedContext* overlapped = PopMirrorOverlapped();
-			if (!overlapped)
-			{
-				return STATUS_MEMORY_NOT_ALLOCATED;
-			}
-
-			Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlapped->m_InternalOverlapped);
-			overlapped->m_FileHandle = mirrorContext;
-			overlapped->m_Context = &eventInfo;
-			overlapped->m_IOType = Mirror::IOOperationType::Write;
-
-			StartThreadpoolIo(mirrorContext->m_IOCompletion);
-			if (!WriteFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, (LPOVERLAPPED)overlapped))
-			{
-				DWORD errorCode = GetLastError();
-				if (errorCode != ERROR_IO_PENDING)
-				{
-					CancelThreadpoolIo(mirrorContext->m_IOCompletion);
-					return GetNtStatusByWin32ErrorCode(errorCode);
-				}
-			}
-			return STATUS_PENDING;
-		}
-		else
-		{
-			return WriteFileSynchronous(eventInfo, mirrorContext->m_FileHandle, fileSize);
-		}
 	}
 
 	DWORD ConvergenceFS::OnFindFilesAux(const KxDynamicStringW& path, EvtFindFiles& eventInfo, Utility::StringSearcherHash& hashStore, TEnumerationVector* searchIndex)
@@ -774,17 +610,16 @@ namespace KxVFS
 		CriticalSectionLocker lockIndex(m_EnumerationDispatcherIndexCS);
 
 		TEnumerationVector* searchIndex = GetEnumerationVector(eventInfo.PathName);
-		if (searchIndex)
+		if (searchIndex && !searchIndex->empty())
 		{
 			SendEnumerationVector(&eventInfo, *searchIndex);
 			return STATUS_SUCCESS;
 		}
-		else
+		if (!searchIndex)
 		{
 			searchIndex = &CreateEnumerationVector(eventInfo.PathName);
 		}
 
-		//////////////////////////////////////////////////////////////////////////
 		auto AppendAsterix = [](KxDynamicStringW& path)
 		{
 			if (!path.empty())
@@ -808,10 +643,10 @@ namespace KxVFS
 		errorCode = OnFindFilesAux(writeTarget, eventInfo, foundPaths, searchIndex);
 
 		// Then in other folders
-		for (auto i = m_VirtualFolders.rbegin(); i != m_VirtualFolders.rend(); ++i)
+		for (auto it = m_VirtualFolders.rbegin(); it != m_VirtualFolders.rend(); ++it)
 		{
 			KxDynamicStringW path;
-			MakeFilePath(path, *i, eventInfo.PathName);
+			MakeFilePath(path, *it, eventInfo.PathName);
 			AppendAsterix(path);
 
 			errorCode = OnFindFilesAux(path, eventInfo, foundPaths, searchIndex);
