@@ -177,6 +177,7 @@ namespace KxVFS
 		OutputDebugStringA(__FUNCTION__);
 		OutputDebugStringA("\r\n");
 
+		m_IsDestructing = true;
 		DoUnMount();
 	}
 
@@ -278,7 +279,15 @@ namespace KxVFS
 			SetMounted(false);
 			GetService()->RemoveFS(this);
 
-			statusCode = OnUnMount(eventInfo);
+			if (!m_IsDestructing)
+			{
+				statusCode = OnUnMount(eventInfo);
+			}
+			else
+			{
+				OutputDebugStringA("We are destructing, don't call 'OnUnMount'");
+				statusCode = STATUS_SUCCESS;
+			}
 		}
 		return statusCode;
 	}

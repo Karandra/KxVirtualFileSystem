@@ -40,6 +40,7 @@ namespace KxVFS
 			CriticalSection m_UnmountCS;
 			uint32_t m_Flags = 0;
 			bool m_IsMounted = false;
+			bool m_IsDestructing = false;
 
 		private:
 			void SetMounted(bool value);
