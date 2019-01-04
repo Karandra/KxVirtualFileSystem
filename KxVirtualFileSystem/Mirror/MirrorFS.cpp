@@ -509,13 +509,13 @@ namespace KxVFS
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
 				// FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
-				FileHandle fileHandle = CreateFileW(targetPath,
-													genericDesiredAccess,
-													eventInfo.ShareAccess,
-													&securityAttributes,
-													OPEN_EXISTING,
-													fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
-													nullptr
+				Utility::FileHandle fileHandle = CreateFileW(targetPath,
+															 genericDesiredAccess,
+															 eventInfo.ShareAccess,
+															 &securityAttributes,
+															 OPEN_EXISTING,
+															 fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
+															 nullptr
 				);
 				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);
 
@@ -570,13 +570,13 @@ namespace KxVFS
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
 				KxVFSDebugPrint(L"Trying to create/open file: %s", targetPath.data());
-				FileHandle fileHandle = CreateFileW(targetPath,
-													genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
-													eventInfo.ShareAccess,
-													&securityAttributes,
-													creationDisposition,
-													fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
-													nullptr
+				Utility::FileHandle fileHandle = CreateFileW(targetPath,
+															 genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
+															 eventInfo.ShareAccess,
+															 &securityAttributes,
+															 creationDisposition,
+															 fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
+															 nullptr
 				);
 
 				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);
@@ -963,7 +963,7 @@ namespace KxVFS
 				KxDynamicStringW targetPath;
 				ResolveLocation(eventInfo.FileName, targetPath);
 
-				FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+				Utility::FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 				if (tempFileHandle.IsOK())
 				{
 					const NTSTATUS status = ReadFileSync(eventInfo, tempFileHandle);
@@ -1028,7 +1028,7 @@ namespace KxVFS
 				KxDynamicStringW targetPath;
 				ResolveLocation(eventInfo.FileName, targetPath);
 
-				FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+				Utility::FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 				if (!tempFileHandle.IsOK())
 				{
 					return GetNtStatusByWin32LastErrorCode();

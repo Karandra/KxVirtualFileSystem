@@ -8,7 +8,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/Utility.h"
 #include "FileHandle.h"
 
-namespace KxVFS
+namespace KxVFS::Utility
 {
 	bool FileHandle::SetDeleteOnClose(bool deleteOnClose)
 	{

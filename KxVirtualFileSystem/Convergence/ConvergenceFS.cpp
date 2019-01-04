@@ -349,13 +349,13 @@ namespace KxVFS
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
 				// FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
-				FileHandle fileHandle = ::CreateFileW(targetPath,
-													  genericDesiredAccess,
-													  eventInfo.ShareAccess,
-													  &securityAttributes,
-													  OPEN_EXISTING,
-													  fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
-													  nullptr
+				Utility::FileHandle fileHandle = ::CreateFileW(targetPath,
+															   genericDesiredAccess,
+															   eventInfo.ShareAccess,
+															   &securityAttributes,
+															   OPEN_EXISTING,
+															   fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
+															   nullptr
 				);
 				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);
 
@@ -435,13 +435,13 @@ namespace KxVFS
 				}
 
 				KxVFSDebugPrint(L"Trying to create/open file: %s", targetPath.data());
-				FileHandle fileHandle = CreateFileW(targetPath,
-													genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
-													eventInfo.ShareAccess,
-													&securityAttributes,
-													creationDisposition,
-													fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
-													nullptr
+				Utility::FileHandle fileHandle = CreateFileW(targetPath,
+															 genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
+															 eventInfo.ShareAccess,
+															 &securityAttributes,
+															 creationDisposition,
+															 fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
+															 nullptr
 				);
 
 				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);
