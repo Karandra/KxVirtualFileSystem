@@ -138,7 +138,7 @@ namespace KxVFS::Utility
 		::OutputDebugStringW(output.data());
 
 		DWORD writtenCount = 0;
-		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), output.data(), output.size(), &writtenCount, nullptr);
+		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), output.data(), static_cast<DWORD>(output.size()), &writtenCount, nullptr);
 		return output.length();
 	}
 };
