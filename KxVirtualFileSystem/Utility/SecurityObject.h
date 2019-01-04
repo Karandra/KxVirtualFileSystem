@@ -36,6 +36,16 @@ namespace KxVFS::Utility
 			}
 	
 		public:
+			const PSECURITY_DESCRIPTOR& GetDescriptor() const
+			{
+				return m_Descriptor;
+			}
+			PSECURITY_DESCRIPTOR& GetDescriptor()
+			{
+				return m_Descriptor;
+			}
+
+		public:
 			SecurityObject& operator=(SecurityObject&& other)
 			{
 				m_Descriptor = other.m_Descriptor;
