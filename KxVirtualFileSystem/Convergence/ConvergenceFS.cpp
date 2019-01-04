@@ -117,9 +117,9 @@ namespace KxVFS
 
 				if (!Utility::IsExist(inWriteTarget))
 				{
-					for (auto i = m_VirtualFolders.rbegin(); i != m_VirtualFolders.rend(); ++i)
+					for (auto it = m_VirtualFolders.rbegin(); it != m_VirtualFolders.rend(); ++it)
 					{
-						MakeFilePath(targetPath, *i, requestedPath);
+						MakeFilePath(targetPath, *it, requestedPath);
 						if (Utility::IsExist(targetPath))
 						{
 							UpdateDispatcherIndex(requestedPath, targetPath);
@@ -393,20 +393,20 @@ namespace KxVFS
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
 				// FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
-				FileHandle fileHandle = CreateFileW(targetPath,
-													genericDesiredAccess,
-													eventInfo.ShareAccess,
-													&securityAttributes,
-													OPEN_EXISTING,
-													fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
-													nullptr
+				FileHandle fileHandle = ::CreateFileW(targetPath,
+													  genericDesiredAccess,
+													  eventInfo.ShareAccess,
+													  &securityAttributes,
+													  OPEN_EXISTING,
+													  fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
+													  nullptr
 				);
 				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);
 
 				if (fileHandle.IsOK())
 				{
-					Mirror::FileContext* mirrorContext = PopMirrorFileHandle(fileHandle);
-					if (!mirrorContext)
+					Mirror::FileContext* fileContext = PopMirrorFileHandle(fileHandle);
+					if (!fileContext)
 					{
 						SetLastError(ERROR_INTERNAL_ERROR);
 						statusCode = STATUS_INTERNAL_ERROR;
@@ -418,7 +418,7 @@ namespace KxVFS
 					}
 
 					// Save the file handle in m_Context
-					eventInfo.DokanFileInfo->Context = (ULONG64)mirrorContext;
+					SaveFileContext(eventInfo, fileContext);
 
 					// Open succeed but we need to inform the driver that the dir open and not created by returning STATUS_OBJECT_NAME_COLLISION
 					if (creationDisposition == OPEN_ALWAYS && fileAttributes != INVALID_FILE_ATTRIBUTES)
@@ -539,8 +539,7 @@ namespace KxVFS
 	}
 	NTSTATUS ConvergenceFS::OnMoveFile(EvtMoveFile& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			KxDynamicStringW targetPathOld;
 			ResolveLocation(eventInfo.FileName, targetPathOld);
@@ -562,7 +561,7 @@ namespace KxVFS
 			}
 			return GetNtStatusByWin32LastErrorCode();
 		}
-		return STATUS_INVALID_HANDLE;
+		return STATUS_FILE_CLOSED;
 	}
 
 	DWORD ConvergenceFS::OnFindFilesAux(const KxDynamicStringW& path, EvtFindFiles& eventInfo, Utility::StringSearcherHash& hashStore, TEnumerationVector* searchIndex)
@@ -637,7 +636,6 @@ namespace KxVFS
 			}
 		};
 
-		DWORD errorCode = 0;
 		Utility::StringSearcherHash foundPaths = {Utility::HashString(L"."), Utility::HashString(L"..")};
 
 		// Find everything in write target first as it have highest priority
@@ -645,7 +643,7 @@ namespace KxVFS
 		MakeFilePath(writeTarget, GetWriteTarget(), eventInfo.PathName);
 		AppendAsterix(writeTarget);
 
-		errorCode = OnFindFilesAux(writeTarget, eventInfo, foundPaths, searchIndex);
+		DWORD errorCode = OnFindFilesAux(writeTarget, eventInfo, foundPaths, searchIndex);
 
 		// Then in other folders
 		for (auto it = m_VirtualFolders.rbegin(); it != m_VirtualFolders.rend(); ++it)

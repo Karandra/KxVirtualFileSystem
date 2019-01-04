@@ -129,6 +129,15 @@ namespace KxVFS
 			virtual void OnBasicFileInfoSet(EvtSetBasicFileInfo& eventInfo, const KxDynamicStringW& targetPath) { }
 
 		protected:
+			template<class TEventInfo> Mirror::FileContext* GetFileContext(TEventInfo& eventInfo) const
+			{
+				return reinterpret_cast<Mirror::FileContext*>(eventInfo.DokanFileInfo->Context);
+			}
+			template<class TEventInfo> void SaveFileContext(TEventInfo& eventInfo, Mirror::FileContext* fileContext) const
+			{
+				eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(fileContext);
+			}
+
 			NTSTATUS OnMount(EvtMounted& eventInfo) override;
 			NTSTATUS OnUnMount(EvtUnMounted& eventInfo) override;
 
@@ -144,6 +153,7 @@ namespace KxVFS
 
 			NTSTATUS OnLockFile(EvtLockFile& eventInfo) override;
 			NTSTATUS OnUnlockFile(EvtUnlockFile& eventInfo) override;
+
 			NTSTATUS OnGetFileSecurity(EvtGetFileSecurity& eventInfo) override;
 			NTSTATUS OnSetFileSecurity(EvtSetFileSecurity& eventInfo) override;
 

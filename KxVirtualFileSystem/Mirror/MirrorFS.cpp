@@ -390,7 +390,7 @@ namespace KxVFS
 
 	NTSTATUS MirrorFS::OnGetVolumeFreeSpace(EvtGetVolumeFreeSpace& eventInfo)
 	{
-		if (!GetDiskFreeSpaceExW(m_Source.data(), (ULARGE_INTEGER*)&eventInfo.FreeBytesAvailable, (ULARGE_INTEGER*)&eventInfo.TotalNumberOfBytes, (ULARGE_INTEGER*)&eventInfo.TotalNumberOfFreeBytes))
+		if (!::GetDiskFreeSpaceExW(m_Source.data(), (ULARGE_INTEGER*)&eventInfo.FreeBytesAvailable, (ULARGE_INTEGER*)&eventInfo.TotalNumberOfBytes, (ULARGE_INTEGER*)&eventInfo.TotalNumberOfFreeBytes))
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
@@ -406,7 +406,7 @@ namespace KxVFS
 	}
 	NTSTATUS MirrorFS::OnGetVolumeAttributes(EvtGetVolumeAttributes& eventInfo)
 	{
-		size_t maxFileSystemNameLengthInBytes = eventInfo.MaxFileSystemNameLengthInChars * sizeof(wchar_t);
+		const size_t maxFileSystemNameLengthInBytes = eventInfo.MaxFileSystemNameLengthInChars * sizeof(wchar_t);
 
 		eventInfo.Attributes->FileSystemAttributes = FILE_CASE_SENSITIVE_SEARCH|FILE_CASE_PRESERVED_NAMES|FILE_SUPPORTS_REMOTE_STORAGE|FILE_UNICODE_ON_DISK|FILE_PERSISTENT_ACLS|FILE_NAMED_STREAMS;
 		eventInfo.Attributes->MaximumComponentNameLength = 256; // Not 255, this means Dokan doesn't support long file names?
@@ -420,16 +420,13 @@ namespace KxVFS
 		DWORD fileSystemFlags = 0;
 		DWORD maximumComponentLength = 0;
 
-		KxDynamicStringRefW fileSystemName;
 		wchar_t fileSystemNameBuffer[255] = {0};
-		if (GetVolumeInformationW(volumeRoot, nullptr, 0, nullptr, &maximumComponentLength, &fileSystemFlags, fileSystemNameBuffer, std::size(fileSystemNameBuffer)))
+		if (::GetVolumeInformationW(volumeRoot, nullptr, 0, nullptr, &maximumComponentLength, &fileSystemFlags, fileSystemNameBuffer, std::size(fileSystemNameBuffer)))
 		{
 			eventInfo.Attributes->MaximumComponentNameLength = maximumComponentLength;
 			eventInfo.Attributes->FileSystemAttributes &= fileSystemFlags;
-
-			fileSystemName = fileSystemNameBuffer;
 		}
-		eventInfo.Attributes->FileSystemNameLength = WriteString(fileSystemName.data(), eventInfo.Attributes->FileSystemName, eventInfo.MaxFileSystemNameLengthInChars);
+		eventInfo.Attributes->FileSystemNameLength = WriteString(fileSystemNameBuffer, eventInfo.Attributes->FileSystemName, eventInfo.MaxFileSystemNameLengthInChars);
 
 		return STATUS_SUCCESS;
 	}
@@ -524,8 +521,8 @@ namespace KxVFS
 
 				if (fileHandle.IsOK())
 				{
-					Mirror::FileContext* mirrorContext = PopMirrorFileHandle(fileHandle);
-					if (!mirrorContext)
+					Mirror::FileContext* fileContext = PopMirrorFileHandle(fileHandle);
+					if (!fileContext)
 					{
 						SetLastError(ERROR_INTERNAL_ERROR);
 						statusCode = STATUS_INTERNAL_ERROR;
@@ -537,7 +534,7 @@ namespace KxVFS
 					}
 
 					// Save the file handle in m_Context
-					eventInfo.DokanFileInfo->Context = (ULONG64)mirrorContext;
+					SaveFileContext(eventInfo, fileContext);
 
 					// Open succeed but we need to inform the driver that the dir open and not created by returning STATUS_OBJECT_NAME_COLLISION
 					if (creationDisposition == OPEN_ALWAYS && fileAttributes != INVALID_FILE_ATTRIBUTES)
@@ -627,16 +624,15 @@ namespace KxVFS
 	}
 	NTSTATUS MirrorFS::OnCloseFile(EvtCloseFile& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			if (CriticalSectionLocker lock(mirrorContext->m_Lock); true)
+			if (CriticalSectionLocker lock(fileContext->m_Lock); true)
 			{
-				mirrorContext->m_IsClosed = true;
-				if (mirrorContext->m_FileHandle && mirrorContext->m_FileHandle != INVALID_HANDLE_VALUE)
+				fileContext->m_IsClosed = true;
+				if (fileContext->m_FileHandle && fileContext->m_FileHandle != INVALID_HANDLE_VALUE)
 				{
-					CloseHandle(mirrorContext->m_FileHandle);
-					mirrorContext->m_FileHandle = nullptr;
+					CloseHandle(fileContext->m_FileHandle);
+					fileContext->m_FileHandle = nullptr;
 
 					KxDynamicStringW targetPath;
 					ResolveLocation(eventInfo.FileName, targetPath);
@@ -648,7 +644,7 @@ namespace KxVFS
 			}
 
 			eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(nullptr);
-			PushMirrorFileHandle(mirrorContext);
+			PushMirrorFileHandle(fileContext);
 			return STATUS_SUCCESS;
 		}
 		return STATUS_INVALID_HANDLE;
@@ -667,16 +663,14 @@ namespace KxVFS
 		* might hold outstanding references to the file object. These components can still read to or write from a file, even
 		* after an IRP_MJ_CLEANUP request is received.
 		*/
-
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			if (CriticalSectionLocker lock(mirrorContext->m_Lock); true)
+			if (CriticalSectionLocker lock(fileContext->m_Lock); true)
 			{
-				CloseHandle(mirrorContext->m_FileHandle);
+				CloseHandle(fileContext->m_FileHandle);
 
-				mirrorContext->m_FileHandle = nullptr;
-				mirrorContext->m_IsCleanedUp = true;
+				fileContext->m_FileHandle = nullptr;
+				fileContext->m_IsCleanedUp = true;
 
 				KxDynamicStringW targetPath;
 				ResolveLocation(eventInfo.FileName, targetPath);
@@ -691,8 +685,7 @@ namespace KxVFS
 	}
 	NTSTATUS MirrorFS::OnMoveFile(EvtMoveFile& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			//KxDynamicStringW targetPathOld;
 			//ResolveLocation(eventInfo.FileName, targetPathOld);
@@ -721,7 +714,7 @@ namespace KxVFS
 			renameInfo->FileNameLength = (DWORD)targetPathNew.length() * sizeof(targetPathNew[0]); // They want length in bytes
 			wcscpy_s(renameInfo->FileName, targetPathNew.length() + 1, targetPathNew);
 
-			const BOOL result = SetFileInformationByHandle(mirrorContext->m_FileHandle, FileRenameInfo, renameInfo, bufferSize);
+			const BOOL result = SetFileInformationByHandle(fileContext->m_FileHandle, FileRenameInfo, renameInfo, bufferSize);
 			if (result)
 			{
 				return STATUS_SUCCESS;
@@ -735,11 +728,10 @@ namespace KxVFS
 	}
 	NTSTATUS MirrorFS::OnCanDeleteFile(EvtCanDeleteFile& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			BY_HANDLE_FILE_INFORMATION fileInfo = {0};
-			if (!::GetFileInformationByHandle(mirrorContext->m_FileHandle, &fileInfo))
+			if (!::GetFileInformationByHandle(fileContext->m_FileHandle, &fileInfo))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
@@ -766,8 +758,7 @@ namespace KxVFS
 
 	NTSTATUS MirrorFS::OnLockFile(EvtLockFile& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			LARGE_INTEGER length;
 			length.QuadPart = eventInfo.Length;
@@ -775,7 +766,7 @@ namespace KxVFS
 			LARGE_INTEGER offset;
 			offset.QuadPart = eventInfo.ByteOffset;
 
-			if (!LockFile(mirrorContext->m_FileHandle, offset.LowPart, offset.HighPart, length.LowPart, length.HighPart))
+			if (!::LockFile(fileContext->m_FileHandle, offset.LowPart, offset.HighPart, length.LowPart, length.HighPart))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
@@ -785,8 +776,7 @@ namespace KxVFS
 	}
 	NTSTATUS MirrorFS::OnUnlockFile(EvtUnlockFile& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			LARGE_INTEGER length;
 			length.QuadPart = eventInfo.Length;
@@ -794,7 +784,7 @@ namespace KxVFS
 			LARGE_INTEGER offset;
 			offset.QuadPart = eventInfo.ByteOffset;
 
-			if (!UnlockFile(mirrorContext->m_FileHandle, offset.LowPart, offset.HighPart, length.LowPart, length.HighPart))
+			if (!::UnlockFile(fileContext->m_FileHandle, offset.LowPart, offset.HighPart, length.LowPart, length.HighPart))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
@@ -802,26 +792,26 @@ namespace KxVFS
 		}
 		return STATUS_INVALID_HANDLE;
 	}
+	
 	NTSTATUS MirrorFS::OnGetFileSecurity(EvtGetFileSecurity& eventInfo)
 	{
 		// This doesn't work properly anyway
 		return STATUS_NOT_IMPLEMENTED;
 
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			PSECURITY_DESCRIPTOR tempSecurityDescriptor = nullptr;
 
 			// GetSecurityInfo() is not thread safe so we use a critical section here to synchronize
 			DWORD errorCode = ERROR_SUCCESS;
 			{
-				CriticalSectionLocker lock(mirrorContext->m_Lock);
+				CriticalSectionLocker lock(fileContext->m_Lock);
 
-				if (mirrorContext->m_IsClosed)
+				if (fileContext->m_IsClosed)
 				{
 					errorCode = ERROR_INVALID_HANDLE;
 				}
-				else if (mirrorContext->m_IsCleanedUp)
+				else if (fileContext->m_IsCleanedUp)
 				{
 					KxDynamicStringW targetPath;
 					ResolveLocation(eventInfo.FileName, targetPath);
@@ -829,7 +819,7 @@ namespace KxVFS
 				}
 				else
 				{
-					errorCode = GetSecurityInfo(mirrorContext->m_FileHandle, SE_FILE_OBJECT, eventInfo.SecurityInformation, nullptr, nullptr, nullptr, nullptr, &tempSecurityDescriptor);
+					errorCode = GetSecurityInfo(fileContext->m_FileHandle, SE_FILE_OBJECT, eventInfo.SecurityInformation, nullptr, nullptr, nullptr, nullptr, &tempSecurityDescriptor);
 				}
 			}
 
@@ -880,8 +870,7 @@ namespace KxVFS
 		// And this can be problematic too
 		return STATUS_NOT_IMPLEMENTED;
 
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			// SecurityDescriptor must be 4-byte aligned
 			_ASSERT(((size_t)eventInfo.SecurityDescriptor & 3) == 0);
@@ -889,14 +878,14 @@ namespace KxVFS
 			BOOL setSecurity = FALSE;
 
 			{
-				CriticalSectionLocker lock(mirrorContext->m_Lock);
+				CriticalSectionLocker lock(fileContext->m_Lock);
 
-				if (mirrorContext->m_IsClosed)
+				if (fileContext->m_IsClosed)
 				{
 					setSecurity = FALSE;
 					SetLastError(ERROR_INVALID_HANDLE);
 				}
-				else if (mirrorContext->m_IsCleanedUp)
+				else if (fileContext->m_IsCleanedUp)
 				{
 					// I wonder why it was commented out
 					#if 0
@@ -943,7 +932,7 @@ namespace KxVFS
 				else
 				{
 					// For some reason this appears to be only variant of SetSecurity that works without returning an ERROR_ACCESS_DENIED
-					setSecurity = SetUserObjectSecurity(mirrorContext->m_FileHandle, &eventInfo.SecurityInformation, eventInfo.SecurityDescriptor);
+					setSecurity = SetUserObjectSecurity(fileContext->m_FileHandle, &eventInfo.SecurityInformation, eventInfo.SecurityDescriptor);
 				}
 			}
 
@@ -958,206 +947,199 @@ namespace KxVFS
 
 	NTSTATUS MirrorFS::OnReadFile(EvtReadFile& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (!mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			return STATUS_FILE_CLOSED;
-		}
+			bool isCleanedUp = false;
+			bool isClosed = false;
+			GetMirrorFileHandleState(fileContext, &isCleanedUp, &isClosed);
 
-		bool isCleanedUp = false;
-		bool isClosed = false;
-		GetMirrorFileHandleState(mirrorContext, &isCleanedUp, &isClosed);
-
-		if (isClosed)
-		{
-			return STATUS_FILE_CLOSED;
-		}
-
-		if (isCleanedUp)
-		{
-			KxDynamicStringW targetPath;
-			ResolveLocation(eventInfo.FileName, targetPath);
-
-			FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
-			if (tempFileHandle.IsOK())
+			if (isClosed)
 			{
-				const NTSTATUS status = ReadFileSync(eventInfo, tempFileHandle);
-				OnFileRead(eventInfo, targetPath);
-				return status;
-			}
-			return GetNtStatusByWin32LastErrorCode();
-		}
-
-		if (IsUnsingAsyncIO())
-		{
-			Mirror::OverlappedContext* overlappedContext = PopMirrorOverlapped();
-			if (!overlappedContext)
-			{
-				return STATUS_MEMORY_NOT_ALLOCATED;
+				return STATUS_FILE_CLOSED;
 			}
 
-			Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->m_InternalOverlapped);
-			overlappedContext->m_FileHandle = mirrorContext;
-			overlappedContext->m_Context = &eventInfo;
-			overlappedContext->m_IOType = Mirror::IOOperationType::Read;
-
-			// Async operation, call before read.
-			OnFileRead(eventInfo, KxNullDynamicStringW);
-
-			StartThreadpoolIo(mirrorContext->m_IOCompletion);
-			if (!::ReadFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, &overlappedContext->m_InternalOverlapped))
+			if (isCleanedUp)
 			{
-				DWORD errorCode = GetLastError();
-				if (errorCode != ERROR_IO_PENDING)
+				KxDynamicStringW targetPath;
+				ResolveLocation(eventInfo.FileName, targetPath);
+
+				FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+				if (tempFileHandle.IsOK())
 				{
-					::CancelThreadpoolIo(mirrorContext->m_IOCompletion);
-					return GetNtStatusByWin32ErrorCode(errorCode);
+					const NTSTATUS status = ReadFileSync(eventInfo, tempFileHandle);
+					OnFileRead(eventInfo, targetPath);
+					return status;
 				}
-			}
-			return STATUS_PENDING;
-		}
-		else
-		{
-			const NTSTATUS status = ReadFileSync(eventInfo, mirrorContext->m_FileHandle);;
-			OnFileRead(eventInfo, KxNullDynamicStringW);
-			return status;
-		}
-	}
-	NTSTATUS MirrorFS::OnWriteFile(EvtWriteFile& eventInfo)
-	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (!mirrorContext)
-		{
-			return STATUS_FILE_CLOSED;
-		}
-
-		bool isCleanedUp = false;
-		bool isClosed = false;
-		GetMirrorFileHandleState(mirrorContext, &isCleanedUp, &isClosed);
-		if (isClosed)
-		{
-			return STATUS_FILE_CLOSED;
-		}
-
-		uint64_t fileSize = 0;
-		if (isCleanedUp)
-		{
-			KxDynamicStringW targetPath;
-			ResolveLocation(eventInfo.FileName, targetPath);
-
-			FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
-			if (!tempFileHandle.IsOK())
-			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
 
+			if (IsUnsingAsyncIO())
+			{
+				Mirror::OverlappedContext* overlappedContext = PopMirrorOverlapped();
+				if (!overlappedContext)
+				{
+					return STATUS_MEMORY_NOT_ALLOCATED;
+				}
+
+				Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->m_InternalOverlapped);
+				overlappedContext->m_FileHandle = fileContext;
+				overlappedContext->m_Context = &eventInfo;
+				overlappedContext->m_IOType = Mirror::IOOperationType::Read;
+
+				// Async operation, call before read.
+				OnFileRead(eventInfo, KxNullDynamicStringW);
+
+				StartThreadpoolIo(fileContext->m_IOCompletion);
+				if (!::ReadFile(fileContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, &overlappedContext->m_InternalOverlapped))
+				{
+					DWORD errorCode = GetLastError();
+					if (errorCode != ERROR_IO_PENDING)
+					{
+						::CancelThreadpoolIo(fileContext->m_IOCompletion);
+						return GetNtStatusByWin32ErrorCode(errorCode);
+					}
+				}
+				return STATUS_PENDING;
+			}
+			else
+			{
+				const NTSTATUS status = ReadFileSync(eventInfo, fileContext->m_FileHandle);;
+				OnFileRead(eventInfo, KxNullDynamicStringW);
+				return status;
+			}
+		}
+		return STATUS_FILE_CLOSED;
+	}
+	NTSTATUS MirrorFS::OnWriteFile(EvtWriteFile& eventInfo)
+	{
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
+		{
+			bool isCleanedUp = false;
+			bool isClosed = false;
+			GetMirrorFileHandleState(fileContext, &isCleanedUp, &isClosed);
+			if (isClosed)
+			{
+				return STATUS_FILE_CLOSED;
+			}
+
+			uint64_t fileSize = 0;
+			if (isCleanedUp)
+			{
+				KxDynamicStringW targetPath;
+				ResolveLocation(eventInfo.FileName, targetPath);
+
+				FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
+				if (!tempFileHandle.IsOK())
+				{
+					return GetNtStatusByWin32LastErrorCode();
+				}
+
+				LARGE_INTEGER liFileSize = {0};
+				if (!::GetFileSizeEx(fileContext->m_FileHandle, &liFileSize))
+				{
+					return GetNtStatusByWin32LastErrorCode();
+				}
+				fileSize = liFileSize.QuadPart;
+
+				// Need to check if its really needs to be 'mirrorContext->m_FileHandle' and not 'tempFileHandle'.
+				NTSTATUS status = WriteFileSync(eventInfo, fileContext->m_FileHandle, fileSize);
+				OnFileWritten(eventInfo, targetPath);
+				return status;
+			}
+
 			LARGE_INTEGER liFileSize = {0};
-			if (!::GetFileSizeEx(mirrorContext->m_FileHandle, &liFileSize))
+			if (!::GetFileSizeEx(fileContext->m_FileHandle, &liFileSize))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
 			fileSize = liFileSize.QuadPart;
 
-			// Need to check if its really needs to be 'mirrorContext->m_FileHandle' and not 'tempFileHandle'.
-			NTSTATUS status = WriteFileSync(eventInfo, mirrorContext->m_FileHandle, fileSize);
-			OnFileWritten(eventInfo, targetPath);
-			return status;
-		}
-
-		LARGE_INTEGER liFileSize = {0};
-		if (!::GetFileSizeEx(mirrorContext->m_FileHandle, &liFileSize))
-		{
-			return GetNtStatusByWin32LastErrorCode();
-		}
-		fileSize = liFileSize.QuadPart;
-
-		if (IsUnsingAsyncIO())
-		{
-			// Paging IO, I need to read about it at some point. Until then, don't touch this code.
-			if (eventInfo.DokanFileInfo->PagingIo)
+			if (IsUnsingAsyncIO())
 			{
-				if ((uint64_t)eventInfo.Offset >= fileSize)
+				// Paging IO, I need to read about it at some point. Until then, don't touch this code.
+				if (eventInfo.DokanFileInfo->PagingIo)
 				{
-					eventInfo.NumberOfBytesWritten = 0;
-					return STATUS_SUCCESS;
-				}
-
-				if (((uint64_t)eventInfo.Offset + eventInfo.NumberOfBytesToWrite) > fileSize)
-				{
-					uint64_t bytes = fileSize - eventInfo.Offset;
-					if (bytes >> 32)
+					if ((uint64_t)eventInfo.Offset >= fileSize)
 					{
-						eventInfo.NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
+						eventInfo.NumberOfBytesWritten = 0;
+						return STATUS_SUCCESS;
 					}
-					else
+
+					if (((uint64_t)eventInfo.Offset + eventInfo.NumberOfBytesToWrite) > fileSize)
 					{
-						eventInfo.NumberOfBytesToWrite = (DWORD)bytes;
+						uint64_t bytes = fileSize - eventInfo.Offset;
+						if (bytes >> 32)
+						{
+							eventInfo.NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
+						}
+						else
+						{
+							eventInfo.NumberOfBytesToWrite = (DWORD)bytes;
+						}
 					}
 				}
-			}
 
-			Mirror::OverlappedContext* overlappedContext = PopMirrorOverlapped();
-			if (!overlappedContext)
-			{
-				return STATUS_MEMORY_NOT_ALLOCATED;
-			}
-
-			Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->m_InternalOverlapped);
-			overlappedContext->m_FileHandle = mirrorContext;
-			overlappedContext->m_Context = &eventInfo;
-			overlappedContext->m_IOType = Mirror::IOOperationType::Write;
-
-			// Call here, because it's async operation.
-			OnFileWritten(eventInfo, KxNullDynamicStringW);
-
-			StartThreadpoolIo(mirrorContext->m_IOCompletion);
-			if (!::WriteFile(mirrorContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, &overlappedContext->m_InternalOverlapped))
-			{
-				DWORD errorCode = ::GetLastError();
-				if (errorCode != ERROR_IO_PENDING)
+				Mirror::OverlappedContext* overlappedContext = PopMirrorOverlapped();
+				if (!overlappedContext)
 				{
-					::CancelThreadpoolIo(mirrorContext->m_IOCompletion);
-					return GetNtStatusByWin32ErrorCode(errorCode);
+					return STATUS_MEMORY_NOT_ALLOCATED;
 				}
+
+				Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->m_InternalOverlapped);
+				overlappedContext->m_FileHandle = fileContext;
+				overlappedContext->m_Context = &eventInfo;
+				overlappedContext->m_IOType = Mirror::IOOperationType::Write;
+
+				// Call here, because it's async operation.
+				OnFileWritten(eventInfo, KxNullDynamicStringW);
+
+				StartThreadpoolIo(fileContext->m_IOCompletion);
+				if (!::WriteFile(fileContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, &overlappedContext->m_InternalOverlapped))
+				{
+					DWORD errorCode = ::GetLastError();
+					if (errorCode != ERROR_IO_PENDING)
+					{
+						::CancelThreadpoolIo(fileContext->m_IOCompletion);
+						return GetNtStatusByWin32ErrorCode(errorCode);
+					}
+				}
+				return STATUS_PENDING;
 			}
-			return STATUS_PENDING;
+			else
+			{
+				NTSTATUS status = WriteFileSync(eventInfo, fileContext->m_FileHandle, fileSize);
+				OnFileWritten(eventInfo, KxNullDynamicStringW);
+				return status;
+			}
 		}
-		else
-		{
-			NTSTATUS status = WriteFileSync(eventInfo, mirrorContext->m_FileHandle, fileSize);
-			OnFileWritten(eventInfo, KxNullDynamicStringW);
-			return status;
-		}
+		return STATUS_FILE_CLOSED;
 	}
 	
 	NTSTATUS MirrorFS::OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (!mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			return STATUS_FILE_CLOSED;
+			if (::FlushFileBuffers(fileContext->m_FileHandle))
+			{
+				OnFileBuffersFlushed(eventInfo, KxNullDynamicStringW);
+				return STATUS_SUCCESS;
+			}
+			return GetNtStatusByWin32LastErrorCode();
 		}
-
-		if (::FlushFileBuffers(mirrorContext->m_FileHandle))
-		{
-			OnFileBuffersFlushed(eventInfo, KxNullDynamicStringW);
-			return STATUS_SUCCESS;
-		}
-		return GetNtStatusByWin32LastErrorCode();
+		return STATUS_FILE_CLOSED;
 	}
 	NTSTATUS MirrorFS::OnSetEndOfFile(EvtSetEndOfFile& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			LARGE_INTEGER offset;
 			offset.QuadPart = eventInfo.Length;
 
-			if (!::SetFilePointerEx(mirrorContext->m_FileHandle, offset, nullptr, FILE_BEGIN))
+			if (!::SetFilePointerEx(fileContext->m_FileHandle, offset, nullptr, FILE_BEGIN))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
-			if (!::SetEndOfFile(mirrorContext->m_FileHandle))
+			if (!::SetEndOfFile(fileContext->m_FileHandle))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
@@ -1165,25 +1147,24 @@ namespace KxVFS
 			OnEndOfFileSet(eventInfo, KxNullDynamicStringW);
 			return STATUS_SUCCESS;
 		}
-		return STATUS_INVALID_HANDLE;
+		return STATUS_FILE_CLOSED;
 	}
 	NTSTATUS MirrorFS::OnSetAllocationSize(EvtSetAllocationSize& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			LARGE_INTEGER fileSize;
-			if (::GetFileSizeEx(mirrorContext->m_FileHandle, &fileSize))
+			if (::GetFileSizeEx(fileContext->m_FileHandle, &fileSize))
 			{
 				if (eventInfo.Length < fileSize.QuadPart)
 				{
 					fileSize.QuadPart = eventInfo.Length;
 
-					if (!::SetFilePointerEx(mirrorContext->m_FileHandle, fileSize, nullptr, FILE_BEGIN))
+					if (!::SetFilePointerEx(fileContext->m_FileHandle, fileSize, nullptr, FILE_BEGIN))
 					{
 						return GetNtStatusByWin32LastErrorCode();
 					}
-					if (!::SetEndOfFile(mirrorContext->m_FileHandle))
+					if (!::SetEndOfFile(fileContext->m_FileHandle))
 					{
 						return GetNtStatusByWin32LastErrorCode();
 					}
@@ -1197,14 +1178,13 @@ namespace KxVFS
 			OnAllocationSizeSet(eventInfo, KxNullDynamicStringW);
 			return STATUS_SUCCESS;
 		}
-		return STATUS_INVALID_HANDLE;
+		return STATUS_FILE_CLOSED;
 	}
 	NTSTATUS MirrorFS::OnGetFileInfo(EvtGetFileInfo& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			if (!GetFileInformationByHandle(mirrorContext->m_FileHandle, &eventInfo.FileHandleInfo))
+			if (!::GetFileInformationByHandle(fileContext->m_FileHandle, &eventInfo.FileHandleInfo))
 			{
 				KxDynamicStringW targetPath;
 				ResolveLocation(eventInfo.FileName, targetPath);
@@ -1237,14 +1217,13 @@ namespace KxVFS
 			KxVFSDebugPrint(L"Successfully retrieved file info by handle: %s", eventInfo.FileName);
 			return STATUS_SUCCESS;
 		}
-		return STATUS_INVALID_HANDLE;
+		return STATUS_FILE_CLOSED;
 	}
 	NTSTATUS MirrorFS::OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo)
 	{
-		Mirror::FileContext* mirrorContext = (Mirror::FileContext*)eventInfo.DokanFileInfo->Context;
-		if (mirrorContext)
+		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			if (!::SetFileInformationByHandle(mirrorContext->m_FileHandle, FileBasicInfo, eventInfo.Info, (DWORD)sizeof(Dokany2::FILE_BASIC_INFORMATION)))
+			if (!::SetFileInformationByHandle(fileContext->m_FileHandle, FileBasicInfo, eventInfo.Info, (DWORD)sizeof(Dokany2::FILE_BASIC_INFORMATION)))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
@@ -1252,7 +1231,7 @@ namespace KxVFS
 			OnBasicFileInfoSet(eventInfo, KxNullDynamicStringW);
 			return STATUS_SUCCESS;
 		}
-		return STATUS_INVALID_HANDLE;
+		return STATUS_FILE_CLOSED;
 	}
 
 	NTSTATUS MirrorFS::OnFindFiles(EvtFindFiles& eventInfo)
