@@ -45,50 +45,6 @@ namespace KxVFS
 		MakeFilePath(path, GetWriteTarget(), requestedPath);
 		return Utility::IsExist(path);
 	}
-
-	bool ConvergenceFS::IsWriteRequest(KxDynamicStringRefW filePath, ACCESS_MASK desiredAccess, DWORD createDisposition) const
-	{
-		/*
-		https://stackoverflow.com/questions/14469607/difference-between-open-always-and-create-always-in-createfile-of-windows-api
-		|                  When the file...
-		This argument:           |             Exists            Does not exist
-		-------------------------+-----------------------------------------------
-		CREATE_ALWAYS            |            Truncates             Creates
-		CREATE_NEW         +-----------+        Fails               Creates
-		OPEN_ALWAYS     ===| does this |===>    Opens               Creates
-		OPEN_EXISTING      +-----------+        Opens                Fails
-		TRUNCATE_EXISTING        |            Truncates              Fails
-		*/
-
-		return
-			(
-				desiredAccess & GENERIC_WRITE ||
-				createDisposition == CREATE_ALWAYS ||
-				(createDisposition == CREATE_NEW && !Utility::IsExist(filePath)) ||
-				(createDisposition == OPEN_ALWAYS && !Utility::IsExist(filePath)) ||
-				(createDisposition == TRUNCATE_EXISTING && Utility::IsExist(filePath))
-				);
-	}
-	bool ConvergenceFS::IsReadRequest(KxDynamicStringRefW filePath, ACCESS_MASK desiredAccess, DWORD createDisposition) const
-	{
-		return !IsWriteRequest(filePath, desiredAccess, createDisposition);
-	}
-	bool ConvergenceFS::IsDirectory(ULONG kernelCreateOptions) const
-	{
-		return kernelCreateOptions & FILE_DIRECTORY_FILE;
-	}
-	bool ConvergenceFS::IsRequestingSACLInfo(const PSECURITY_INFORMATION securityInformation) const
-	{
-		return ((*securityInformation & SACL_SECURITY_INFORMATION) || (*securityInformation & BACKUP_SECURITY_INFORMATION));
-	}
-	void ConvergenceFS::ProcessSESecurityPrivilege(bool hasSESecurityPrivilege, PSECURITY_INFORMATION securityInformation) const
-	{
-		if (!hasSESecurityPrivilege)
-		{
-			*securityInformation &= ~SACL_SECURITY_INFORMATION;
-			*securityInformation &= ~BACKUP_SECURITY_INFORMATION;
-		}
-	}
 }
 
 // IRequestDispatcher

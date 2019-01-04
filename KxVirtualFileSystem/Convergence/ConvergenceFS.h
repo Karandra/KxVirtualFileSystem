@@ -49,16 +49,6 @@ namespace KxVFS
 			bool IsPathPresent(KxDynamicStringRefW fileName, KxDynamicStringRefW* virtualFolder = nullptr) const;
 			bool IsPathPresentInWriteTarget(KxDynamicStringRefW fileName) const;
 
-			bool IsRequestToRoot(KxDynamicStringRefW fileName) const
-			{
-				return fileName.empty() || fileName == L"\\";
-			}
-			bool IsWriteRequest(KxDynamicStringRefW, ACCESS_MASK desiredAccess, DWORD createDisposition) const;
-			bool IsReadRequest(KxDynamicStringRefW, ACCESS_MASK desiredAccess, DWORD createDisposition) const;
-			bool IsDirectory(ULONG kernelCreateOptions) const;
-			bool IsRequestingSACLInfo(const PSECURITY_INFORMATION securityInformation) const;
-			void ProcessSESecurityPrivilege(bool hasSESecurityPrivilege, PSECURITY_INFORMATION securityInformation) const;
-
 			// IRequestDispatcher
 			void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 			bool TryDispatchRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) const;

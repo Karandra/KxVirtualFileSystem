@@ -37,6 +37,22 @@ namespace KxVFS
 			bool m_IsMounted = false;
 			bool m_IsDestructing = false;
 
+		protected:
+			// Some utility functions
+			bool IsRequestToRoot(KxDynamicStringRefW fileName) const
+			{
+				return fileName.empty() || (fileName.length() == 1 && fileName.front() == L'\\');
+			}
+			bool IsWriteRequest(KxDynamicStringRefW filePath, ACCESS_MASK desiredAccess, DWORD createDisposition) const;
+			bool IsReadRequest(KxDynamicStringRefW filePath, ACCESS_MASK desiredAccess, DWORD createDisposition) const
+			{
+				return !IsWriteRequest(filePath, desiredAccess, createDisposition);
+			}
+			bool IsDirectory(ULONG kernelCreateOptions) const;
+			
+			bool IsRequestingSACLInfo(const PSECURITY_INFORMATION securityInformation) const;
+			void ProcessSESecurityPrivilege(PSECURITY_INFORMATION securityInformation) const;
+
 		private:
 			void SetMounted(bool value);
 			FSError DoMount();
@@ -77,6 +93,7 @@ namespace KxVFS
 			NTSTATUS OnUnMountInternal(EvtUnMounted& eventInfo);
 
 		protected:
+			// KxVFS callbacks
 			// For OnMount, OnUnMount, OnCloseFile, OnCleanUp return 'STATUS_NOT_SUPPORTED'
 			// as underlaying function has void as its return type.
 			virtual NTSTATUS OnMount(EvtMounted& eventInfo) = 0;
@@ -109,6 +126,7 @@ namespace KxVFS
 			virtual NTSTATUS OnFindStreams(EvtFindStreams& eventInfo) = 0;
 
 		private:
+			// Dokan callbacks
 			static AbstractFS* GetFromContext(Dokany2::DOKAN_OPTIONS* dokanOptions)
 			{
 				return reinterpret_cast<AbstractFS*>(dokanOptions->GlobalContext);
