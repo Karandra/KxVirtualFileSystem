@@ -35,7 +35,7 @@ namespace KxVFS
 {
 	KxDynamicStringW Service::GetLibraryVersion()
 	{
-		return L"1.3";
+		return L"1.4";
 	}
 	KxDynamicStringW Service::GetDokanyVersion()
 	{
