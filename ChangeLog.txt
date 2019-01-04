@@ -1,4 +1,21 @@
+Version 1.4 - 04.01.2019
+- Solution file layout changed, general refactoring.
+- More detailed build instructions.
+- Using declarations from KxVFSEvents struct moved to KxVFS namespace.
+- Fixed mount point string assign to not cause VFS fault on mount.
+- Fixed logic of 'allowed/diallowed' diagnostic.
+- Options 'ThreadCount', 'MountPoint', 'Timeout' and 'Flags' are now updated on next mount instead of on construction.
+- Fixed crash on deleting VFS instance without unmounting it first.
+- Removed 'AllowDeleteInVirtualFolder' option since it's not actually used.
+- Functions 'IsCodeSuccess' and 'GetErrorCodeMessage' removed from 'AbstractFS' in favor of 'FSError' class.
+- Function 'NormalizePath' moved to 'AbstractFS' as static function and renamed to 'NormalizeFilePath'.
+- File system classes from KxFramework updated.
+- Fixed building of dispatcher map in 'ConvergenceFS'.
+- Fixed INI optimization. refert to this commit for details (https://github.com/KerberX/KxVirtualFileSystem/commit/cebea634c57154448e6975066460d2b186e482bd).
+- Implemented security functions.
+
 Version 1.3 - 02.01.2019
+- Dokany 2 beta library updated to latest version.
 - Refactoring. Prefix 'KVFS' removed from all library classes and they are added to 'KxVFS' namespace.
 - New implementation of 'KxDynamicString' class.
 - API now uses 'KxDynamicStringRefW' instead of plain 'wchar_t' pointers or 'std::wstring's.

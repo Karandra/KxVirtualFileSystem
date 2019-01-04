@@ -39,14 +39,12 @@ namespace KxVFS
 
 		protected:
 			// Some utility functions
-			template<class TOption, class TValue> bool SetOptionIfNotMounted(TOption& option, TValue&& value)
+			template<class TOption, class TValue> void SetOptionIfNotMounted(TOption& option, TValue&& value)
 			{
 				if (!m_IsMounted)
 				{
 					option = value;
-					return true;
 				}
-				return false;
 			}
 
 			bool IsRequestToRoot(KxDynamicStringRefW fileName) const
@@ -87,10 +85,10 @@ namespace KxVFS
 			bool IsMounted() const;
 
 			KxDynamicStringRefW GetMountPoint() const;
-			bool SetMountPoint(KxDynamicStringRefW mountPoint);
+			void SetMountPoint(KxDynamicStringRefW mountPoint);
 		
 			uint32_t GetFlags() const;
-			bool SetFlags(uint32_t flags);
+			void SetFlags(uint32_t flags);
 
 			NTSTATUS GetNtStatusByWin32ErrorCode(DWORD nWin32ErrorCode) const;
 			NTSTATUS GetNtStatusByWin32LastErrorCode() const;

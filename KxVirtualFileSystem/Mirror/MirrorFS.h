@@ -114,16 +114,16 @@ namespace KxVFS
 
 		public:
 			KxDynamicStringRefW GetSource() const;
-			bool SetSource(KxDynamicStringRefW source);
+			void SetSource(KxDynamicStringRefW source);
 
 			bool IsUnsingAsyncIO() const;
-			bool UseAsyncIO(bool value);
+			void UseAsyncIO(bool value);
 
 			bool IsSecurityFunctionsEnabled() const;
-			bool EnableSecurityFunctions(bool value);
+			void EnableSecurityFunctions(bool value);
 
 			bool ShouldImpersonateCallerUser() const;
-			bool SetImpersonateCallerUser(bool value);
+			void SetImpersonateCallerUser(bool value);
 
 		protected:
 			// Events for derived classes

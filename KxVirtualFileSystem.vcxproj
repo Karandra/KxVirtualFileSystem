@@ -87,13 +87,13 @@
     <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\ChangeLog.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="KxVirtualFileSystem.rc" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="KxVirtualFileSystem\Utility\KxDynamicString\KxBasicDynamicString.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ChangeLog.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F79583B3-ED13-48F1-BC7F-AFAC9756FD7C}</ProjectGuid>

@@ -40,6 +40,8 @@ namespace KxVFS
 			mutable CriticalSection m_NonExistentINIFilesCS;
 			TNonExistentINIMap m_NonExistentINIFiles;
 
+			bool m_IsINIOptimizationEnabled = false;
+
 		protected:
 			// IRequestDispatcher
 			void MakeFilePath(KxDynamicStringW& outPath, KxDynamicStringRefW folder, KxDynamicStringRefW file) const;
@@ -97,10 +99,10 @@ namespace KxVFS
 
 		public:
 			KxDynamicStringRefW GetWriteTarget() const;
-			bool SetWriteTarget(KxDynamicStringRefW writeTarget);
+			void SetWriteTarget(KxDynamicStringRefW writeTarget);
 		
-			bool AddVirtualFolder(KxDynamicStringRefW path);
-			bool ClearVirtualFolders();
+			void AddVirtualFolder(KxDynamicStringRefW path);
+			void ClearVirtualFolders();
 
 			size_t BuildDispatcherIndex();
 			void SetDispatcherIndex(const TExternalDispatcherMap& index)
@@ -111,6 +113,9 @@ namespace KxVFS
 			{
 				SetDispatcherIndexT(index);
 			}
+
+			bool IsINIOptimizationEnabled() const;
+			void EnableINIOptimization(bool value);
 
 		protected:
 			template<class TEventInfo> void OnEvent(TEventInfo& eventInfo)

@@ -371,36 +371,36 @@ namespace KxVFS
 	{
 		return m_Source;
 	}
-	bool MirrorFS::SetSource(KxDynamicStringRefW source)
+	void MirrorFS::SetSource(KxDynamicStringRefW source)
 	{
-		return SetOptionIfNotMounted(m_Source, source);
+		SetOptionIfNotMounted(m_Source, source);
 	}
 
 	bool MirrorFS::IsUnsingAsyncIO() const
 	{
 		return m_IsUnsingAsyncIO;
 	}
-	bool MirrorFS::UseAsyncIO(bool value)
+	void MirrorFS::UseAsyncIO(bool value)
 	{
-		return SetOptionIfNotMounted(m_IsUnsingAsyncIO, value);
+		SetOptionIfNotMounted(m_IsUnsingAsyncIO, value);
 	}
 
 	bool MirrorFS::IsSecurityFunctionsEnabled() const
 	{
 		return m_EnableSecurityFunctions;
 	}
-	bool MirrorFS::EnableSecurityFunctions(bool value)
+	void MirrorFS::EnableSecurityFunctions(bool value)
 	{
-		return SetOptionIfNotMounted(m_EnableSecurityFunctions, value);
+		SetOptionIfNotMounted(m_EnableSecurityFunctions, value);
 	}
 
 	bool MirrorFS::ShouldImpersonateCallerUser() const
 	{
 		return m_ShouldImpersonateCallerUser;
 	}
-	bool MirrorFS::SetImpersonateCallerUser(bool value)
+	void MirrorFS::SetImpersonateCallerUser(bool value)
 	{
-		return SetOptionIfNotMounted(m_ShouldImpersonateCallerUser, value);
+		SetOptionIfNotMounted(m_ShouldImpersonateCallerUser, value);
 	}
 }
 
@@ -933,7 +933,7 @@ namespace KxVFS
 				}
 
 				Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->m_InternalOverlapped);
-				overlappedContext->m_FileHandle = fileContext;
+				overlappedContext->m_FileContext = fileContext;
 				overlappedContext->m_Context = &eventInfo;
 				overlappedContext->m_IOType = Mirror::IOOperationType::Read;
 
@@ -1037,7 +1037,7 @@ namespace KxVFS
 				}
 
 				Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->m_InternalOverlapped);
-				overlappedContext->m_FileHandle = fileContext;
+				overlappedContext->m_FileContext = fileContext;
 				overlappedContext->m_Context = &eventInfo;
 				overlappedContext->m_IOType = Mirror::IOOperationType::Write;
 
@@ -1297,8 +1297,6 @@ namespace KxVFS
 	}
 	void MirrorFS::PushMirrorFileHandle(Mirror::FileContext* fileContext)
 	{
-		fileContext->m_VFSInstance = this;
-
 		if (IsUnsingAsyncIO() && fileContext->m_IOCompletion)
 		{
 			if (CriticalSectionLocker lock(m_ThreadPoolCS); m_ThreadPoolCleanupGroup)
@@ -1499,6 +1497,6 @@ namespace KxVFS
 				break;
 			}
 		};
-		mirrorContext->m_VFSInstance->PushMirrorOverlapped(overlappedContext);
+		mirrorContext->GetFSInstance()->PushMirrorOverlapped(overlappedContext);
 	}
 }

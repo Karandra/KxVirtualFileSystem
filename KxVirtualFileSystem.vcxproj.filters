@@ -199,11 +199,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="..\ChangeLog.txt">
-      <Filter>Resource Files</Filter>
-    </Text>
-  </ItemGroup>
-  <ItemGroup>
     <ResourceCompile Include="KxVirtualFileSystem.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
@@ -212,5 +207,10 @@
     <Natvis Include="KxVirtualFileSystem\Utility\KxDynamicString\KxBasicDynamicString.natvis">
       <Filter>Resource Files\KxDynamicString</Filter>
     </Natvis>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ChangeLog.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

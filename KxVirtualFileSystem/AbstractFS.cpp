@@ -258,18 +258,18 @@ namespace KxVFS
 	{
 		return m_MountPoint;
 	}
-	bool AbstractFS::SetMountPoint(KxDynamicStringRefW mountPoint)
+	void AbstractFS::SetMountPoint(KxDynamicStringRefW mountPoint)
 	{
-		return SetOptionIfNotMounted(m_MountPoint, mountPoint);
+		SetOptionIfNotMounted(m_MountPoint, mountPoint);
 	}
 
 	uint32_t AbstractFS::GetFlags() const
 	{
 		return m_Flags;
 	}
-	bool AbstractFS::SetFlags(uint32_t flags)
+	void AbstractFS::SetFlags(uint32_t flags)
 	{
-		return SetOptionIfNotMounted(m_Flags, flags);
+		SetOptionIfNotMounted(m_Flags, flags);
 	}
 
 	NTSTATUS AbstractFS::GetNtStatusByWin32ErrorCode(DWORD nWin32ErrorCode) const

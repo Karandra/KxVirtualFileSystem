@@ -212,29 +212,25 @@ namespace KxVFS
 	{
 		return GetSource();
 	}
-	bool ConvergenceFS::SetWriteTarget(KxDynamicStringRefW writeTarget)
+	void ConvergenceFS::SetWriteTarget(KxDynamicStringRefW writeTarget)
 	{
-		return SetSource(writeTarget);
+		SetSource(writeTarget);
 	}
 
-	bool ConvergenceFS::AddVirtualFolder(KxDynamicStringRefW path)
+	void ConvergenceFS::AddVirtualFolder(KxDynamicStringRefW path)
 	{
 		if (!IsMounted())
 		{
 			m_VirtualFolders.emplace_back(NormalizeFilePath(path));
-			return true;
 		}
-		return false;
 	}
-	bool ConvergenceFS::ClearVirtualFolders()
+	void ConvergenceFS::ClearVirtualFolders()
 	{
 		if (!IsMounted())
 		{
 			m_VirtualFolders.clear();
 			m_RequestDispatcherIndex.clear();
-			return true;
 		}
-		return false;
 	}
 
 	size_t ConvergenceFS::BuildDispatcherIndex()
@@ -254,6 +250,15 @@ namespace KxVFS
 		}
 
 		return m_RequestDispatcherIndex.size();
+	}
+
+	bool ConvergenceFS::IsINIOptimizationEnabled() const
+	{
+		return m_IsINIOptimizationEnabled;
+	}
+	void ConvergenceFS::EnableINIOptimization(bool value)
+	{
+		SetOptionIfNotMounted(m_IsINIOptimizationEnabled, value);
 	}
 }
 
@@ -412,7 +417,7 @@ namespace KxVFS
 				}
 
 				// Non-existent INI files optimization
-				if (IsINIFile(eventInfo.FileName))
+				if (m_IsINIOptimizationEnabled && IsINIFile(eventInfo.FileName))
 				{
 					const bool existOnDisk = Utility::IsFileExist(targetPath);
 					const bool knownAsInvalid = IsINIFileNonExistent(eventInfo.FileName);

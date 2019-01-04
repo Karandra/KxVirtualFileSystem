@@ -17,9 +17,10 @@ namespace KxVFS::Mirror
 {
 	class FileContext
 	{
-		public:
-			MirrorFS* m_VFSInstance = nullptr;
+		private:
+			MirrorFS* const m_FSInstance = nullptr;
 			
+		public:
 			CriticalSection m_Lock;
 			HANDLE m_FileHandle = INVALID_HANDLE_VALUE;
 			PTP_IO m_IOCompletion = nullptr;
@@ -29,8 +30,14 @@ namespace KxVFS::Mirror
 
 		public:
 			FileContext(MirrorFS* mirror)
-				:m_VFSInstance(mirror)
+				:m_FSInstance(mirror)
 			{
+			}
+	
+		public:
+			MirrorFS* GetFSInstance() const
+			{
+				return m_FSInstance;
 			}
 	};
 
@@ -44,7 +51,7 @@ namespace KxVFS::Mirror
 	{
 		public:
 			OVERLAPPED m_InternalOverlapped = {0};
-			FileContext* m_FileHandle = nullptr;
+			FileContext* m_FileContext = nullptr;
 			IOOperationType m_IOType = IOOperationType::Unknown;
 			void* m_Context = nullptr;
 	};
