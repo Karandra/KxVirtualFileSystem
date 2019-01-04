@@ -21,19 +21,21 @@ int _tmain()
 {
 	using namespace KxVFS;
 
-	Service* service = new Service(L"KortexVFS");
+	auto service = std::make_unique<Service>(L"KortexVFS");
 	service->Install(L"C:\\Users\\Kerber\\Documents\\Visual Studio 2017\\Projects\\Kortex Mod Manager\\Kortex\\Bin\\Data\\VFS\\Drivers\\Win7 x64\\dokan2.sys");
 	service->Start();
 
 	#if 1
-	ConvergenceFS* mainVFS = new ConvergenceFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
+	auto mainVFS = std::make_unique<ConvergenceFS>(*service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
+	mainVFS->EnableSecurityFunctions(true);
+
 	mainVFS->AddVirtualFolder(L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
 	mainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\Mod Organizer 2");
 	mainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\Resources");
 	#endif
 
-	//MirrorFS* mainVFS = new MirrorFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
-	//MirrorFS* mainVFS = new MirrorFS(service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
+	//auto mainVFS = std::make_unique<MirrorFS>(*service, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
+	//auto mainVFS = std::make_unique<MirrorFS>(*service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
 
 	wchar_t fileName[1024] = L"\"C:\\Users\\Kerber\\Desktop\\Test\\WolfTime x64.exe\"";
 	wchar_t workingDir[1024] = L"C:\\Users\\Kerber\\Desktop\\Test";
@@ -102,18 +104,6 @@ int _tmain()
 				wprintf(L"BuildDispatcherIndex: %zu entries built\r\n", count);
 				break;
 			}
-			case 'f':
-			{
-				Utility::KxFileFinder finder(L"C:\\Users\\Kerber\\Desktop\\TestWrite", L"*");
-				for (Utility::KxFileItem item = finder.FindNext(); item.IsOK(); item = finder.FindNext())
-				{
-					if (item.IsNormalItem())
-					{
-						wprintf(L"%s\r\n", item.GetFullPath().data());
-					}
-				}
-				break;
-			}
 
 			case 'u':
 			{
@@ -123,8 +113,8 @@ int _tmain()
 			}
 			case 'x':
 			{
-				delete mainVFS;
-				delete service;
+				mainVFS.reset();
+				service.reset();
 				break;
 			}
 		};

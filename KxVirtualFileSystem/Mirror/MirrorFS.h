@@ -22,8 +22,9 @@ namespace KxVFS
 
 		private:
 			volatile LONG m_IsUnmounted = 0;
-			bool m_ShouldImpersonateCallerUser = false;
 			bool m_IsUnsingAsyncIO = true;
+			bool m_EnableSecurityFunctions = false;
+			bool m_ShouldImpersonateCallerUser = false;
 
 			Dokany2::DOKAN_VECTOR m_FileHandlePool = {0};
 			CriticalSection m_FileHandlePoolCS;
@@ -41,6 +42,15 @@ namespace KxVFS
 			DWORD GetParentSecurity(KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const;
 			DWORD CreateNewSecurity(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const;
 			Utility::SecurityObject CreateSecurityIfNeeded(EvtCreateFile& eventInfo, SECURITY_ATTRIBUTES& securityAttributes, KxDynamicStringRefW targetPath, DWORD creationDisposition);
+			
+			void OpenWithSecurityAccess(ACCESS_MASK& desiredAccess, bool isWriteRequest) const;
+			void OpenWithSecurityAccessIfNeeded(ACCESS_MASK& desiredAccess, bool isWriteRequest) const
+			{
+				if (m_EnableSecurityFunctions)
+				{
+					OpenWithSecurityAccess(desiredAccess, isWriteRequest);
+				}
+			}
 
 			// ImpersonateCallerUser section
 			TokenHandle ImpersonateCallerUser(EvtCreateFile& eventInfo) const;
@@ -93,26 +103,27 @@ namespace KxVFS
 
 			// IRequestDispatcher
 		public:
-			void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
+			void DispatchLocationRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 
 		public:
-			MirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags = DefFlags);
+			MirrorFS(Service& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags = DefFlags);
 			virtual ~MirrorFS();
 
 		public:
-			KxDynamicStringRefW GetSource() const
-			{
-				return m_Source;
-			}
+			FSError Mount() override;
+
+		public:
+			KxDynamicStringRefW GetSource() const;
 			bool SetSource(KxDynamicStringRefW source);
 
-			bool IsUnsingAsyncIO() const
-			{
-				return m_IsUnsingAsyncIO;
-			}
+			bool IsUnsingAsyncIO() const;
 			bool UseAsyncIO(bool value);
 
-			virtual FSError Mount() override;
+			bool IsSecurityFunctionsEnabled() const;
+			bool EnableSecurityFunctions(bool value);
+
+			bool ShouldImpersonateCallerUser() const;
+			bool SetImpersonateCallerUser(bool value);
 
 		protected:
 			// Events for derived classes

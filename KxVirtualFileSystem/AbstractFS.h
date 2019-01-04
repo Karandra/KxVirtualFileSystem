@@ -26,7 +26,7 @@ namespace KxVFS
 			static size_t WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength);
 
 		private:
-			Service* m_ServiceInstance = nullptr;
+			Service& m_Service;
 			Dokany2::DOKAN_OPTIONS m_Options = {0};
 			Dokany2::DOKAN_OPERATIONS m_Operations = {0};
 			Dokany2::DOKAN_HANDLE m_Handle = nullptr;
@@ -39,6 +39,16 @@ namespace KxVFS
 
 		protected:
 			// Some utility functions
+			template<class TOption, class TValue> bool SetOptionIfNotMounted(TOption& option, TValue&& value)
+			{
+				if (!m_IsMounted)
+				{
+					option = value;
+					return true;
+				}
+				return false;
+			}
+
 			bool IsRequestToRoot(KxDynamicStringRefW fileName) const
 			{
 				return fileName.empty() || (fileName.length() == 1 && fileName.front() == L'\\');
@@ -61,25 +71,22 @@ namespace KxVFS
 		public:
 			static const uint32_t DefFlags = 0;
 
-			AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t flags = DefFlags);
+			AbstractFS(Service& service, KxDynamicStringRefW mountPoint, uint32_t flags = DefFlags);
 			virtual ~AbstractFS();
 
 		public:
 			virtual FSError Mount();
 			virtual bool UnMount();
 
-			virtual KxDynamicStringRefW GetVolumeName() const;
-			virtual KxDynamicStringRefW GetVolumeFileSystemName() const;
+			virtual KxDynamicStringW GetVolumeLabel() const;
+			virtual KxDynamicStringW GetVolumeFileSystemName() const;
 			virtual uint32_t GetVolumeSerialNumber() const;
 
-			Service* GetService();
-			const Service* GetService() const;
+			Service& GetService();
+			const Service& GetService() const;
 			bool IsMounted() const;
 
-			KxDynamicStringRefW GetMountPoint() const
-			{
-				return m_MountPoint;
-			}
+			KxDynamicStringRefW GetMountPoint() const;
 			bool SetMountPoint(KxDynamicStringRefW mountPoint);
 		
 			uint32_t GetFlags() const;

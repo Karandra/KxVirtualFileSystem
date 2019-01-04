@@ -13,6 +13,6 @@ namespace KxVFS
 	class KxVFS_API IRequestDispatcher
 	{
 		public:
-			virtual void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) = 0;
+			virtual void DispatchLocationRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) = 0;
 	};
 }

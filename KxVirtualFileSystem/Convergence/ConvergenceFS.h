@@ -41,31 +41,16 @@ namespace KxVFS
 			TNonExistentINIMap m_NonExistentINIFiles;
 
 		protected:
-			void MakeFilePath(KxDynamicStringW& outPath, KxDynamicStringRefW folder, KxDynamicStringRefW file) const;
-			bool IsPathInVirtualFolder(KxDynamicStringRefW fileName) const
-			{
-				return IsPathPresent(fileName);
-			}
-			bool IsPathPresent(KxDynamicStringRefW fileName, KxDynamicStringRefW* virtualFolder = nullptr) const;
-			bool IsPathPresentInWriteTarget(KxDynamicStringRefW fileName) const;
-
 			// IRequestDispatcher
-			void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
+			void MakeFilePath(KxDynamicStringW& outPath, KxDynamicStringRefW folder, KxDynamicStringRefW file) const;
 			bool TryDispatchRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) const;
+			void DispatchLocationRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 
 			bool UpdateDispatcherIndexUnlocked(KxDynamicStringRefW, KxDynamicStringRefW targetPath);
 			void UpdateDispatcherIndexUnlocked(KxDynamicStringRefW requestedPath);
 
-			bool UpdateDispatcherIndex(KxDynamicStringRefW requestedPath, KxDynamicStringRefW targetPath)
-			{
-				CriticalSectionLocker lock(m_RequestDispatcherIndexCS);
-				return UpdateDispatcherIndexUnlocked(requestedPath, targetPath);
-			}
-			void UpdateDispatcherIndex(KxDynamicStringRefW requestedPath)
-			{
-				CriticalSectionLocker lock(m_RequestDispatcherIndexCS);
-				UpdateDispatcherIndexUnlocked(requestedPath);
-			}
+			bool UpdateDispatcherIndex(KxDynamicStringRefW requestedPath, KxDynamicStringRefW targetPath);
+			void UpdateDispatcherIndex(KxDynamicStringRefW requestedPath);
 
 			// IEnumerationDispatcher
 			TEnumerationVector* GetEnumerationVector(KxDynamicStringRefW requestedPath) override;
@@ -103,17 +88,15 @@ namespace KxVFS
 			}
 
 		public:
-			ConvergenceFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t flags = DefFlags);
+			ConvergenceFS(Service& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t flags = DefFlags);
 			virtual ~ConvergenceFS();
 
 		public:
-			virtual FSError Mount() override;
-			virtual bool UnMount() override;
+			FSError Mount() override;
+			bool UnMount() override;
 
-			KxDynamicStringRefW GetWriteTarget() const
-			{
-				return GetSource();
-			}
+		public:
+			KxDynamicStringRefW GetWriteTarget() const;
 			bool SetWriteTarget(KxDynamicStringRefW writeTarget);
 		
 			bool AddVirtualFolder(KxDynamicStringRefW path);

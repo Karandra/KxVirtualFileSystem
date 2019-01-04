@@ -14,6 +14,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include <AclAPI.h>
 #pragma warning (disable: 4267)
 
+// IRequestDispatcher
 namespace KxVFS
 {
 	void ConvergenceFS::MakeFilePath(KxDynamicStringW& outPath, KxDynamicStringRefW folder, KxDynamicStringRefW file) const
@@ -22,35 +23,17 @@ namespace KxVFS
 		outPath += folder;
 		outPath += file;
 	}
-	bool ConvergenceFS::IsPathPresent(KxDynamicStringRefW requestedPath, KxDynamicStringRefW* virtualFolder) const
+	bool ConvergenceFS::TryDispatchRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) const
 	{
-		KxDynamicStringW path;
-		for (auto i = m_VirtualFolders.rbegin(); i != m_VirtualFolders.rend(); ++i)
+		auto it = m_RequestDispatcherIndex.find(NormalizeFilePath(requestedPath));
+		if (it != m_RequestDispatcherIndex.end())
 		{
-			MakeFilePath(path, *i, requestedPath);
-			if (Utility::IsExist(path))
-			{
-				if (virtualFolder)
-				{
-					*virtualFolder = i->c_str();
-				}
-				return true;
-			}
+			targetPath = it->second;
+			return true;
 		}
 		return false;
 	}
-	bool ConvergenceFS::IsPathPresentInWriteTarget(KxDynamicStringRefW requestedPath) const
-	{
-		KxDynamicStringW path;
-		MakeFilePath(path, GetWriteTarget(), requestedPath);
-		return Utility::IsExist(path);
-	}
-}
-
-// IRequestDispatcher
-namespace KxVFS
-{
-	void ConvergenceFS::ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath)
+	void ConvergenceFS::DispatchLocationRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath)
 	{
 		// If request to root return path to write target
 		if (IsRequestToRoot(requestedPath))
@@ -90,16 +73,6 @@ namespace KxVFS
 			}
 		}
 	}
-	bool ConvergenceFS::TryDispatchRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) const
-	{
-		auto it = m_RequestDispatcherIndex.find(NormalizeFilePath(requestedPath));
-		if (it != m_RequestDispatcherIndex.end())
-		{
-			targetPath = it->second;
-			return true;
-		}
-		return false;
-	}
 
 	bool ConvergenceFS::UpdateDispatcherIndexUnlocked(KxDynamicStringRefW requestedPath, KxDynamicStringRefW targetPath)
 	{
@@ -113,6 +86,20 @@ namespace KxVFS
 	void ConvergenceFS::UpdateDispatcherIndexUnlocked(KxDynamicStringRefW requestedPath)
 	{
 		m_RequestDispatcherIndex.erase(NormalizeFilePath(requestedPath));
+	}
+	bool ConvergenceFS::UpdateDispatcherIndex(KxDynamicStringRefW requestedPath, KxDynamicStringRefW targetPath)
+	{
+		if (CriticalSectionLocker lock(m_RequestDispatcherIndexCS); true)
+		{
+			return UpdateDispatcherIndexUnlocked(requestedPath, targetPath);
+		}
+	}
+	void ConvergenceFS::UpdateDispatcherIndex(KxDynamicStringRefW requestedPath)
+	{
+		if (CriticalSectionLocker lock(m_RequestDispatcherIndexCS); true)
+		{
+			UpdateDispatcherIndexUnlocked(requestedPath);
+		}
 	}
 }
 
@@ -136,9 +123,10 @@ namespace KxVFS
 	
 	void ConvergenceFS::InvalidateEnumerationVector(KxDynamicStringRefW requestedPath)
 	{
-		CriticalSectionLocker lockWrite(m_EnumerationDispatcherIndexCS);
-		
-		m_EnumerationDispatcherIndex.erase(NormalizeFilePath(requestedPath));
+		if (CriticalSectionLocker lock(m_EnumerationDispatcherIndexCS); true)
+		{
+			m_EnumerationDispatcherIndex.erase(NormalizeFilePath(requestedPath));
+		}
 	}
 	void ConvergenceFS::InvalidateSearchDispatcherVectorUsingFile(KxDynamicStringRefW requestedFilePath)
 	{
@@ -184,8 +172,8 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	ConvergenceFS::ConvergenceFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t flags)
-		:MirrorFS(vfsService, mountPoint, writeTarget, flags)
+	ConvergenceFS::ConvergenceFS(Service& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, uint32_t flags)
+		:MirrorFS(service, mountPoint, writeTarget, flags)
 	{
 	}
 	ConvergenceFS::~ConvergenceFS()
@@ -216,7 +204,14 @@ namespace KxVFS
 
 		return MirrorFS::UnMount();
 	}
+}
 
+namespace KxVFS
+{
+	KxDynamicStringRefW ConvergenceFS::GetWriteTarget() const
+	{
+		return GetSource();
+	}
 	bool ConvergenceFS::SetWriteTarget(KxDynamicStringRefW writeTarget)
 	{
 		return SetSource(writeTarget);
@@ -270,7 +265,7 @@ namespace KxVFS
 		NTSTATUS statusCode = STATUS_SUCCESS;
 
 		KxDynamicStringW targetPath;
-		ResolveLocation(eventInfo.FileName, targetPath);
+		DispatchLocationRequest(eventInfo.FileName, targetPath);
 
 		DWORD fileAttributesAndFlags = 0;
 		DWORD creationDisposition = 0;
@@ -435,6 +430,8 @@ namespace KxVFS
 				}
 
 				KxVFSDebugPrint(L"Trying to create/open file: %s", targetPath.data());
+
+				OpenWithSecurityAccessIfNeeded(genericDesiredAccess, isWriteRequest);
 				Utility::FileHandle fileHandle = CreateFileW(targetPath,
 															 genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
 															 eventInfo.ShareAccess,
@@ -498,10 +495,10 @@ namespace KxVFS
 		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			KxDynamicStringW targetPathOld;
-			ResolveLocation(eventInfo.FileName, targetPathOld);
+			DispatchLocationRequest(eventInfo.FileName, targetPathOld);
 
 			KxDynamicStringW targetPathNew;
-			ResolveLocation(eventInfo.NewFileName, targetPathNew);
+			DispatchLocationRequest(eventInfo.NewFileName, targetPathNew);
 
 			Utility::CreateFolderTree(targetPathNew, true);
 			bool isOK = ::MoveFileExW(targetPathOld, targetPathNew, MOVEFILE_COPY_ALLOWED|(eventInfo.ReplaceIfExists ? MOVEFILE_REPLACE_EXISTING : 0));
@@ -567,54 +564,55 @@ namespace KxVFS
 	}
 	NTSTATUS ConvergenceFS::OnFindFiles(EvtFindFiles& eventInfo)
 	{
-		CriticalSectionLocker lockIndex(m_EnumerationDispatcherIndexCS);
-
-		TEnumerationVector* searchIndex = GetEnumerationVector(eventInfo.PathName);
-		if (searchIndex && !searchIndex->empty())
+		if (CriticalSectionLocker lockIndex(m_EnumerationDispatcherIndexCS); true)
 		{
-			SendEnumerationVector(&eventInfo, *searchIndex);
+			TEnumerationVector* searchIndex = GetEnumerationVector(eventInfo.PathName);
+			if (searchIndex && !searchIndex->empty())
+			{
+				SendEnumerationVector(&eventInfo, *searchIndex);
+				return STATUS_SUCCESS;
+			}
+			if (!searchIndex)
+			{
+				searchIndex = &CreateEnumerationVector(eventInfo.PathName);
+			}
+
+			auto AppendAsterix = [](KxDynamicStringW& path)
+			{
+				if (!path.empty())
+				{
+					if (path.back() != TEXT('\\'))
+					{
+						path += TEXT('\\');
+					}
+					path += TEXT('*');
+				}
+			};
+
+			Utility::StringSearcherHash foundPaths = {Utility::HashString(L"."), Utility::HashString(L"..")};
+
+			// Find everything in write target first as it have highest priority
+			KxDynamicStringW writeTarget;
+			MakeFilePath(writeTarget, GetWriteTarget(), eventInfo.PathName);
+			AppendAsterix(writeTarget);
+
+			DWORD errorCode = OnFindFilesAux(writeTarget, eventInfo, foundPaths, searchIndex);
+
+			// Then in other folders
+			for (auto it = m_VirtualFolders.rbegin(); it != m_VirtualFolders.rend(); ++it)
+			{
+				KxDynamicStringW path;
+				MakeFilePath(path, *it, eventInfo.PathName);
+				AppendAsterix(path);
+
+				errorCode = OnFindFilesAux(path, eventInfo, foundPaths, searchIndex);
+			}
+
+			if (errorCode != ERROR_NO_MORE_FILES)
+			{
+				return GetNtStatusByWin32LastErrorCode();
+			}
 			return STATUS_SUCCESS;
 		}
-		if (!searchIndex)
-		{
-			searchIndex = &CreateEnumerationVector(eventInfo.PathName);
-		}
-
-		auto AppendAsterix = [](KxDynamicStringW& path)
-		{
-			if (!path.empty())
-			{
-				if (path.back() != TEXT('\\'))
-				{
-					path += TEXT('\\');
-				}
-				path += TEXT('*');
-			}
-		};
-
-		Utility::StringSearcherHash foundPaths = {Utility::HashString(L"."), Utility::HashString(L"..")};
-
-		// Find everything in write target first as it have highest priority
-		KxDynamicStringW writeTarget;
-		MakeFilePath(writeTarget, GetWriteTarget(), eventInfo.PathName);
-		AppendAsterix(writeTarget);
-
-		DWORD errorCode = OnFindFilesAux(writeTarget, eventInfo, foundPaths, searchIndex);
-
-		// Then in other folders
-		for (auto it = m_VirtualFolders.rbegin(); it != m_VirtualFolders.rend(); ++it)
-		{
-			KxDynamicStringW path;
-			MakeFilePath(path, *it, eventInfo.PathName);
-			AppendAsterix(path);
-
-			errorCode = OnFindFilesAux(path, eventInfo, foundPaths, searchIndex);
-		}
-
-		if (errorCode != ERROR_NO_MORE_FILES)
-		{
-			return GetNtStatusByWin32LastErrorCode();
-		}
-		return STATUS_SUCCESS;
 	}
 }

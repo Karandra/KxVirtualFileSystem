@@ -109,6 +109,19 @@ namespace KxVFS
 		}
 		return nullptr;
 	}
+	
+	void MirrorFS::OpenWithSecurityAccess(ACCESS_MASK& desiredAccess, bool isWriteRequest) const
+	{
+		desiredAccess |= READ_CONTROL;
+		if (isWriteRequest)
+		{
+			desiredAccess |= WRITE_DAC;
+		}
+		if (GetService().HasSeSecurityNamePrivilege())
+		{
+			desiredAccess |= ACCESS_SYSTEM_SECURITY;
+		}
+	}
 }
 
 // ImpersonateCallerUser section
@@ -315,7 +328,7 @@ namespace KxVFS
 // IRequestDispatcher
 namespace KxVFS
 {
-	void MirrorFS::ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath)
+	void MirrorFS::DispatchLocationRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath)
 	{
 		targetPath = L"\\\\?\\";
 		targetPath.append(m_Source);
@@ -325,31 +338,12 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	MirrorFS::MirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags)
-		:AbstractFS(vfsService, mountPoint, flags), m_Source(source)
+	MirrorFS::MirrorFS(Service& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags)
+		:AbstractFS(service, mountPoint, flags), m_Source(source)
 	{
 	}
 	MirrorFS::~MirrorFS()
 	{
-	}
-
-	bool MirrorFS::SetSource(KxDynamicStringRefW source)
-	{
-		if (!IsMounted())
-		{
-			m_Source = source;
-			return true;
-		}
-		return false;
-	}
-	bool MirrorFS::UseAsyncIO(bool value)
-	{
-		if (!IsMounted())
-		{
-			m_IsUnsingAsyncIO = value;
-			return true;
-		}
-		return false;
 	}
 
 	FSError MirrorFS::Mount()
@@ -368,6 +362,45 @@ namespace KxVFS
 			return AbstractFS::Mount();
 		}
 		return DOKAN_ERROR;
+	}
+}
+
+namespace KxVFS
+{
+	KxVFS::KxDynamicStringRefW MirrorFS::GetSource() const
+	{
+		return m_Source;
+	}
+	bool MirrorFS::SetSource(KxDynamicStringRefW source)
+	{
+		return SetOptionIfNotMounted(m_Source, source);
+	}
+
+	bool MirrorFS::IsUnsingAsyncIO() const
+	{
+		return m_IsUnsingAsyncIO;
+	}
+	bool MirrorFS::UseAsyncIO(bool value)
+	{
+		return SetOptionIfNotMounted(m_IsUnsingAsyncIO, value);
+	}
+
+	bool MirrorFS::IsSecurityFunctionsEnabled() const
+	{
+		return m_EnableSecurityFunctions;
+	}
+	bool MirrorFS::EnableSecurityFunctions(bool value)
+	{
+		return SetOptionIfNotMounted(m_EnableSecurityFunctions, value);
+	}
+
+	bool MirrorFS::ShouldImpersonateCallerUser() const
+	{
+		return m_ShouldImpersonateCallerUser;
+	}
+	bool MirrorFS::SetImpersonateCallerUser(bool value)
+	{
+		return SetOptionIfNotMounted(m_ShouldImpersonateCallerUser, value);
 	}
 }
 
@@ -399,8 +432,11 @@ namespace KxVFS
 	NTSTATUS MirrorFS::OnGetVolumeInfo(EvtGetVolumeInfo& eventInfo)
 	{
 		eventInfo.VolumeInfo->VolumeSerialNumber = GetVolumeSerialNumber();
-		eventInfo.VolumeInfo->VolumeLabelLength = WriteString(GetVolumeName().data(), eventInfo.VolumeInfo->VolumeLabel, eventInfo.MaxLabelLengthInChars);
 		eventInfo.VolumeInfo->SupportsObjects = FALSE;
+
+		const KxDynamicStringW volumeLabel = GetVolumeLabel();
+		const size_t labelLength = std::min<size_t>(volumeLabel.length(), eventInfo.MaxLabelLengthInChars);
+		eventInfo.VolumeInfo->VolumeLabelLength = WriteString(volumeLabel.data(), eventInfo.VolumeInfo->VolumeLabel, labelLength);
 
 		return STATUS_SUCCESS;
 	}
@@ -437,7 +473,7 @@ namespace KxVFS
 		NTSTATUS statusCode = STATUS_SUCCESS;
 
 		KxDynamicStringW targetPath;
-		ResolveLocation(eventInfo.FileName, targetPath);
+		DispatchLocationRequest(eventInfo.FileName, targetPath);
 
 		DWORD fileAttributesAndFlags = 0;
 		DWORD creationDisposition = 0;
@@ -551,6 +587,10 @@ namespace KxVFS
 		else
 		{
 			// It is a create file request
+			if (m_EnableSecurityFunctions)
+			{
+				OpenWithSecurityAccess(genericDesiredAccess, IsWriteRequest(targetPath, genericDesiredAccess, creationDisposition));
+			}
 
 			// Cannot overwrite a hidden or system file if flag not set
 			if (fileAttributes != INVALID_FILE_ATTRIBUTES && ((!(fileAttributesAndFlags & FILE_ATTRIBUTE_HIDDEN) &&
@@ -635,7 +675,7 @@ namespace KxVFS
 					fileContext->m_FileHandle = nullptr;
 
 					KxDynamicStringW targetPath;
-					ResolveLocation(eventInfo.FileName, targetPath);
+					DispatchLocationRequest(eventInfo.FileName, targetPath);
 					if (CheckDeleteOnClose(eventInfo.DokanFileInfo, targetPath))
 					{
 						OnFileClosed(eventInfo, targetPath);
@@ -673,7 +713,7 @@ namespace KxVFS
 				fileContext->m_IsCleanedUp = true;
 
 				KxDynamicStringW targetPath;
-				ResolveLocation(eventInfo.FileName, targetPath);
+				DispatchLocationRequest(eventInfo.FileName, targetPath);
 				if (CheckDeleteOnClose(eventInfo.DokanFileInfo, targetPath))
 				{
 					OnFileCleanedUp(eventInfo, targetPath);
@@ -688,10 +728,10 @@ namespace KxVFS
 		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			//KxDynamicStringW targetPathOld;
-			//ResolveLocation(eventInfo.FileName, targetPathOld);
+			//DispatchLocationRequest(eventInfo.FileName, targetPathOld);
 
 			KxDynamicStringW targetPathNew;
-			ResolveLocation(eventInfo.NewFileName, targetPathNew);
+			DispatchLocationRequest(eventInfo.NewFileName, targetPathNew);
 
 			// The FILE_RENAME_INFO struct has space for one WCHAR for the name at
 			// the end, so that accounts for the null terminator
@@ -743,7 +783,7 @@ namespace KxVFS
 			if (eventInfo.DokanFileInfo->IsDirectory)
 			{
 				KxDynamicStringW targetPath;
-				ResolveLocation(eventInfo.FileName, targetPath);
+				DispatchLocationRequest(eventInfo.FileName, targetPath);
 				
 				const NTSTATUS status = CanDeleteDirectory(targetPath);
 				if (status == STATUS_SUCCESS)
@@ -795,154 +835,65 @@ namespace KxVFS
 	
 	NTSTATUS MirrorFS::OnGetFileSecurity(EvtGetFileSecurity& eventInfo)
 	{
-		// This doesn't work properly anyway
-		return STATUS_NOT_IMPLEMENTED;
-
-		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
+		if (!IsSecurityFunctionsEnabled())
 		{
-			PSECURITY_DESCRIPTOR tempSecurityDescriptor = nullptr;
-
-			// GetSecurityInfo() is not thread safe so we use a critical section here to synchronize
-			DWORD errorCode = ERROR_SUCCESS;
+			return STATUS_NOT_IMPLEMENTED;
+		}
+		else
+		{
+			if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
 			{
-				CriticalSectionLocker lock(fileContext->m_Lock);
-
-				if (fileContext->m_IsClosed)
+				const bool success = ::GetKernelObjectSecurity(fileContext->m_FileHandle,
+															   eventInfo.SecurityInformation,
+															   eventInfo.SecurityDescriptor,
+															   eventInfo.SecurityDescriptorSize,
+															   &eventInfo.LengthNeeded
+				);
+				if (!success)
 				{
-					errorCode = ERROR_INVALID_HANDLE;
-				}
-				else if (fileContext->m_IsCleanedUp)
-				{
-					KxDynamicStringW targetPath;
-					ResolveLocation(eventInfo.FileName, targetPath);
-					errorCode = GetNamedSecurityInfoW(targetPath, SE_FILE_OBJECT, eventInfo.SecurityInformation, nullptr, nullptr, nullptr, nullptr, &tempSecurityDescriptor);
-				}
-				else
-				{
-					errorCode = GetSecurityInfo(fileContext->m_FileHandle, SE_FILE_OBJECT, eventInfo.SecurityInformation, nullptr, nullptr, nullptr, nullptr, &tempSecurityDescriptor);
-				}
-			}
-
-			if (errorCode != ERROR_SUCCESS)
-			{
-				return GetNtStatusByWin32ErrorCode(errorCode);
-			}
-
-			SECURITY_DESCRIPTOR_CONTROL control = 0;
-			DWORD nRevision;
-			if (!GetSecurityDescriptorControl(tempSecurityDescriptor, &control, &nRevision))
-			{
-				//DbgPrint(L"  GetSecurityDescriptorControl error: %d\n", GetLastError());
-			}
-
-			if (!(control & SE_SELF_RELATIVE))
-			{
-				if (!MakeSelfRelativeSD(tempSecurityDescriptor, eventInfo.SecurityDescriptor, &eventInfo.LengthNeeded))
-				{
-					errorCode = GetLastError();
-					LocalFree(tempSecurityDescriptor);
-
-					if (errorCode == ERROR_INSUFFICIENT_BUFFER)
+					const DWORD error = ::GetLastError();
+					if (error == ERROR_INSUFFICIENT_BUFFER)
 					{
+						KxVFSDebugPrint(L"GetKernelObjectSecurity error: ERROR_INSUFFICIENT_BUFFER\n");
 						return STATUS_BUFFER_OVERFLOW;
 					}
-					return GetNtStatusByWin32ErrorCode(errorCode);
+					else
+					{
+						KxVFSDebugPrint(L"GetKernelObjectSecurity error: %u\n", error);
+						return GetNtStatusByWin32ErrorCode(error);
+					}
 				}
-			}
-			else
-			{
-				eventInfo.LengthNeeded = GetSecurityDescriptorLength(tempSecurityDescriptor);
-				if (eventInfo.LengthNeeded > eventInfo.SecurityDescriptorSize)
-				{
-					LocalFree(tempSecurityDescriptor);
-					return STATUS_BUFFER_OVERFLOW;
-				}
-				memcpy_s(eventInfo.SecurityDescriptor, eventInfo.SecurityDescriptorSize, tempSecurityDescriptor, eventInfo.LengthNeeded);
-			}
-			LocalFree(tempSecurityDescriptor);
 
-			return STATUS_SUCCESS;
+				// Ensure the Security Descriptor Length is set
+				const DWORD securityDescriptorLength = ::GetSecurityDescriptorLength(eventInfo.SecurityDescriptor);
+				KxVFSDebugPrint(L"GetKernelObjectSecurity return true, 'eventInfo.LengthNeeded = %u, securityDescriptorLength = %u", eventInfo.LengthNeeded, securityDescriptorLength);
+				eventInfo.LengthNeeded = securityDescriptorLength;
+
+				return STATUS_SUCCESS;
+			}
+			return STATUS_FILE_CLOSED;
 		}
-		return STATUS_INVALID_HANDLE;
 	}
 	NTSTATUS MirrorFS::OnSetFileSecurity(EvtSetFileSecurity& eventInfo)
 	{
-		// And this can be problematic too
-		return STATUS_NOT_IMPLEMENTED;
-
-		if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
+		if (!IsSecurityFunctionsEnabled())
 		{
-			// SecurityDescriptor must be 4-byte aligned
-			_ASSERT(((size_t)eventInfo.SecurityDescriptor & 3) == 0);
-
-			BOOL setSecurity = FALSE;
-
-			{
-				CriticalSectionLocker lock(fileContext->m_Lock);
-
-				if (fileContext->m_IsClosed)
-				{
-					setSecurity = FALSE;
-					SetLastError(ERROR_INVALID_HANDLE);
-				}
-				else if (fileContext->m_IsCleanedUp)
-				{
-					// I wonder why it was commented out
-					#if 0
-					PSID owner = nullptr;
-					PSID group = nullptr;
-					PACL dacl = nullptr;
-					PACL sacl = nullptr;
-					BOOL ownerDefault = FALSE;
-
-					if (eventInfo.SecurityInformation & (OWNER_SECURITY_INFORMATION | BACKUP_SECURITY_INFORMATION))
-					{
-						GetSecurityDescriptorOwner(eventInfo.SecurityDescriptor, &owner, &ownerDefault);
-					}
-
-					if (eventInfo.SecurityInformation & (GROUP_SECURITY_INFORMATION | BACKUP_SECURITY_INFORMATION))
-					{
-						GetSecurityDescriptorGroup(eventInfo.SecurityDescriptor, &group, &ownerDefault);
-					}
-
-					if (eventInfo.SecurityInformation & (DACL_SECURITY_INFORMATION | BACKUP_SECURITY_INFORMATION))
-					{
-						BOOL hasDacl = FALSE;
-						GetSecurityDescriptorDacl(eventInfo.SecurityDescriptor, &hasDacl, &dacl, &ownerDefault);
-					}
-
-					if (eventInfo.SecurityInformation &
-						(GROUP_SECURITY_INFORMATION
-						 | BACKUP_SECURITY_INFORMATION
-						 | LABEL_SECURITY_INFORMATION
-						 | SACL_SECURITY_INFORMATION
-						 | SCOPE_SECURITY_INFORMATION
-						 | ATTRIBUTE_SECURITY_INFORMATION))
-					{
-						BOOL hasSacl = FALSE;
-						GetSecurityDescriptorSacl(eventInfo.SecurityDescriptor, &hasSacl, &sacl, &ownerDefault);
-					}
-					setSecurity = SetNamedSecurityInfoW(filePath, SE_FILE_OBJECT, eventInfo.SecurityInformation, owner, group, dacl, sacl) == ERROR_SUCCESS;
-					#endif
-
-					KxDynamicStringW targetPath;
-					ResolveLocation(eventInfo.FileName, targetPath);
-					setSecurity = SetFileSecurityW(targetPath, eventInfo.SecurityInformation, eventInfo.SecurityDescriptor);
-				}
-				else
-				{
-					// For some reason this appears to be only variant of SetSecurity that works without returning an ERROR_ACCESS_DENIED
-					setSecurity = SetUserObjectSecurity(fileContext->m_FileHandle, &eventInfo.SecurityInformation, eventInfo.SecurityDescriptor);
-				}
-			}
-
-			if (!setSecurity)
-			{
-				return GetNtStatusByWin32LastErrorCode();
-			}
-			return STATUS_SUCCESS;
+			return STATUS_NOT_IMPLEMENTED;
 		}
-		return STATUS_INVALID_HANDLE;
+		else
+		{
+			if (Mirror::FileContext* fileContext = GetFileContext(eventInfo))
+			{
+				if (!::SetKernelObjectSecurity(fileContext->m_FileHandle, eventInfo.SecurityInformation, eventInfo.SecurityDescriptor))
+				{
+					const DWORD error = ::GetLastError();
+					KxVFSDebugPrint(L"SetKernelObjectSecurity error: %u\n", error);
+					return GetNtStatusByWin32ErrorCode(error);
+				}
+				return STATUS_SUCCESS;
+			}
+			return STATUS_FILE_CLOSED;
+		}
 	}
 
 	NTSTATUS MirrorFS::OnReadFile(EvtReadFile& eventInfo)
@@ -961,7 +912,7 @@ namespace KxVFS
 			if (isCleanedUp)
 			{
 				KxDynamicStringW targetPath;
-				ResolveLocation(eventInfo.FileName, targetPath);
+				DispatchLocationRequest(eventInfo.FileName, targetPath);
 
 				Utility::FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 				if (tempFileHandle.IsOK())
@@ -1026,7 +977,7 @@ namespace KxVFS
 			if (isCleanedUp)
 			{
 				KxDynamicStringW targetPath;
-				ResolveLocation(eventInfo.FileName, targetPath);
+				DispatchLocationRequest(eventInfo.FileName, targetPath);
 
 				Utility::FileHandle tempFileHandle = ::CreateFileW(targetPath, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_DELETE|FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, 0, nullptr);
 				if (!tempFileHandle.IsOK())
@@ -1187,7 +1138,7 @@ namespace KxVFS
 			if (!::GetFileInformationByHandle(fileContext->m_FileHandle, &eventInfo.FileHandleInfo))
 			{
 				KxDynamicStringW targetPath;
-				ResolveLocation(eventInfo.FileName, targetPath);
+				DispatchLocationRequest(eventInfo.FileName, targetPath);
 				KxVFSDebugPrint(L"Couldn't get file info by handle, trying by file name: %s", targetPath.data());
 
 				// FileName is a root directory, in this case, 'FindFirstFile' can't get directory information.
@@ -1237,7 +1188,7 @@ namespace KxVFS
 	NTSTATUS MirrorFS::OnFindFiles(EvtFindFiles& eventInfo)
 	{
 		KxDynamicStringW targetPath;
-		ResolveLocation(eventInfo.PathName, targetPath);
+		DispatchLocationRequest(eventInfo.PathName, targetPath);
 		size_t targetPathLength = targetPath.length();
 
 		auto AppendAsterix = [](KxDynamicStringW& path)
@@ -1287,7 +1238,7 @@ namespace KxVFS
 	NTSTATUS MirrorFS::OnFindStreams(EvtFindStreams& eventInfo)
 	{
 		KxDynamicStringW targetPath;
-		ResolveLocation(eventInfo.FileName, targetPath);
+		DispatchLocationRequest(eventInfo.FileName, targetPath);
 
 		WIN32_FIND_STREAM_DATA findData = {0};
 		HANDLE findHandle = ::FindFirstStreamW(targetPath, FindStreamInfoStandard, &findData, 0);

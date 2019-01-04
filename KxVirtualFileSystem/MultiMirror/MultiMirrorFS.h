@@ -39,10 +39,10 @@ namespace KxVFS
 
 		protected:
 			// IRequestDispatcher
-			void ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
+			void DispatchLocationRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 
 		public:
-			MultiMirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags = DefFlags);
+			MultiMirrorFS(Service& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags = DefFlags);
 			virtual ~MultiMirrorFS();
 
 		protected:

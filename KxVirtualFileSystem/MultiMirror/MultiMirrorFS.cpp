@@ -13,7 +13,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 // IRequestDispatcher
 namespace KxVFS
 {
-	void MultiMirrorFS::ResolveLocation(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath)
+	void MultiMirrorFS::DispatchLocationRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath)
 	{
 		// Search file in write target and in all virtual folders
 		KxDynamicStringW inWriteTarget;
@@ -36,8 +36,8 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	MultiMirrorFS::MultiMirrorFS(Service* vfsService, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags)
-		:ConvergenceFS(vfsService, mountPoint, source, flags)
+	MultiMirrorFS::MultiMirrorFS(Service& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags)
+		:ConvergenceFS(service, mountPoint, source, flags)
 	{
 	}
 	MultiMirrorFS::~MultiMirrorFS()

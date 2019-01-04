@@ -102,7 +102,7 @@ namespace KxVFS
 	}
 	void AbstractFS::ProcessSESecurityPrivilege(PSECURITY_INFORMATION securityInformation) const
 	{
-		if (!m_ServiceInstance->HasSeSecurityNamePrivilege())
+		if (!m_Service.HasSeSecurityNamePrivilege())
 		{
 			*securityInformation &= ~SACL_SECURITY_INFORMATION;
 			*securityInformation &= ~BACKUP_SECURITY_INFORMATION;
@@ -112,10 +112,6 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	void AbstractFS::SetMounted(bool value)
-	{
-		m_IsMounted = value;
-	}
 	FSError AbstractFS::DoMount()
 	{
 		OutputDebugStringA(__FUNCTION__);
@@ -163,8 +159,8 @@ namespace KxVFS
 		return false;
 	}
 
-	AbstractFS::AbstractFS(Service* vfsService, KxDynamicStringRefW mountPoint, uint32_t flags)
-		:m_ServiceInstance(vfsService), m_MountPoint(mountPoint), m_Flags(flags)
+	AbstractFS::AbstractFS(Service& service, KxDynamicStringRefW mountPoint, uint32_t flags)
+		:m_Service(service), m_MountPoint(mountPoint), m_Flags(flags)
 	{
 		// Options
 		m_Options.GlobalContext = reinterpret_cast<ULONG64>(this);
@@ -219,11 +215,11 @@ namespace KxVFS
 		return DoUnMount();
 	}
 
-	KxDynamicStringRefW AbstractFS::GetVolumeName() const
+	KxDynamicStringW AbstractFS::GetVolumeLabel() const
 	{
-		return GetService()->GetServiceName();
+		return m_Service.GetServiceName();
 	}
-	KxDynamicStringRefW AbstractFS::GetVolumeFileSystemName() const
+	KxDynamicStringW AbstractFS::GetVolumeFileSystemName() const
 	{
 		// File system name could be anything up to 10 characters.
 		// But Windows check few feature availability based on file system name.
@@ -237,30 +233,34 @@ namespace KxVFS
 
 		#pragma warning (suppress: 4311)
 		#pragma warning (suppress: 4302)
-		return (uint32_t)(reinterpret_cast<size_t>(this) ^ reinterpret_cast<size_t>(GetService()));
+		return (uint32_t)(reinterpret_cast<size_t>(this) ^ reinterpret_cast<size_t>(&m_Service));
 	}
 
-	Service* AbstractFS::GetService()
+	Service& AbstractFS::GetService()
 	{
-		return m_ServiceInstance;
+		return m_Service;
 	}
-	const Service* AbstractFS::GetService() const
+	const Service& AbstractFS::GetService() const
 	{
-		return m_ServiceInstance;
+		return m_Service;
 	}
 
 	bool AbstractFS::IsMounted() const
 	{
 		return m_IsMounted;
 	}
+	void AbstractFS::SetMounted(bool value)
+	{
+		m_IsMounted = value;
+	}
+
+	KxDynamicStringRefW AbstractFS::GetMountPoint() const
+	{
+		return m_MountPoint;
+	}
 	bool AbstractFS::SetMountPoint(KxDynamicStringRefW mountPoint)
 	{
-		if (!IsMounted())
-		{
-			m_MountPoint = mountPoint;
-			return true;
-		}
-		return false;
+		return SetOptionIfNotMounted(m_MountPoint, mountPoint);
 	}
 
 	uint32_t AbstractFS::GetFlags() const
@@ -269,12 +269,7 @@ namespace KxVFS
 	}
 	bool AbstractFS::SetFlags(uint32_t flags)
 	{
-		if (!IsMounted())
-		{
-			m_Flags = flags;
-			return true;
-		}
-		return false;
+		return SetOptionIfNotMounted(m_Flags, flags);
 	}
 
 	NTSTATUS AbstractFS::GetNtStatusByWin32ErrorCode(DWORD nWin32ErrorCode) const
@@ -288,8 +283,8 @@ namespace KxVFS
 
 	NTSTATUS AbstractFS::OnMountInternal(EvtMounted& eventInfo)
 	{
-		SetMounted(true);
-		GetService()->AddFS(this);
+		m_IsMounted = true;
+		m_Service.AddFS(this);
 
 		return OnMount(eventInfo);
 	}
@@ -299,14 +294,14 @@ namespace KxVFS
 		OutputDebugStringA("\r\n");
 
 		NTSTATUS statusCode = STATUS_UNSUCCESSFUL;
-		CriticalSectionLocker lock(m_UnmountCS);
+		if (CriticalSectionLocker lock(m_UnmountCS); true)
 		{
 			OutputDebugStringA("In EnterCriticalSection: ");
 			OutputDebugStringA(__FUNCTION__);
 			OutputDebugStringA("\r\n");
 
-			SetMounted(false);
-			GetService()->RemoveFS(this);
+			m_IsMounted = false;
+			m_Service.RemoveFS(this);
 
 			if (!m_IsDestructing)
 			{
