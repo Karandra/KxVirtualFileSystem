@@ -7,6 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Service.h"
 #include "KxVirtualFileSystem/Convergence/ConvergenceFS.h"
+#include "KxVirtualFileSystem/MultiMirror/MultiMirrorFS.h"
 #include "KxVirtualFileSystem/Mirror/MirrorFS.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include <iostream>
