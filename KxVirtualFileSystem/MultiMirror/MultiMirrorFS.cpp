@@ -18,12 +18,13 @@ namespace KxVFS
 		// Search file in write target and in all virtual folders
 		KxDynamicStringW inWriteTarget;
 		MakeFilePath(inWriteTarget, GetSource(), requestedPath);
+
 		if (!Utility::IsExist(inWriteTarget))
 		{
-			KxDynamicStringW targetPath;
-			for (auto i = GetVirtualFolders().rbegin(); i != GetVirtualFolders().rend(); ++i)
+			const auto& virtualFolders = GetVirtualFolders();
+			for (auto it = virtualFolders.rbegin(); it != virtualFolders.rend(); ++it)
 			{
-				MakeFilePath(targetPath, *i, requestedPath);
+				MakeFilePath(targetPath, *it, requestedPath);
 				if (Utility::IsExist(targetPath))
 				{
 					return;
@@ -112,7 +113,8 @@ namespace KxVFS
 		errorCode = OnFindFilesAux(writeTarget, eventInfo, foundPaths);
 
 		// Then in other folders
-		for (auto it = GetVirtualFolders().rbegin(); it != GetVirtualFolders().rend(); ++it)
+		const auto& virtualFolders = GetVirtualFolders();
+		for (auto it = virtualFolders.rbegin(); it != virtualFolders.rend(); ++it)
 		{
 			KxDynamicStringW path;
 			MakeFilePath(path, *it, eventInfo.PathName);
