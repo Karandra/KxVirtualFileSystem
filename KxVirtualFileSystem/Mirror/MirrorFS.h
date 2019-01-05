@@ -106,7 +106,7 @@ namespace KxVFS
 			void DispatchLocationRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 
 		public:
-			MirrorFS(Service& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags = DefFlags);
+			MirrorFS(Service& service, KxDynamicStringRefW mountPoint = {}, KxDynamicStringRefW source = {}, uint32_t flags = DefFlags);
 			virtual ~MirrorFS();
 
 		public:

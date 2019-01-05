@@ -42,7 +42,7 @@ namespace KxVFS
 			void DispatchLocationRequest(KxDynamicStringRefW requestedPath, KxDynamicStringW& targetPath) override;
 
 		public:
-			MultiMirrorFS(Service& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, uint32_t flags = DefFlags);
+			MultiMirrorFS(Service& service, KxDynamicStringRefW mountPoint = {}, KxDynamicStringRefW source = {}, uint32_t flags = DefFlags);
 			virtual ~MultiMirrorFS();
 
 		protected:
