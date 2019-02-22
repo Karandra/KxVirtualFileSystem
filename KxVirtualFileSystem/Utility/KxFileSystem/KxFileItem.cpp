@@ -121,4 +121,29 @@ namespace KxVFS::Utility
 			}
 		}
 	}
+
+	WIN32_FIND_DATAW KxFileItem::ToWIN32_FIND_DATA() const
+	{
+		WIN32_FIND_DATAW findData = {0};
+
+		// File name
+		wcsncpy_s(findData.cFileName, m_Name.data(), m_Name.size());
+
+		// Attributes
+		findData.dwFileAttributes = m_Attributes;
+		if (IsReparsePoint())
+		{
+			findData.dwReserved0 = m_ReparsePointAttributes;
+		}
+
+		// Time
+		findData.ftCreationTime = m_CreationTime;
+		findData.ftLastAccessTime = m_LastAccessTime;
+		findData.ftLastWriteTime = m_ModificationTime;
+
+		// File size
+		Utility::Int64ToHighLow(m_FileSize, findData.nFileSizeHigh, findData.nFileSizeLow);
+		
+		return findData;
+	}
 }

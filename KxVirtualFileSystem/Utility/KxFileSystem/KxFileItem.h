@@ -179,5 +179,7 @@ namespace KxVFS::Utility
 			{
 				m_Source = KxDynamicStringW(fullPath).before_last(L'\\', &m_Name);
 			}
+			
+			WIN32_FIND_DATAW ToWIN32_FIND_DATA() const;
 	};
 }
