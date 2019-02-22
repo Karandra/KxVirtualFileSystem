@@ -15,7 +15,7 @@ namespace KxVFS
 			CRITICAL_SECTION m_CritSec;
 
 		public:
-			CriticalSection()
+			CriticalSection() noexcept
 			{
 				::InitializeCriticalSection(&m_CritSec);
 			}
@@ -24,43 +24,89 @@ namespace KxVFS
 				::InitializeCriticalSectionAndSpinCount(&m_CritSec, count);
 			}
 			CriticalSection(const CriticalSection&) = delete;
-			~CriticalSection()
+			CriticalSection(CriticalSection&&) = delete;
+			~CriticalSection() noexcept
 			{
 				::DeleteCriticalSection(&m_CritSec);
 			}
 
 		public:
-			void Enter()
+			void Enter() noexcept
 			{
 				::EnterCriticalSection(&m_CritSec);
 			}
-			bool TryEnter()
+			bool TryEnter() noexcept
 			{
 				return ::TryEnterCriticalSection(&m_CritSec);
 			}
-			void Leave()
+			void Leave() noexcept
 			{
 				::LeaveCriticalSection(&m_CritSec);
+			}
+
+		public:
+			CriticalSection& operator=(const CriticalSection&) = delete;
+			CriticalSection& operator=(CriticalSection&&) = delete;
+	};
+}
+
+namespace KxVFS
+{
+	template<bool t_IsMoveable> class BasicCriticalSectionLocker final
+	{
+		public:
+			constexpr static bool IsMoveable() noexcept
+			{
+				return t_IsMoveable;
+			}
+
+		private:
+			CriticalSection* m_CritSec = nullptr;
+
+		public:
+			BasicCriticalSectionLocker(CriticalSection& critSec) noexcept
+				:m_CritSec(&critSec)
+			{
+				m_CritSec->Enter();
+			}
+			BasicCriticalSectionLocker(BasicCriticalSectionLocker&& other) noexcept
+			{
+				*this = std::move(other);
+			}
+			BasicCriticalSectionLocker(const BasicCriticalSectionLocker&) = delete;
+			~BasicCriticalSectionLocker() noexcept
+			{
+				if constexpr(t_IsMoveable)
+				{
+					if (m_CritSec == nullptr)
+					{
+						return;
+					}
+				}
+
+				m_CritSec->Leave();
+			}
+			
+		public:
+			BasicCriticalSectionLocker& operator=(const BasicCriticalSectionLocker&) = delete;
+			BasicCriticalSectionLocker& operator=(BasicCriticalSectionLocker&& other) noexcept
+			{
+				if constexpr(t_IsMoveable)
+				{
+					m_CritSec = other.m_CritSec;
+					other.m_CritSec = nullptr;
+					return *this;
+				}
+				else
+				{
+					static_assert(false, "this locker type is not movable");
+				}
 			}
 	};
 }
 
 namespace KxVFS
 {
-	class CriticalSectionLocker final
-	{
-		private:
-			CriticalSection& m_CritSec;
-
-		public:
-			CriticalSectionLocker(CriticalSection& critSec)
-				:m_CritSec(critSec)
-			{
-				m_CritSec.Enter();
-			}
-			~CriticalSectionLocker()
-			{
-				m_CritSec.Leave();
-			}
-	};
+	using CriticalSectionLocker = BasicCriticalSectionLocker<false>;
+	using MoveableCriticalSectionLocker = BasicCriticalSectionLocker<true>;
 }
