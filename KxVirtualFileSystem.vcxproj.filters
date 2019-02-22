@@ -150,6 +150,9 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\DispatcherMapBuilder.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\SRWLock.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">

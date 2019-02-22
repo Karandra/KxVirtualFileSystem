@@ -28,6 +28,7 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\SecurityObject.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\SRWLock.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\TokenHandle.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="KxVirtualFileSystem\Convergence\ConvergenceFS.h" />

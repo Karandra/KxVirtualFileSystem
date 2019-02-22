@@ -28,4 +28,5 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Utility/SecurityObject.h"
 #include "Utility/ServiceManager.h"
 #include "Utility/CriticalSection.h"
+#include "Utility/SRWLock.h"
 #include "Utility/DispatcherMapBuilder.h"
