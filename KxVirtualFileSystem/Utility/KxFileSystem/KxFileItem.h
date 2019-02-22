@@ -17,8 +17,8 @@ namespace KxVFS::Utility
 		friend class KxFileFinder;
 
 		private:
-			KxDynamicStringW m_Source;
 			KxDynamicStringW m_Name;
+			KxDynamicStringW m_Source;
 			uint32_t m_Attributes = INVALID_FILE_ATTRIBUTES;
 			uint32_t m_ReparsePointAttributes = 0;
 			FILETIME m_CreationTime;
