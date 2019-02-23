@@ -102,6 +102,10 @@ namespace KxVFS::Utility
 			{
 				m_Attributes = FILE_ATTRIBUTE_NORMAL;
 			}
+			void SetAttributes(uint32_t value)
+			{
+				m_Attributes = value;
+			}
 
 			FILETIME GetCreationTime() const
 			{
