@@ -98,6 +98,12 @@ namespace KxVFS::Utility
 		HighLowToInt64(value, high, low);
 		return value;
 	}
+
+	template<class T> void MoveValue(T& left, T& right, T resetTo = {})
+	{
+		left = right;
+		right = resetTo;
+	}
 }
 
 namespace KxVFS::Utility
