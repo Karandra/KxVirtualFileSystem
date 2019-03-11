@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -272,9 +272,9 @@ namespace KxVFS
 		SetOptionIfNotMounted(m_Flags, flags);
 	}
 
-	NTSTATUS AbstractFS::GetNtStatusByWin32ErrorCode(DWORD nWin32ErrorCode) const
+	NTSTATUS AbstractFS::GetNtStatusByWin32ErrorCode(DWORD errorCode) const
 	{
-		return Dokany2::DokanNtStatusFromWin32(nWin32ErrorCode);
+		return Dokany2::DokanNtStatusFromWin32(errorCode);
 	}
 	NTSTATUS AbstractFS::GetNtStatusByWin32LastErrorCode() const
 	{

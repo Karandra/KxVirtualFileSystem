@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -90,7 +90,7 @@ namespace KxVFS
 			uint32_t GetFlags() const;
 			void SetFlags(uint32_t flags);
 
-			NTSTATUS GetNtStatusByWin32ErrorCode(DWORD nWin32ErrorCode) const;
+			NTSTATUS GetNtStatusByWin32ErrorCode(DWORD errorCode) const;
 			NTSTATUS GetNtStatusByWin32LastErrorCode() const;
 
 		private:
