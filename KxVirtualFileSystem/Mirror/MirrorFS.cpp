@@ -733,9 +733,8 @@ namespace KxVFS
 			KxDynamicStringW targetPathNew;
 			DispatchLocationRequest(eventInfo.NewFileName, targetPathNew);
 
-			// The FILE_RENAME_INFO struct has space for one WCHAR for the name at
-			// the end, so that accounts for the null terminator
-			DWORD bufferSize = (DWORD)(sizeof(FILE_RENAME_INFO) + targetPathNew.length() * sizeof(targetPathNew[0]));
+			// The FILE_RENAME_INFO struct has space for one WCHAR for the name at the end, so that accounts for the null terminator
+			const size_t bufferSize = sizeof(FILE_RENAME_INFO) + targetPathNew.length() * sizeof(targetPathNew[0]);
 			PFILE_RENAME_INFO renameInfo = (PFILE_RENAME_INFO)malloc(bufferSize);
 			KxCallAtScopeExit atExit([renameInfo]()
 			{
