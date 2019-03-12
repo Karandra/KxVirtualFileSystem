@@ -61,6 +61,9 @@ namespace KxVFS
 			bool IsRequestingSACLInfo(const PSECURITY_INFORMATION securityInformation) const;
 			void ProcessSESecurityPrivilege(PSECURITY_INFORMATION securityInformation) const;
 
+			std::tuple<DWORD, DWORD, ACCESS_MASK> MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo) const;
+			bool CheckAttributesToOverwriteFile(DWORD fileAttributes, DWORD fileAttributesAndFlags, DWORD creationDisposition) const;
+
 		private:
 			void SetMounted(bool value);
 			FSError DoMount();

@@ -475,10 +475,7 @@ namespace KxVFS
 		KxDynamicStringW targetPath;
 		DispatchLocationRequest(eventInfo.FileName, targetPath);
 
-		DWORD fileAttributesAndFlags = 0;
-		DWORD creationDisposition = 0;
-		ACCESS_MASK genericDesiredAccess = 0;
-		Dokany2::DokanMapKernelToUserCreateFileFlags(&eventInfo, &genericDesiredAccess, &fileAttributesAndFlags, &creationDisposition);
+		auto[fileAttributesAndFlags, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
 
 		// When filePath is a directory, needs to change the flag so that the file can be opened.
 		DWORD fileAttributes = ::GetFileAttributesW(targetPath);
@@ -592,11 +589,7 @@ namespace KxVFS
 				OpenWithSecurityAccess(genericDesiredAccess, IsWriteRequest(targetPath, genericDesiredAccess, creationDisposition));
 			}
 
-			// Cannot overwrite a hidden or system file if flag not set
-			if (fileAttributes != INVALID_FILE_ATTRIBUTES && ((!(fileAttributesAndFlags & FILE_ATTRIBUTE_HIDDEN) &&
-				(fileAttributes & FILE_ATTRIBUTE_HIDDEN)) || (!(fileAttributesAndFlags & FILE_ATTRIBUTE_SYSTEM) &&
-															   (fileAttributes & FILE_ATTRIBUTE_SYSTEM))) &&(eventInfo.CreateDisposition == TRUNCATE_EXISTING ||
-																											 eventInfo.CreateDisposition == CREATE_ALWAYS))
+			if (!CheckAttributesToOverwriteFile(fileAttributes, fileAttributesAndFlags, creationDisposition))
 			{
 				statusCode = STATUS_ACCESS_DENIED;
 			}

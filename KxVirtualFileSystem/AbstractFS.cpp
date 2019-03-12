@@ -108,6 +108,27 @@ namespace KxVFS
 			*securityInformation &= ~BACKUP_SECURITY_INFORMATION;
 		}
 	}
+
+	std::tuple<DWORD, DWORD, ACCESS_MASK> AbstractFS::MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo) const
+	{
+		DWORD fileAttributesAndFlags = 0;
+		DWORD creationDisposition = 0;
+		ACCESS_MASK genericDesiredAccess = 0;
+		Dokany2::DokanMapKernelToUserCreateFileFlags(const_cast<EvtCreateFile*>(&eventInfo), &genericDesiredAccess, &fileAttributesAndFlags, &creationDisposition);
+
+		return {fileAttributesAndFlags, creationDisposition, genericDesiredAccess};
+	}
+	bool AbstractFS::CheckAttributesToOverwriteFile(DWORD fileAttributes, DWORD fileAttributesAndFlags, DWORD creationDisposition) const
+	{
+		if (fileAttributes != INVALID_FILE_ATTRIBUTES && ((!(fileAttributesAndFlags & FILE_ATTRIBUTE_HIDDEN) &&
+			(fileAttributes & FILE_ATTRIBUTE_HIDDEN)) || (!(fileAttributesAndFlags & FILE_ATTRIBUTE_SYSTEM) &&
+														   (fileAttributes & FILE_ATTRIBUTE_SYSTEM))) &&(creationDisposition == TRUNCATE_EXISTING ||
+																										 creationDisposition == CREATE_ALWAYS))
+		{
+			return false;
+		}
+		return true;
+	}
 }
 
 namespace KxVFS
