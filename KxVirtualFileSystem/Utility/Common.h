@@ -22,38 +22,38 @@ namespace KxVFS::Utility
 	KxDynamicStringW FormatMessage(DWORD flags, const void* source, DWORD messageID, WORD langID = 0);
 	KxDynamicStringW GetErrorMessage(DWORD code = GetLastError(), WORD langID = 0);
 	
-	template<class T, class V> static bool SetIfNotNull(T* p, const V& v)
+	template<class T1, class T2> static bool SetIfNotNull(T1* pointer, T2&& value)
 	{
-		if (p)
+		if (pointer)
 		{
-			*p = v;
+			*pointer = value;
 			return true;
 		}
 		return false;
 	}
 
-	template<class F, class V> static F ModFlag(F f, V v, bool set)
+	template<class TFlag, class TFlagValue> static TFlag ModFlag(TFlag flag, TFlagValue value, bool set)
 	{
 		if (set)
 		{
-			f = static_cast<F>(f|static_cast<F>(v));
+			flag = static_cast<TFlag>(flag|static_cast<TFlag>(value));
 		}
 		else
 		{
-			f = static_cast<F>(f & ~static_cast<F>(v));
+			flag = static_cast<TFlag>(flag & ~static_cast<TFlag>(value));
 		}
-		return f;
+		return flag;
 	}
-	template<class F, class V> static void ModFlagRef(F& f, V v, bool set)
+	template<class TFlag, class TFlagValue> static void ModFlagRef(TFlag& flag, TFlagValue value, bool set)
 	{
-		f = ModFlag(f, v, set);
+		flag = ModFlag(flag, value, set);
 	}
-	template<class F, class V> static bool HasFlag(F f, V v)
+	template<class TFlag, class TFlagValue> static bool HasFlag(TFlag flag, TFlagValue value)
 	{
-		return f & v;
+		return flag & value;
 	}
 
-	bool CreateFolderTree(KxDynamicStringRefW pathW, bool noLast = false, SECURITY_ATTRIBUTES* securityAttributes = nullptr, DWORD* errorCodeOut = nullptr);
+	bool CreateFolderTree(KxDynamicStringRefW pathW, bool skipLastPart = false, SECURITY_ATTRIBUTES* securityAttributes = nullptr, DWORD* errorCodeOut = nullptr);
 	bool IsFolderEmpty(KxDynamicStringRefW path);
 	KxDynamicStringW GetDriveFromPath(KxDynamicStringRefW path);
 	DWORD GetFileAttributes(KxDynamicStringRefW path);

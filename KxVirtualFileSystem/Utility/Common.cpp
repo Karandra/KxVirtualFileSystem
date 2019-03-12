@@ -68,7 +68,7 @@ namespace KxVFS::Utility
 		return (attributes != INVALID_FILE_ATTRIBUTES) && (attributes & FILE_ATTRIBUTE_DIRECTORY);
 	}
 
-	bool CreateFolderTree(KxDynamicStringRefW pathW, bool noLast, SECURITY_ATTRIBUTES* securityAttributes, DWORD* errorCodeOut)
+	bool CreateFolderTree(KxDynamicStringRefW pathW, bool skipLastPart, SECURITY_ATTRIBUTES* securityAttributes, DWORD* errorCodeOut)
 	{
 		if (!IsFolderExist(pathW))
 		{
@@ -114,7 +114,7 @@ namespace KxVFS::Utility
 					SetIfNotNull(errorCodeOut, GetLastError());
 				}
 
-				if (noLast && i + 2 == folderArray.size())
+				if (skipLastPart && i + 2 == folderArray.size())
 				{
 					break;
 				}
