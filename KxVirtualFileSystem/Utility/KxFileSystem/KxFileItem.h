@@ -29,6 +29,10 @@ namespace KxVFS::Utility
 		private:
 			void MakeNull(bool attribuesOnly = false);
 			void Set(const WIN32_FIND_DATAW& fileInfo);
+			FILETIME FileTimeFromLARGE_INTEGER(const LARGE_INTEGER& value) const
+			{
+				return *reinterpret_cast<const FILETIME*>(&value);
+			}
 			bool DoUpdateInfo(KxDynamicStringRefW fullPath);
 
 		public:
@@ -115,6 +119,10 @@ namespace KxVFS::Utility
 			{
 				m_CreationTime = value;
 			}
+			void SetCreationTime(const LARGE_INTEGER& value)
+			{
+				m_CreationTime = FileTimeFromLARGE_INTEGER(value);
+			}
 		
 			FILETIME GetLastAccessTime() const
 			{
@@ -124,7 +132,11 @@ namespace KxVFS::Utility
 			{
 				m_LastAccessTime = value;
 			}
-		
+			void SetLastAccessTime(const LARGE_INTEGER& value)
+			{
+				m_LastAccessTime = FileTimeFromLARGE_INTEGER(value);
+			}
+
 			FILETIME GetModificationTime() const
 			{
 				return m_ModificationTime;
@@ -132,6 +144,10 @@ namespace KxVFS::Utility
 			void SetModificationTime(const FILETIME& value)
 			{
 				m_ModificationTime = value;
+			}
+			void SetModificationTime(const LARGE_INTEGER& value)
+			{
+				m_ModificationTime = FileTimeFromLARGE_INTEGER(value);
 			}
 
 			int64_t GetFileSize() const
