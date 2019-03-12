@@ -298,7 +298,7 @@ namespace KxVFS
 			}
 		}
 
-		if (IsUnsingAsyncIO())
+		if (IsUsingAsyncIO())
 		{
 			fileAttributesAndFlags |= FILE_FLAG_OVERLAPPED;
 		}

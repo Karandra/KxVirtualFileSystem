@@ -116,7 +116,7 @@ namespace KxVFS
 			KxDynamicStringRefW GetSource() const;
 			void SetSource(KxDynamicStringRefW source);
 
-			bool IsUnsingAsyncIO() const;
+			bool IsUsingAsyncIO() const;
 			void UseAsyncIO(bool value);
 
 			bool IsSecurityFunctionsEnabled() const;

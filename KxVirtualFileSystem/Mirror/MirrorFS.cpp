@@ -350,7 +350,7 @@ namespace KxVFS
 	{
 		if (!m_Source.empty())
 		{
-			if (IsUnsingAsyncIO())
+			if (IsUsingAsyncIO())
 			{
 				if (!InitializeAsyncIO())
 				{
@@ -376,7 +376,7 @@ namespace KxVFS
 		SetOptionIfNotMounted(m_Source, source);
 	}
 
-	bool MirrorFS::IsUnsingAsyncIO() const
+	bool MirrorFS::IsUsingAsyncIO() const
 	{
 		return m_IsUnsingAsyncIO;
 	}
@@ -413,7 +413,7 @@ namespace KxVFS
 	NTSTATUS MirrorFS::OnUnMount(EvtUnMounted& eventInfo)
 	{
 		CleanupMirrorFileHandles();
-		if (IsUnsingAsyncIO())
+		if (IsUsingAsyncIO())
 		{
 			CleanupAsyncIO();
 		}
@@ -501,7 +501,7 @@ namespace KxVFS
 			}
 		}
 
-		if (IsUnsingAsyncIO())
+		if (IsUsingAsyncIO())
 		{
 			fileAttributesAndFlags |= FILE_FLAG_OVERLAPPED;
 		}
@@ -923,7 +923,7 @@ namespace KxVFS
 				return GetNtStatusByWin32LastErrorCode();
 			}
 
-			if (IsUnsingAsyncIO())
+			if (IsUsingAsyncIO())
 			{
 				Mirror::OverlappedContext* overlappedContext = PopMirrorOverlapped();
 				if (!overlappedContext)
@@ -1004,7 +1004,7 @@ namespace KxVFS
 			}
 			fileSize = liFileSize.QuadPart;
 
-			if (IsUnsingAsyncIO())
+			if (IsUsingAsyncIO())
 			{
 				// Paging IO, I need to read about it at some point. Until then, don't touch this code.
 				if (eventInfo.DokanFileInfo->PagingIo)
@@ -1283,7 +1283,7 @@ namespace KxVFS
 	{
 		if (fileContext)
 		{
-			if (IsUnsingAsyncIO() && fileContext->m_IOCompletion)
+			if (IsUsingAsyncIO() && fileContext->m_IOCompletion)
 			{
 				if (CriticalSectionLocker lock(m_ThreadPoolCS); m_ThreadPoolCleanupGroup && fileContext->m_IOCompletion)
 				{
@@ -1296,7 +1296,7 @@ namespace KxVFS
 	}
 	void MirrorFS::PushMirrorFileHandle(Mirror::FileContext* fileContext)
 	{
-		if (IsUnsingAsyncIO() && fileContext->m_IOCompletion)
+		if (IsUsingAsyncIO() && fileContext->m_IOCompletion)
 		{
 			if (CriticalSectionLocker lock(m_ThreadPoolCS); m_ThreadPoolCleanupGroup)
 			{
@@ -1335,7 +1335,7 @@ namespace KxVFS
 		mirrorContext->m_IsCleanedUp = false;
 		mirrorContext->m_IsClosed = false;
 
-		if (IsUnsingAsyncIO())
+		if (IsUsingAsyncIO())
 		{
 			if (CriticalSectionLocker lock(m_ThreadPoolCS); m_ThreadPoolCleanupGroup)
 			{
