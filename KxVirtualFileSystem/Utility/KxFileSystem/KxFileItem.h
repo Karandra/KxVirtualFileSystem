@@ -200,6 +200,12 @@ namespace KxVFS::Utility
 				m_Source = KxDynamicStringW(fullPath).before_last(L'\\', &m_Name);
 			}
 			
-			WIN32_FIND_DATAW ToWIN32_FIND_DATA() const;
+			void ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const;
+			WIN32_FIND_DATAW ToWIN32_FIND_DATA() const
+			{
+				WIN32_FIND_DATAW findData = {0};
+				ToWIN32_FIND_DATA(findData);
+				return findData;
+			}
 	};
 }

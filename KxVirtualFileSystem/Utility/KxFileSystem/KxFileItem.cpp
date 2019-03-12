@@ -122,10 +122,8 @@ namespace KxVFS::Utility
 		}
 	}
 
-	WIN32_FIND_DATAW KxFileItem::ToWIN32_FIND_DATA() const
+	void KxFileItem::ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const
 	{
-		WIN32_FIND_DATAW findData = {0};
-
 		// File name
 		wcsncpy_s(findData.cFileName, m_Name.data(), m_Name.size());
 
@@ -143,7 +141,5 @@ namespace KxVFS::Utility
 
 		// File size
 		Utility::Int64ToHighLow(m_FileSize, findData.nFileSizeHigh, findData.nFileSizeLow);
-		
-		return findData;
 	}
 }
