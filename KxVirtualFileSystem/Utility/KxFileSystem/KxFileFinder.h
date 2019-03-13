@@ -6,6 +6,8 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Utility.h"
+#include "KxVirtualFileSystem/Utility/SearchHandle.h"
 #include "KxIFileFinder.h"
 #include "KxFileItem.h"
 
@@ -22,7 +24,7 @@ namespace KxVFS::Utility
 			bool m_CaseSensitive = false;
 			bool m_QueryShortNames = false;
 
-			HANDLE m_Handle = INVALID_HANDLE_VALUE;
+			SearchHandle m_Handle;
 			WIN32_FIND_DATAW m_FindData = {0};
 
 		protected:
@@ -32,7 +34,7 @@ namespace KxVFS::Utility
 		public:
 			KxFileFinder(KxDynamicStringRefW searchQuery);
 			KxFileFinder(KxDynamicStringRefW source, KxDynamicStringRefW filter);
-			virtual ~KxFileFinder();
+			virtual ~KxFileFinder() = default;
 
 		public:
 			bool IsOK() const override;

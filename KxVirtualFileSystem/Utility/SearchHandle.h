@@ -9,20 +9,20 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/IncludeWindows.h"
 #include "KxVirtualFileSystem/Utility/HandleWrapper.h"
 
-namespace KxVFS
+namespace KxVFS::Utility
 {
-	class KxVFS_API TokenHandle: public HandleWrapper<TokenHandle, size_t, std::numeric_limits<size_t>::max()>
+	class KxVFS_API SearchHandle: public HandleWrapper<SearchHandle, size_t, std::numeric_limits<size_t>::max()>
 	{
 		friend class TWrapper;
 
 		protected:
 			static void DoCloseHandle(THandle handle)
 			{
-				::CloseHandle(handle);
+				::FindClose(handle);
 			}
 
 		public:
-			TokenHandle(THandle fileHandle = GetInvalidHandle())
+			SearchHandle(THandle fileHandle = GetInvalidHandle())
 				:HandleWrapper(fileHandle)
 			{
 			}

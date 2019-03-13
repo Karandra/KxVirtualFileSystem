@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -7,13 +7,16 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/IncludeWindows.h"
-#include "KxVirtualFileSystem/Utility.h"
 
 namespace KxVFS
 {
-	template<class t_HandleIntType, t_HandleIntType t_InvalidValue> class HandleWrapper
+	template<class t_Derived, class t_HandleIntType, t_HandleIntType t_InvalidValue>
+	class HandleWrapper
 	{
 		public:
+			using TWrapper = HandleWrapper;
+			using TDerived = t_Derived;
+
 			using TIntHandle = t_HandleIntType;
 			using THandle = HANDLE;
 
@@ -40,15 +43,13 @@ namespace KxVFS
 				Close();
 			}
 			
-			HandleWrapper& operator=(THandle value)
+			HandleWrapper& operator=(THandle handle)
 			{
-				return Assign(value);
+				return Assign(handle);
 			}
 			HandleWrapper& operator=(HandleWrapper&& other)
 			{
-				Close();
-				m_Handle = other.Release();
-				return *this;
+				return Assign(other.Release());
 			}
 			HandleWrapper& operator=(const HandleWrapper&) = delete;
 
@@ -81,7 +82,12 @@ namespace KxVFS
 			}
 			bool Close()
 			{
-				return IsOK() ? ::CloseHandle(Release()) : false;
+				if (IsOK())
+				{
+					TDerived::DoCloseHandle(Release());
+					return true;
+				}
+				return false;
 			}
 
 		public:
@@ -102,7 +108,6 @@ namespace KxVFS
 			{
 				return !IsOK();
 			}
-
 			operator THandle() const
 			{
 				return Get();

@@ -24,10 +24,6 @@ namespace
 	{
 		return ::FindNextFileW(handle, &fileInfo);
 	}
-	bool CallFindClose(HANDLE handle)
-	{
-		return ::FindClose(handle);
-	}
 }
 
 namespace KxVFS::Utility
@@ -77,24 +73,16 @@ namespace KxVFS::Utility
 		:m_SearchQuery(Normalize(ConstructSearchQuery(source, filter), true, true))
 	{
 	}
-	KxFileFinder::~KxFileFinder()
-	{
-		// If sequential search is not completed, close the handle here
-		if (m_Handle != INVALID_HANDLE_VALUE)
-		{
-			CallFindClose(m_Handle);
-		}
-	}
 
 	bool KxFileFinder::IsOK() const
 	{
-		return m_Handle != INVALID_HANDLE_VALUE && m_Handle != nullptr;
+		return m_Handle.IsOK() && !m_Handle.IsNull();
 	}
 	bool KxFileFinder::Run()
 	{
 		WIN32_FIND_DATAW fileInfo = {0};
-		HANDLE searchHandle = CallFindFirstFile(m_SearchQuery, fileInfo, m_CaseSensitive, m_QueryShortNames);
-		if (searchHandle != INVALID_HANDLE_VALUE)
+		SearchHandle searchHandle = CallFindFirstFile(m_SearchQuery, fileInfo, m_CaseSensitive, m_QueryShortNames);
+		if (searchHandle)
 		{
 			if (OnFound(fileInfo))
 			{
@@ -102,18 +90,17 @@ namespace KxVFS::Utility
 				{
 				}
 			}
-			CallFindClose(searchHandle);
 			return true;
 		}
 		return false;
 	}
 	KxFileItem KxFileFinder::FindNext()
 	{
-		if (m_Handle == INVALID_HANDLE_VALUE)
+		if (!m_Handle.IsOK())
 		{
 			// No search handle available, begin operation.
 			m_Handle = CallFindFirstFile(m_SearchQuery, m_FindData, m_CaseSensitive, m_QueryShortNames);
-			if (m_Handle != INVALID_HANDLE_VALUE)
+			if (m_Handle)
 			{
 				m_IsCanceled = false;
 				return KxFileItem(*this, m_FindData);
@@ -128,8 +115,7 @@ namespace KxVFS::Utility
 			}
 
 			// No files left, close search handle
-			CallFindClose(m_Handle);
-			m_Handle = INVALID_HANDLE_VALUE;
+			m_Handle.Close();
 			m_IsCanceled = false;
 		}
 		return KxFileItem();

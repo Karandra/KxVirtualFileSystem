@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -7,7 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/IncludeWindows.h"
-#include "KxVirtualFileSystem/Utility.h"
+#include "KxVirtualFileSystem/Utility/HandleWrapper.h"
 
 namespace KxVFS::Utility
 {
@@ -18,18 +18,22 @@ namespace KxVFS::Utility
 		End = FILE_END,
 	};
 
-	class KxVFS_API FileHandle: public HandleWrapper<size_t, std::numeric_limits<size_t>::max()>
+	class KxVFS_API FileHandle: public HandleWrapper<FileHandle, size_t, std::numeric_limits<size_t>::max()>
 	{
+		friend class TWrapper;
+
+		protected:
+			static void DoCloseHandle(THandle handle)
+			{
+				::CloseHandle(handle);
+			}
+
 		public:
 			FileHandle(THandle fileHandle = GetInvalidHandle())
 				:HandleWrapper(fileHandle)
 			{
 			}
-			FileHandle(FileHandle&& other)
-				:HandleWrapper(std::move(other))
-			{
-			}
-			
+
 		public:
 			uint32_t GetAttributes() const
 			{
