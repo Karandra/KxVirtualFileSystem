@@ -14,10 +14,11 @@ namespace
 {
 	using namespace KxVFS;
 
-	HANDLE CallFindFirstFile(KxDynamicStringRefW query, WIN32_FIND_DATAW& fileInfo, bool isCaseSensitive)
+	HANDLE CallFindFirstFile(KxDynamicStringRefW query, WIN32_FIND_DATAW& fileInfo, bool isCaseSensitive, bool queryShortNames)
 	{
 		const DWORD searchFlags = FIND_FIRST_EX_LARGE_FETCH|(isCaseSensitive ? FIND_FIRST_EX_CASE_SENSITIVE : 0);
-		return ::FindFirstFileExW(query.data(), FindExInfoBasic, &fileInfo, FindExSearchNameMatch, nullptr, searchFlags);
+		const FINDEX_INFO_LEVELS infoLevel = queryShortNames ? FindExInfoStandard : FindExInfoBasic;
+		return ::FindFirstFileExW(query.data(), infoLevel, &fileInfo, FindExSearchNameMatch, nullptr, searchFlags);
 	}
 	bool CallFindNextFile(HANDLE handle, WIN32_FIND_DATAW& fileInfo)
 	{
@@ -56,7 +57,7 @@ namespace KxVFS::Utility
 
 	bool KxFileFinder::OnFound(const WIN32_FIND_DATAW& fileInfo)
 	{
-		KxFileItem foundItem(this, fileInfo);
+		KxFileItem foundItem(*this, fileInfo);
 		if (!foundItem.IsCurrentOrParent())
 		{
 			return OnFound(foundItem);
@@ -92,7 +93,7 @@ namespace KxVFS::Utility
 	bool KxFileFinder::Run()
 	{
 		WIN32_FIND_DATAW fileInfo = {0};
-		HANDLE searchHandle = CallFindFirstFile(m_SearchQuery, fileInfo, m_CaseSensitive);
+		HANDLE searchHandle = CallFindFirstFile(m_SearchQuery, fileInfo, m_CaseSensitive, m_QueryShortNames);
 		if (searchHandle != INVALID_HANDLE_VALUE)
 		{
 			if (OnFound(fileInfo))
@@ -111,11 +112,11 @@ namespace KxVFS::Utility
 		if (m_Handle == INVALID_HANDLE_VALUE)
 		{
 			// No search handle available, begin operation.
-			m_Handle = CallFindFirstFile(m_SearchQuery, m_FindData, m_CaseSensitive);
+			m_Handle = CallFindFirstFile(m_SearchQuery, m_FindData, m_CaseSensitive, m_QueryShortNames);
 			if (m_Handle != INVALID_HANDLE_VALUE)
 			{
 				m_IsCanceled = false;
-				return KxFileItem(this, m_FindData);
+				return KxFileItem(*this, m_FindData);
 			}
 		}
 		else
@@ -123,7 +124,7 @@ namespace KxVFS::Utility
 			// We have handle, find next file.
 			if (CallFindNextFile(m_Handle, m_FindData))
 			{
-				return KxFileItem(this, m_FindData);
+				return KxFileItem(*this, m_FindData);
 			}
 
 			// No files left, close search handle

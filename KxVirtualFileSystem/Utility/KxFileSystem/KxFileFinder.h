@@ -20,6 +20,7 @@ namespace KxVFS::Utility
 			KxDynamicStringW m_SearchQuery;
 			bool m_IsCanceled = false;
 			bool m_CaseSensitive = false;
+			bool m_QueryShortNames = false;
 
 			HANDLE m_Handle = INVALID_HANDLE_VALUE;
 			WIN32_FIND_DATAW m_FindData = {0};
@@ -44,9 +45,18 @@ namespace KxVFS::Utility
 			{
 				return m_CaseSensitive;
 			}
-			void SetCaseSensitive(bool value)
+			void SetCaseSensitive(bool value = true)
 			{
 				m_CaseSensitive = value;
+			}
+
+			bool ShouldQueryShortNames() const
+			{
+				return m_QueryShortNames;
+			}
+			void QueryShortNames(bool value = true)
+			{
+				m_QueryShortNames = value;
 			}
 
 			bool Run() override;

@@ -54,8 +54,8 @@ namespace KxVFS::Utility
 	{
 		UpdateInfo();
 	}
-	KxFileItem::KxFileItem(KxFileFinder* finder, const WIN32_FIND_DATAW& fileInfo)
-		: m_Source(finder->GetSource())
+	KxFileItem::KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& fileInfo)
+		:m_Source(finder.GetSource())
 	{
 		FromWIN32_FIND_DATA(fileInfo);
 	}

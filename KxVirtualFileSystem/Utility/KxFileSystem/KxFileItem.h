@@ -44,7 +44,7 @@ namespace KxVFS::Utility
 			KxFileItem(KxDynamicStringRefW source, KxDynamicStringRefW fileName);
 
 		private:
-			KxFileItem(KxFileFinder* finder, const WIN32_FIND_DATAW& fileInfo);
+			KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& fileInfo);
 
 		public:
 			bool IsOK() const
