@@ -36,7 +36,7 @@ namespace KxVFS::Utility
 			{
 				return *reinterpret_cast<const FILETIME*>(&value);
 			}
-			bool DoUpdateInfo(KxDynamicStringRefW fullPath);
+			bool DoUpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName = false);
 
 		public:
 			KxFileItem() = default;
@@ -51,9 +51,9 @@ namespace KxVFS::Utility
 			{
 				return m_Attributes != INVALID_FILE_ATTRIBUTES;
 			}
-			bool UpdateInfo()
+			bool UpdateInfo(bool queryShortName = false)
 			{
-				return DoUpdateInfo(GetFullPath());
+				return DoUpdateInfo(GetFullPath(), queryShortName);
 			}
 
 			bool IsNormalItem() const

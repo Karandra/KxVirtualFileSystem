@@ -27,14 +27,15 @@ namespace KxVFS::Utility
 			*this = KxFileItem();
 		}
 	}
-	bool KxFileItem::DoUpdateInfo(KxDynamicStringRefW fullPath)
+	bool KxFileItem::DoUpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName)
 	{
-		WIN32_FIND_DATAW info = {0};
-		HANDLE searchHandle = ::FindFirstFileExW(fullPath.data(), FindExInfoBasic, &info, FindExSearchNameMatch, nullptr, 0);
-		if (searchHandle != INVALID_HANDLE_VALUE)
+		KxFileFinder finder(fullPath);
+		finder.QueryShortNames(queryShortName);
+
+		KxFileItem item = finder.FindNext();
+		if (item.IsOK())
 		{
-			FromWIN32_FIND_DATA(info);
-			::FindClose(searchHandle);
+			*this = std::move(item);
 			return true;
 		}
 		else
