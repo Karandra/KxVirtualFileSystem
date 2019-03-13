@@ -138,11 +138,14 @@ namespace KxVFS::Utility
 {
 	template<class... Args> size_t DebugPrint(const wchar_t* fmt, Args&&... arg)
 	{
-		KxDynamicStringW output = KxDynamicStringW::Format(fmt, std::forward<Args>(arg)...);
+		KxDynamicStringW output = KxDynamicStringW::Format(L"[Thread:%u] ", ::GetCurrentThreadId());
+		output += KxDynamicStringW::Format(fmt, std::forward<Args>(arg)...);
 		output += L"\r\n";
 
+		// Print to VS 'Output' window 
 		::OutputDebugStringW(output.data());
 
+		// Print to console stdout
 		DWORD writtenCount = 0;
 		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), output.data(), static_cast<DWORD>(output.size()), &writtenCount, nullptr);
 		return output.length();
