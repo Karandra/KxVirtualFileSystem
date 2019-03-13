@@ -1033,15 +1033,19 @@ class KxBasicDynamicString
 
 			if (count > 0)
 			{
-				buffer.resize((size_t)count + 1);
+				// Resize to exact required length, the string will take care of null terminator
+				buffer.resize((size_t)count);
 
-				if constexpr (std::is_same_v<CharT, wchar_t>)
+				// And tell vs[w]printf that we allocated buffer with space for that null terminator
+				// because it expects length with it, otherwise it won't print last character.
+				const size_t effectiveSize = buffer.size() + 1;
+				if constexpr(std::is_same_v<CharT, wchar_t>)
 				{
-					count = vswprintf(buffer.data(), buffer.size(), formatString, argptr);
+					count = vswprintf(buffer.data(), effectiveSize, formatString, argptr);
 				}
-				else if constexpr (std::is_same_v<CharT, char>)
+				else if constexpr(std::is_same_v<CharT, char>)
 				{
-					count = vsprintf(buffer.data(), buffer.size(), formatString, argptr);
+					count = vsprintf(buffer.data(), effectiveSize, formatString, argptr);
 				}
 			}
 			va_end(argptr);
