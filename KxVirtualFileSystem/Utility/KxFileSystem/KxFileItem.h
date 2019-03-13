@@ -16,9 +16,13 @@ namespace KxVFS::Utility
 	{
 		friend class KxFileFinder;
 
+		public:
+			using TShortName = KxBasicDynamicString<wchar_t, ARRAYSIZE(WIN32_FIND_DATAW::cAlternateFileName)>;
+
 		private:
 			KxDynamicStringW m_Name;
 			KxDynamicStringW m_Source;
+			TShortName m_ShortName;
 			uint32_t m_Attributes = INVALID_FILE_ATTRIBUTES;
 			uint32_t m_ReparsePointAttributes = 0;
 			FILETIME m_CreationTime;
@@ -28,7 +32,6 @@ namespace KxVFS::Utility
 
 		private:
 			void MakeNull(bool attribuesOnly = false);
-			void Set(const WIN32_FIND_DATAW& fileInfo);
 			FILETIME FileTimeFromLARGE_INTEGER(const LARGE_INTEGER& value) const
 			{
 				return *reinterpret_cast<const FILETIME*>(&value);
@@ -123,7 +126,7 @@ namespace KxVFS::Utility
 			{
 				m_CreationTime = FileTimeFromLARGE_INTEGER(value);
 			}
-		
+			
 			FILETIME GetLastAccessTime() const
 			{
 				return m_LastAccessTime;
@@ -167,7 +170,7 @@ namespace KxVFS::Utility
 			{
 				m_Source = source;
 			}
-		
+			
 			KxDynamicStringRefW GetName() const
 			{
 				return m_Name;
@@ -176,7 +179,16 @@ namespace KxVFS::Utility
 			{
 				m_Name = name;
 			}
-		
+			
+			KxDynamicStringRefW GetShortName() const
+			{
+				return m_ShortName;
+			}
+			void SetShortName(KxDynamicStringRefW name)
+			{
+				m_ShortName = name;
+			}
+
 			KxDynamicStringW GetFileExtension() const;
 			void SetFileExtension(KxDynamicStringRefW ext);
 
@@ -200,6 +212,7 @@ namespace KxVFS::Utility
 				m_Source = KxDynamicStringW(fullPath).before_last(L'\\', &m_Name);
 			}
 			
+			void FromWIN32_FIND_DATA(const WIN32_FIND_DATAW& findInfo);
 			void ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const;
 			WIN32_FIND_DATAW ToWIN32_FIND_DATA() const
 			{

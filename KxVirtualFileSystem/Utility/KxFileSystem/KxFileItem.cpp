@@ -27,32 +27,13 @@ namespace KxVFS::Utility
 			*this = KxFileItem();
 		}
 	}
-	void KxFileItem::Set(const WIN32_FIND_DATAW& fileInfo)
-	{
-		m_Attributes = fileInfo.dwFileAttributes;
-		if (IsReparsePoint())
-		{
-			m_ReparsePointAttributes = fileInfo.dwReserved0;
-		}
-
-		m_FileSize = -1;
-		if (IsFile())
-		{
-			Utility::HighLowToInt64(m_FileSize, fileInfo.nFileSizeHigh, fileInfo.nFileSizeLow);
-		}
-
-		m_Name = fileInfo.cFileName;
-		m_CreationTime = fileInfo.ftCreationTime;
-		m_LastAccessTime = fileInfo.ftLastAccessTime;
-		m_ModificationTime = fileInfo.ftLastWriteTime;
-	}
 	bool KxFileItem::DoUpdateInfo(KxDynamicStringRefW fullPath)
 	{
 		WIN32_FIND_DATAW info = {0};
 		HANDLE searchHandle = ::FindFirstFileExW(fullPath.data(), FindExInfoBasic, &info, FindExSearchNameMatch, nullptr, 0);
 		if (searchHandle != INVALID_HANDLE_VALUE)
 		{
-			Set(info);
+			FromWIN32_FIND_DATA(info);
 			::FindClose(searchHandle);
 			return true;
 		}
@@ -76,7 +57,7 @@ namespace KxVFS::Utility
 	KxFileItem::KxFileItem(KxFileFinder* finder, const WIN32_FIND_DATAW& fileInfo)
 		: m_Source(finder->GetSource())
 	{
-		Set(fileInfo);
+		FromWIN32_FIND_DATA(fileInfo);
 	}
 
 	bool KxFileItem::IsCurrentOrParent() const
@@ -122,10 +103,31 @@ namespace KxVFS::Utility
 		}
 	}
 
+	void KxFileItem::FromWIN32_FIND_DATA(const WIN32_FIND_DATAW& findInfo)
+	{
+		m_Attributes = findInfo.dwFileAttributes;
+		if (IsReparsePoint())
+		{
+			m_ReparsePointAttributes = findInfo.dwReserved0;
+		}
+
+		m_FileSize = -1;
+		if (IsFile())
+		{
+			Utility::HighLowToInt64(m_FileSize, findInfo.nFileSizeHigh, findInfo.nFileSizeLow);
+		}
+
+		m_Name = findInfo.cFileName;
+		m_ShortName = findInfo.cAlternateFileName;
+		m_CreationTime = findInfo.ftCreationTime;
+		m_LastAccessTime = findInfo.ftLastAccessTime;
+		m_ModificationTime = findInfo.ftLastWriteTime;
+	}
 	void KxFileItem::ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const
 	{
 		// File name
 		wcsncpy_s(findData.cFileName, m_Name.data(), m_Name.size());
+		wcsncpy_s(findData.cAlternateFileName, m_ShortName.data(), m_ShortName.size());
 
 		// Attributes
 		findData.dwFileAttributes = m_Attributes;
@@ -140,6 +142,6 @@ namespace KxVFS::Utility
 		findData.ftLastWriteTime = m_ModificationTime;
 
 		// File size
-		Utility::Int64ToHighLow(m_FileSize, findData.nFileSizeHigh, findData.nFileSizeLow);
+		Utility::Int64ToHighLow(IsFile() ? m_FileSize : 0, findData.nFileSizeHigh, findData.nFileSizeLow);
 	}
 }
