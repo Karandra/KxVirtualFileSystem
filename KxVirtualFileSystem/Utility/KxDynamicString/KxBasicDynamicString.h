@@ -577,7 +577,7 @@ class KxBasicDynamicString
 		KxBasicDynamicString before_last(value_type ch, KxBasicDynamicString* rest = nullptr) const
 		{
 			KxBasicDynamicString out;
-			size_t charPos = rfind(ch);
+			const size_t charPos = rfind(ch);
 			if (charPos != npos)
 			{
 				if (charPos != 0)
@@ -598,6 +598,23 @@ class KxBasicDynamicString
 				}
 			}
 			return out;
+		}
+		KxBasicDynamicString after_last(value_type ch) const
+		{
+			const size_t charPos = rfind(ch);
+			if (charPos != npos)
+			{
+				KxBasicDynamicString out;
+				if (charPos + 1 != size())
+				{
+					out.assign(get_view(charPos + 1));
+				}
+				return out;
+			}
+			else
+			{
+				return *this;
+			}
 		}
 
 		// Assign
