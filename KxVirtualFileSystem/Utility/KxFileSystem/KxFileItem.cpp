@@ -16,7 +16,7 @@ namespace KxVFS::Utility
 		if (attribuesOnly)
 		{
 			m_Attributes = FileAttributes::Invalid;
-			m_ReparsePointAttributes = ReparsePointTags::None;
+			m_ReparsePointTags = ReparsePointTags::None;
 			m_CreationTime = {0};
 			m_LastAccessTime = {0};
 			m_ModificationTime = {0};
@@ -109,7 +109,7 @@ namespace KxVFS::Utility
 		m_Attributes = FromInt<FileAttributes>(findInfo.dwFileAttributes);
 		if (IsReparsePoint())
 		{
-			m_ReparsePointAttributes = FromInt<ReparsePointTags>(findInfo.dwReserved0);
+			m_ReparsePointTags = FromInt<ReparsePointTags>(findInfo.dwReserved0);
 		}
 
 		m_FileSize = -1;
@@ -134,7 +134,7 @@ namespace KxVFS::Utility
 		findData.dwFileAttributes = ToInt(m_Attributes);
 		if (IsReparsePoint())
 		{
-			findData.dwReserved0 = ToInt(m_ReparsePointAttributes);
+			findData.dwReserved0 = ToInt(m_ReparsePointTags);
 		}
 
 		// Time

@@ -24,7 +24,7 @@ namespace KxVFS::Utility
 			KxDynamicStringW m_Source;
 			TShortName m_ShortName;
 			FileAttributes m_Attributes = FileAttributes::Invalid;
-			ReparsePointTags m_ReparsePointAttributes = ReparsePointTags::None;
+			ReparsePointTags m_ReparsePointTags = ReparsePointTags::None;
 			FILETIME m_CreationTime;
 			FILETIME m_LastAccessTime;
 			FILETIME m_ModificationTime;
@@ -110,15 +110,15 @@ namespace KxVFS::Utility
 				m_Attributes = FileAttributes::Normal;
 			}
 			
-			ReparsePointTags GetReparsePointAttributes() const
+			ReparsePointTags GetReparsePointTags() const
 			{
-				return m_ReparsePointAttributes;
+				return m_ReparsePointTags;
 			}
-			void SetReparsePointAttributes(ReparsePointTags attributes)
+			void SetReparsePointTags(ReparsePointTags tags)
 			{
 				if (IsReparsePoint())
 				{
-					m_ReparsePointAttributes = attributes;
+					m_ReparsePointTags = tags;
 				}
 			}
 
