@@ -18,7 +18,7 @@ namespace KxVFS
 {
 	DWORD MirrorFS::GetParentSecurity(KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const
 	{
-		constexpr size_t maxPathLength = 32768;
+		constexpr size_t maxPathLength = std::numeric_limits<int16_t>::max();
 
 		int lastPathSeparator = -1;
 		for (int i = 0; i < maxPathLength && filePath[i]; ++i)
@@ -56,10 +56,15 @@ namespace KxVFS
 		}
 
 		PSECURITY_DESCRIPTOR parentDescriptor = nullptr;
+		KxCallAtScopeExit atExit([&parentDescriptor]()
+		{
+			::LocalFree(parentDescriptor);
+		});
+
 		DWORD errorCode = GetParentSecurity(filePath, &parentDescriptor);
 		if (errorCode == ERROR_SUCCESS)
 		{
-			static GENERIC_MAPPING g_GenericMapping =
+			GENERIC_MAPPING genericMapping =
 			{
 				FILE_GENERIC_READ,
 				FILE_GENERIC_WRITE,
@@ -67,27 +72,25 @@ namespace KxVFS
 				FILE_ALL_ACCESS
 			};
 
-			HANDLE accessTokenHandle = Dokany2::DokanOpenRequestorToken(eventInfo.DokanFileInfo);
-			if (accessTokenHandle != nullptr && accessTokenHandle != INVALID_HANDLE_VALUE)
+			Utility::GenericHandle accessTokenHandle = Dokany2::DokanOpenRequestorToken(eventInfo.DokanFileInfo);
+			if (accessTokenHandle.IsOK() && !accessTokenHandle.IsNull())
 			{
-				bool success = ::CreatePrivateObjectSecurity(parentDescriptor,
-															 eventInfo.SecurityContext.AccessState.SecurityDescriptor,
-															 newSecurity,
-															 eventInfo.DokanFileInfo->IsDirectory,
-															 accessTokenHandle,
-															 &g_GenericMapping
+				const bool success = ::CreatePrivateObjectSecurity(parentDescriptor,
+																   eventInfo.SecurityContext.AccessState.SecurityDescriptor,
+																   newSecurity,
+																   eventInfo.DokanFileInfo->IsDirectory,
+																   accessTokenHandle,
+																   &genericMapping
 				);
 				if (!success)
 				{
 					errorCode = ::GetLastError();
 				}
-				::CloseHandle(accessTokenHandle);
 			}
 			else
 			{
 				errorCode = ::GetLastError();
 			}
-			::LocalFree(parentDescriptor);
 		}
 		return errorCode;
 	}

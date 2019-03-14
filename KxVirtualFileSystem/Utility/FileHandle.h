@@ -7,7 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/IncludeWindows.h"
-#include "KxVirtualFileSystem/Utility/HandleWrapper.h"
+#include "KxVirtualFileSystem/Utility/GenericHandle.h"
 
 namespace KxVFS::Utility
 {
@@ -18,7 +18,7 @@ namespace KxVFS::Utility
 		End = FILE_END,
 	};
 
-	class KxVFS_API FileHandle: public HandleWrapper<FileHandle, size_t, std::numeric_limits<size_t>::max()>
+	class KxVFS_API FileHandle: public GenericHandle
 	{
 		friend class TWrapper;
 
@@ -30,7 +30,7 @@ namespace KxVFS::Utility
 
 		public:
 			FileHandle(THandle fileHandle = GetInvalidHandle())
-				:HandleWrapper(fileHandle)
+				:GenericHandle(fileHandle)
 			{
 			}
 
