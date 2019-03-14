@@ -18,39 +18,22 @@ namespace KxVFS
 {
 	DWORD MirrorFS::GetParentSecurity(KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const
 	{
-		constexpr size_t maxPathLength = std::numeric_limits<int16_t>::max();
+		KxDynamicStringW parentPath = filePath;
+		parentPath = parentPath.before_last(L'\\');
 
-		int lastPathSeparator = -1;
-		for (int i = 0; i < maxPathLength && filePath[i]; ++i)
+		if (!parentPath.empty())
 		{
-			if (filePath[i] == '\\')
-			{
-				lastPathSeparator = i;
-			}
-		}
-		if (lastPathSeparator == -1)
-		{
-			return ERROR_PATH_NOT_FOUND;
-		}
+			// Give us everything
+			const SECURITY_INFORMATION securityInfo = BACKUP_SECURITY_INFORMATION;
 
-		wchar_t parentPath[maxPathLength] = {0};
-		memcpy_s(parentPath, maxPathLength * sizeof(wchar_t), filePath.data(), lastPathSeparator * sizeof(wchar_t));
-		parentPath[lastPathSeparator] = 0;
-
-		// Must LocalFree() parentSecurity
-		return GetNamedSecurityInfoW(parentPath,
-									 SE_FILE_OBJECT,
-									 BACKUP_SECURITY_INFORMATION, // give us everything
-									 nullptr,
-									 nullptr,
-									 nullptr,
-									 nullptr,
-									 parentSecurity
-		);
+			// Must LocalFree() 'parentSecurity' object
+			return ::GetNamedSecurityInfoW(parentPath, SE_FILE_OBJECT, securityInfo, nullptr, nullptr, nullptr, nullptr, parentSecurity);
+		}
+		return ERROR_PATH_NOT_FOUND;
 	}
 	DWORD MirrorFS::CreateNewSecurity(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const
 	{
-		if (filePath.empty() || !requestedSecurity || !newSecurity)
+		if (filePath.empty() || requestedSecurity == nullptr || newSecurity == nullptr)
 		{
 			return ERROR_INVALID_PARAMETER;
 		}
@@ -76,7 +59,7 @@ namespace KxVFS
 			if (accessTokenHandle.IsOK() && !accessTokenHandle.IsNull())
 			{
 				const bool success = ::CreatePrivateObjectSecurity(parentDescriptor,
-																   eventInfo.SecurityContext.AccessState.SecurityDescriptor,
+																   requestedSecurity,
 																   newSecurity,
 																   eventInfo.DokanFileInfo->IsDirectory,
 																   accessTokenHandle,
@@ -94,18 +77,18 @@ namespace KxVFS
 		}
 		return errorCode;
 	}
-	Utility::SecurityObject MirrorFS::CreateSecurityIfNeeded(EvtCreateFile& eventInfo, KxDynamicStringRefW targetPath, CreationDisposition creationDisposition)
+	Utility::SecurityObject MirrorFS::CreateSecurityIfNeeded(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, CreationDisposition creationDisposition)
 	{
-		SECURITY_ATTRIBUTES attributes;
-		attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-		attributes.lpSecurityDescriptor = eventInfo.SecurityContext.AccessState.SecurityDescriptor;
-		attributes.bInheritHandle = FALSE;
-
 		// We only need security information if there's a possibility a new file could be created
-		if (wcscmp(eventInfo.FileName, L"\\") != 0 && wcscmp(eventInfo.FileName, L"/") != 0	&& creationDisposition != CreationDisposition::OpenExisting && creationDisposition != CreationDisposition::TruncateExisting)
+		if (!IsRequestToRoot(filePath) && creationDisposition != CreationDisposition::OpenExisting && creationDisposition != CreationDisposition::TruncateExisting)
 		{
+			SECURITY_ATTRIBUTES attributes;
+			attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+			attributes.lpSecurityDescriptor = eventInfo.SecurityContext.AccessState.SecurityDescriptor;
+			attributes.bInheritHandle = FALSE;
+
 			PSECURITY_DESCRIPTOR newFileSecurity = nullptr;
-			if (CreateNewSecurity(eventInfo, targetPath, eventInfo.SecurityContext.AccessState.SecurityDescriptor, &newFileSecurity) == ERROR_SUCCESS)
+			if (CreateNewSecurity(eventInfo, filePath, eventInfo.SecurityContext.AccessState.SecurityDescriptor, &newFileSecurity) == ERROR_SUCCESS)
 			{
 				return Utility::SecurityObject(newFileSecurity, attributes);
 			}

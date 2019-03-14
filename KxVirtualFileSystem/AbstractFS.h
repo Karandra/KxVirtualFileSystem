@@ -49,7 +49,7 @@ namespace KxVFS
 
 			bool IsRequestToRoot(KxDynamicStringRefW fileName) const
 			{
-				return fileName.empty() || (fileName.length() == 1 && fileName.front() == L'\\');
+				return fileName.empty() || (fileName.length() == 1 && (fileName.front() == L'\\' || fileName.front() == L'/'));
 			}
 			bool IsWriteRequest(bool IsExist, AccessRights desiredAccess, CreationDisposition createDisposition) const;
 			bool IsWriteRequest(KxDynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const
