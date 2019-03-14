@@ -500,7 +500,7 @@ namespace KxVFS
 
 		if (IsUsingAsyncIO())
 		{
-			fileAttributesAndFlags |= FileAttributesAndFlags::FlagOverlapped;
+			fileAttributesAndFlags |= FileAttributes::FlagOverlapped;
 		}
 
 		// This is for Impersonate Caller User Option
@@ -546,7 +546,7 @@ namespace KxVFS
 															 eventInfo.ShareAccess,
 															 &newFileSecurity.GetAttributes(),
 															 OPEN_EXISTING,
-															 ToInt(fileAttributesAndFlags|FileAttributesAndFlags::FlagBackupSemantics),
+															 ToInt(fileAttributesAndFlags|FileAttributes::FlagBackupSemantics),
 															 nullptr
 				);
 				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);

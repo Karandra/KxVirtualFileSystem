@@ -51,18 +51,18 @@ namespace KxVFS
 			{
 				return fileName.empty() || (fileName.length() == 1 && fileName.front() == L'\\');
 			}
-			bool IsWriteRequest(KxDynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const;
-			bool IsReadRequest(KxDynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const
+			bool IsWriteRequest(bool IsExist, AccessRights desiredAccess, CreationDisposition createDisposition) const;
+			bool IsWriteRequest(KxDynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const
 			{
-				return !IsWriteRequest(filePath, desiredAccess, createDisposition);
+				return IsWriteRequest(Utility::IsExist(filePath), desiredAccess, createDisposition);
 			}
 			bool IsDirectory(ULONG kernelCreateOptions) const;
 			
 			bool IsRequestingSACLInfo(const PSECURITY_INFORMATION securityInformation) const;
 			void ProcessSESecurityPrivilege(PSECURITY_INFORMATION securityInformation) const;
 
-			std::tuple<FileAttributesAndFlags, CreationDisposition, AccessRights> MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo) const;
-			bool CheckAttributesToOverwriteFile(FileAttributes fileAttributes, FileAttributesAndFlags requestAttributes, CreationDisposition creationDisposition) const;
+			std::tuple<FileAttributes, CreationDisposition, AccessRights> MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo) const;
+			bool CheckAttributesToOverwriteFile(FileAttributes fileAttributes, FileAttributes requestAttributes, CreationDisposition creationDisposition) const;
 
 		private:
 			void SetMounted(bool value);
