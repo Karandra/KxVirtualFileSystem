@@ -73,7 +73,7 @@ namespace KxVFS::Utility
 			bool IsDirectoryEmpty() const;
 			KxFileItem& SetDirectory()
 			{
-				Utility::ModFlagRef(m_Attributes, FILE_ATTRIBUTE_DIRECTORY, true);
+				Utility::ModFlagRef(m_Attributes, FileAttributes::Directory, true);
 				return *this;
 			}
 
@@ -83,7 +83,7 @@ namespace KxVFS::Utility
 			}
 			KxFileItem& SetFile()
 			{
-				Utility::ModFlagRef(m_Attributes, FILE_ATTRIBUTE_DIRECTORY, false);
+				Utility::ModFlagRef(m_Attributes, FileAttributes::Directory, false);
 				return *this;
 			}
 
@@ -93,7 +93,7 @@ namespace KxVFS::Utility
 			}
 			KxFileItem& SetReadOnly(bool value = true)
 			{
-				Utility::ModFlagRef(m_Attributes, FILE_ATTRIBUTE_READONLY, value);
+				Utility::ModFlagRef(m_Attributes, FileAttributes::ReadOnly, value);
 				return *this;
 			}
 
@@ -167,7 +167,10 @@ namespace KxVFS::Utility
 			}
 			void SetFileSize(int64_t size)
 			{
-				m_FileSize = size;
+				if (IsFile())
+				{
+					m_FileSize = size;
+				}
 			}
 
 			KxDynamicStringRefW GetSource() const
