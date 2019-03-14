@@ -15,8 +15,8 @@ namespace KxVFS::Utility
 	{
 		if (attribuesOnly)
 		{
-			m_Attributes = INVALID_FILE_ATTRIBUTES;
-			m_ReparsePointAttributes = 0;
+			m_Attributes = FileAttributes::Invalid;
+			m_ReparsePointAttributes = ReparsePointTags::None;
 			m_CreationTime = {0};
 			m_LastAccessTime = {0};
 			m_ModificationTime = {0};
@@ -106,10 +106,10 @@ namespace KxVFS::Utility
 
 	void KxFileItem::FromWIN32_FIND_DATA(const WIN32_FIND_DATAW& findInfo)
 	{
-		m_Attributes = findInfo.dwFileAttributes;
+		m_Attributes = FromInt<FileAttributes>(findInfo.dwFileAttributes);
 		if (IsReparsePoint())
 		{
-			m_ReparsePointAttributes = findInfo.dwReserved0;
+			m_ReparsePointAttributes = FromInt<ReparsePointTags>(findInfo.dwReserved0);
 		}
 
 		m_FileSize = -1;
@@ -131,10 +131,10 @@ namespace KxVFS::Utility
 		wcsncpy_s(findData.cAlternateFileName, m_ShortName.data(), m_ShortName.size());
 
 		// Attributes
-		findData.dwFileAttributes = m_Attributes;
+		findData.dwFileAttributes = ToInt(m_Attributes);
 		if (IsReparsePoint())
 		{
-			findData.dwReserved0 = m_ReparsePointAttributes;
+			findData.dwReserved0 = ToInt(m_ReparsePointAttributes);
 		}
 
 		// Time

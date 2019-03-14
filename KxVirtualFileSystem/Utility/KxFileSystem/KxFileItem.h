@@ -23,8 +23,8 @@ namespace KxVFS::Utility
 			KxDynamicStringW m_Name;
 			KxDynamicStringW m_Source;
 			TShortName m_ShortName;
-			uint32_t m_Attributes = INVALID_FILE_ATTRIBUTES;
-			uint32_t m_ReparsePointAttributes = 0;
+			FileAttributes m_Attributes = FileAttributes::Invalid;
+			ReparsePointTags m_ReparsePointAttributes = ReparsePointTags::None;
 			FILETIME m_CreationTime;
 			FILETIME m_LastAccessTime;
 			FILETIME m_ModificationTime;
@@ -49,7 +49,7 @@ namespace KxVFS::Utility
 		public:
 			bool IsOK() const
 			{
-				return m_Attributes != INVALID_FILE_ATTRIBUTES;
+				return m_Attributes != FileAttributes::Invalid;
 			}
 			bool UpdateInfo(bool queryShortName = false)
 			{
@@ -63,12 +63,12 @@ namespace KxVFS::Utility
 			bool IsCurrentOrParent() const;
 			bool IsReparsePoint() const
 			{
-				return m_Attributes & FILE_ATTRIBUTE_REPARSE_POINT;
+				return ToBool(m_Attributes & FileAttributes::ReparsePoint);
 			}
 
 			bool IsDirectory() const
 			{
-				return m_Attributes & FILE_ATTRIBUTE_DIRECTORY;
+				return ToBool(m_Attributes & FileAttributes::Directory);
 			}
 			bool IsDirectoryEmpty() const;
 			KxFileItem& SetDirectory()
@@ -89,7 +89,7 @@ namespace KxVFS::Utility
 
 			bool IsReadOnly() const
 			{
-				return m_Attributes & FILE_ATTRIBUTE_READONLY;
+				return ToBool(m_Attributes & FileAttributes::ReadOnly);
 			}
 			KxFileItem& SetReadOnly(bool value = true)
 			{
@@ -97,21 +97,29 @@ namespace KxVFS::Utility
 				return *this;
 			}
 
-			uint32_t GetAttributes() const
+			FileAttributes GetAttributes() const
 			{
 				return m_Attributes;
 			}
-			uint32_t GetReparsePointAttributes() const
+			void SetAttributes(FileAttributes attributes)
 			{
-				return m_ReparsePointAttributes;
+				m_Attributes = attributes;
 			}
 			void SetNormalAttributes()
 			{
-				m_Attributes = FILE_ATTRIBUTE_NORMAL;
+				m_Attributes = FileAttributes::Normal;
 			}
-			void SetAttributes(uint32_t value)
+			
+			ReparsePointTags GetReparsePointAttributes() const
 			{
-				m_Attributes = value;
+				return m_ReparsePointAttributes;
+			}
+			void SetReparsePointAttributes(ReparsePointTags attributes)
+			{
+				if (IsReparsePoint())
+				{
+					m_ReparsePointAttributes = attributes;
+				}
 			}
 
 			FILETIME GetCreationTime() const
