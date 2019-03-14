@@ -41,7 +41,7 @@ namespace KxVFS
 			// Security section
 			DWORD GetParentSecurity(KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const;
 			DWORD CreateNewSecurity(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const;
-			Utility::SecurityObject CreateSecurityIfNeeded(EvtCreateFile& eventInfo, SECURITY_ATTRIBUTES& securityAttributes, KxDynamicStringRefW targetPath, CreationDisposition creationDisposition);
+			Utility::SecurityObject CreateSecurityIfNeeded(EvtCreateFile& eventInfo, KxDynamicStringRefW targetPath, CreationDisposition creationDisposition);
 			
 			void OpenWithSecurityAccess(AccessRights& desiredAccess, bool isWriteRequest) const;
 			void OpenWithSecurityAccessIfNeeded(AccessRights& desiredAccess, bool isWriteRequest) const

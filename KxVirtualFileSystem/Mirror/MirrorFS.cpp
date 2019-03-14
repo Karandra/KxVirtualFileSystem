@@ -91,11 +91,12 @@ namespace KxVFS
 		}
 		return errorCode;
 	}
-	Utility::SecurityObject MirrorFS::CreateSecurityIfNeeded(EvtCreateFile& eventInfo, SECURITY_ATTRIBUTES& securityAttributes, KxDynamicStringRefW targetPath, CreationDisposition creationDisposition)
+	Utility::SecurityObject MirrorFS::CreateSecurityIfNeeded(EvtCreateFile& eventInfo, KxDynamicStringRefW targetPath, CreationDisposition creationDisposition)
 	{
-		securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
-		securityAttributes.lpSecurityDescriptor = eventInfo.SecurityContext.AccessState.SecurityDescriptor;
-		securityAttributes.bInheritHandle = FALSE;
+		SECURITY_ATTRIBUTES attributes;
+		attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
+		attributes.lpSecurityDescriptor = eventInfo.SecurityContext.AccessState.SecurityDescriptor;
+		attributes.bInheritHandle = FALSE;
 
 		// We only need security information if there's a possibility a new file could be created
 		if (wcscmp(eventInfo.FileName, L"\\") != 0 && wcscmp(eventInfo.FileName, L"/") != 0	&& creationDisposition != CreationDisposition::OpenExisting && creationDisposition != CreationDisposition::TruncateExisting)
@@ -103,8 +104,7 @@ namespace KxVFS
 			PSECURITY_DESCRIPTOR newFileSecurity = nullptr;
 			if (CreateNewSecurity(eventInfo, targetPath, eventInfo.SecurityContext.AccessState.SecurityDescriptor, &newFileSecurity) == ERROR_SUCCESS)
 			{
-				securityAttributes.lpSecurityDescriptor = newFileSecurity;
-				return newFileSecurity;
+				return Utility::SecurityObject(newFileSecurity, attributes);
 			}
 		}
 		return nullptr;
@@ -507,8 +507,7 @@ namespace KxVFS
 		TokenHandle userTokenHandle = ImpersonateCallerUserIfNeeded(eventInfo);
 
 		// Security
-		SECURITY_ATTRIBUTES securityAttributes = {0};
-		Utility::SecurityObject newFileSecurity = CreateSecurityIfNeeded(eventInfo, securityAttributes, targetPath, creationDisposition);
+		Utility::SecurityObject newFileSecurity = CreateSecurityIfNeeded(eventInfo, targetPath, creationDisposition);
 
 		if (eventInfo.DokanFileInfo->IsDirectory)
 		{
@@ -518,7 +517,7 @@ namespace KxVFS
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
 				// We create folder
-				if (!CreateDirectoryW(targetPath, &securityAttributes))
+				if (!CreateDirectoryW(targetPath, &newFileSecurity.GetAttributes()))
 				{
 					errorCode = GetLastError();
 
@@ -545,7 +544,7 @@ namespace KxVFS
 				Utility::FileHandle fileHandle = CreateFileW(targetPath,
 															 ToInt(genericDesiredAccess),
 															 eventInfo.ShareAccess,
-															 &securityAttributes,
+															 &newFileSecurity.GetAttributes(),
 															 OPEN_EXISTING,
 															 ToInt(fileAttributesAndFlags|FileAttributesAndFlags::FlagBackupSemantics),
 															 nullptr
@@ -606,7 +605,7 @@ namespace KxVFS
 				Utility::FileHandle fileHandle = CreateFileW(targetPath,
 															 ToInt(genericDesiredAccess),
 															 eventInfo.ShareAccess,
-															 &securityAttributes,
+															 &newFileSecurity.GetAttributes(),
 															 ToInt(creationDisposition),
 															 ToInt(fileAttributesAndFlags),
 															 nullptr

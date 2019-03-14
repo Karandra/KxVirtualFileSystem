@@ -304,8 +304,7 @@ namespace KxVFS
 		TokenHandle userTokenHandle = ImpersonateCallerUserIfNeeded(eventInfo);
 
 		// Security
-		SECURITY_ATTRIBUTES securityAttributes = {0};
-		Utility::SecurityObject newFileSecurity = CreateSecurityIfNeeded(eventInfo, securityAttributes, targetPath, creationDisposition);
+		Utility::SecurityObject newFileSecurity = CreateSecurityIfNeeded(eventInfo, targetPath, creationDisposition);
 
 		if (eventInfo.DokanFileInfo->IsDirectory)
 		{
@@ -317,7 +316,7 @@ namespace KxVFS
 
 				// We create folder
 				DWORD createFolderErrorCode = STATUS_SUCCESS;
-				if (!Utility::CreateFolderTree(targetPath, false, &securityAttributes, &createFolderErrorCode))
+				if (!Utility::CreateFolderTree(targetPath, false, &newFileSecurity.GetAttributes(), &createFolderErrorCode))
 				{
 					//errorCode = GetLastError();
 					errorCode = createFolderErrorCode;
@@ -349,7 +348,7 @@ namespace KxVFS
 				Utility::FileHandle fileHandle = ::CreateFileW(targetPath,
 															   ToInt(genericDesiredAccess),
 															   eventInfo.ShareAccess,
-															   &securityAttributes,
+															   &newFileSecurity.GetAttributes(),
 															   OPEN_EXISTING,
 															   ToInt(fileAttributesAndFlags|FileAttributesAndFlags::FlagBackupSemantics),
 															   nullptr
@@ -433,7 +432,7 @@ namespace KxVFS
 				Utility::FileHandle fileHandle = CreateFileW(targetPath,
 															 ToInt(genericDesiredAccess),
 															 eventInfo.ShareAccess,
-															 &securityAttributes,
+															 &newFileSecurity.GetAttributes(),
 															 ToInt(creationDisposition),
 															 ToInt(fileAttributesAndFlags),
 															 nullptr
