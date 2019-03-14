@@ -9,7 +9,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	template<class T> struct IsEnumClass: std::false_type
+	template<class T> struct IsEnumClass: public std::false_type
 	{
 	};
 	template<class T> inline constexpr bool IsEnumClassV = IsEnumClass<T>::value;
