@@ -44,6 +44,15 @@ namespace KxVFS::Utility
 			return false;
 		}
 	}
+	KxDynamicStringRefW KxFileItem::TrimNamespace(KxDynamicStringRefW path) const
+	{
+		const size_t prefixLength = std::size(Utility::LongPathPrefix) - 1;
+		if (path.substr(0, prefixLength) == Utility::LongPathPrefix)
+		{
+			path.remove_prefix(prefixLength);
+		}
+		return path;
+	}
 
 	KxFileItem::KxFileItem(KxDynamicStringRefW fullPath)
 	{
@@ -51,12 +60,12 @@ namespace KxVFS::Utility
 		DoUpdateInfo(fullPath);
 	}
 	KxFileItem::KxFileItem(KxDynamicStringRefW source, KxDynamicStringRefW fileName)
-		:m_Source(source), m_Name(fileName)
+		:m_Source(TrimNamespace(source)), m_Name(fileName)
 	{
 		UpdateInfo();
 	}
 	KxFileItem::KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& fileInfo)
-		:m_Source(finder.GetSource())
+		:m_Source(TrimNamespace(finder.GetSource()))
 	{
 		FromWIN32_FIND_DATA(fileInfo);
 	}

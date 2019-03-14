@@ -37,6 +37,7 @@ namespace KxVFS::Utility
 				return *reinterpret_cast<const FILETIME*>(&value);
 			}
 			bool DoUpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName = false);
+			KxDynamicStringRefW TrimNamespace(KxDynamicStringRefW path) const;
 
 		public:
 			KxFileItem() = default;
@@ -179,7 +180,7 @@ namespace KxVFS::Utility
 			}
 			void SetSource(KxDynamicStringRefW source)
 			{
-				m_Source = source;
+				m_Source = TrimNamespace(source);
 			}
 			
 			KxDynamicStringRefW GetName() const
@@ -220,7 +221,8 @@ namespace KxVFS::Utility
 			}
 			void SetFullPath(KxDynamicStringRefW fullPath)
 			{
-				m_Source = KxDynamicStringW(fullPath).before_last(L'\\', &m_Name);
+				KxDynamicStringW source = KxDynamicStringW(fullPath).before_last(L'\\', &m_Name);
+				m_Source = TrimNamespace(source);
 			}
 			
 			void FromWIN32_FIND_DATA(const WIN32_FIND_DATAW& findInfo);
