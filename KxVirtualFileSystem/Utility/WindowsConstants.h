@@ -7,6 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/IncludeWindows.h"
+#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 namespace KxVFS
 {
@@ -33,6 +34,8 @@ namespace KxVFS
 		SparseFile = FILE_ATTRIBUTE_SPARSE_FILE,
 		Virtual = FILE_ATTRIBUTE_VIRTUAL,
 	};
+	KxVFSDeclareEnumOperations(FileAttributes);
+	
 	enum class FileFlags: uint32_t
 	{
 		DeleteOnClose = FILE_FLAG_DELETE_ON_CLOSE,
@@ -47,6 +50,8 @@ namespace KxVFS
 		SessionAware = FILE_FLAG_SESSION_AWARE,
 		WriteThrough = FILE_FLAG_WRITE_THROUGH,
 	};
+	KxVFSDeclareEnumOperations(FileFlags);
+	
 	enum class SecurityFlags: uint32_t
 	{
 		Anonymous = SECURITY_ANONYMOUS,
@@ -56,6 +61,8 @@ namespace KxVFS
 		ContextTracking = SECURITY_CONTEXT_TRACKING,
 		EffectiveOnly = SECURITY_EFFECTIVE_ONLY,
 	};
+	KxVFSDeclareEnumOperations(SecurityFlags);
+	
 	enum class FileShare: uint32_t
 	{
 		None = 0,
@@ -63,6 +70,8 @@ namespace KxVFS
 		Write = FILE_SHARE_WRITE,
 		Delete = FILE_SHARE_DELETE,
 	};
+	KxVFSDeclareEnumOperations(FileShare);
+	
 	enum class CreationDisposition: uint32_t
 	{
 		CreateNew = CREATE_NEW,
@@ -71,6 +80,8 @@ namespace KxVFS
 		OpenExisting = OPEN_EXISTING,
 		TruncateExisting = TRUNCATE_EXISTING,
 	};
+	KxVFSDeclareEnumOperations(CreationDisposition);
+	
 	enum class FileAccess: uint32_t
 	{
 		// For a directory
@@ -97,6 +108,8 @@ namespace KxVFS
 		StandardRightsRead = STANDARD_RIGHTS_READ,
 		StandardRightsWrite = STANDARD_RIGHTS_WRITE,
 	};
+	KxVFSDeclareEnumOperations(FileAccess);
+
 	enum class GenericAccess: uint32_t
 	{
 		Read = GENERIC_READ,
@@ -104,4 +117,26 @@ namespace KxVFS
 		Execute = GENERIC_EXECUTE,
 		All = GENERIC_ALL,
 	};
+	KxVFSDeclareEnumOperations(GenericAccess);
+
+	enum class ReparsePointTags: uint32_t
+	{
+		None = 0,
+
+		CSV = IO_REPARSE_TAG_CSV,
+		DEDUP = IO_REPARSE_TAG_DEDUP,
+		DFS = IO_REPARSE_TAG_DFS,
+		DFSR = IO_REPARSE_TAG_DFSR,
+		HSM = IO_REPARSE_TAG_HSM,
+		HSM2 = IO_REPARSE_TAG_HSM2,
+		NFS = IO_REPARSE_TAG_NFS,
+		SIS = IO_REPARSE_TAG_SIS,
+		WIM = IO_REPARSE_TAG_WIM,
+		Symlink = IO_REPARSE_TAG_SYMLINK,
+		MountPoint = IO_REPARSE_TAG_MOUNT_POINT,
+		ReservedOne = IO_REPARSE_TAG_RESERVED_ONE,
+		ReservedZero = IO_REPARSE_TAG_RESERVED_ZERO,
+		ReservedRange = IO_REPARSE_TAG_RESERVED_RANGE,
+	};
+	KxVFSDeclareEnumOperations(ReparsePointTags);
 }
