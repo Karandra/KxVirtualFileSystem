@@ -21,6 +21,7 @@ namespace KxVFS::Utility
 			SecurityObject(PSECURITY_DESCRIPTOR value = nullptr, const SECURITY_ATTRIBUTES& attributes = {})
 				:m_Descriptor(value), m_Attributes(attributes)
 			{
+				m_Attributes.nLength = sizeof(SECURITY_ATTRIBUTES);
 				m_Attributes.lpSecurityDescriptor = m_Descriptor;
 			}
 			SecurityObject(SecurityObject&& other)
@@ -60,6 +61,8 @@ namespace KxVFS::Utility
 			{
 				Utility::MoveValue(m_Descriptor, other.m_Descriptor);
 				Utility::MoveValue(m_Attributes, other.m_Attributes);
+
+				return *this;
 			}
 			SecurityObject& operator=(const SecurityObject& other) = delete;
 	};
