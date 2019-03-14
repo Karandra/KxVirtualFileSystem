@@ -192,7 +192,7 @@ namespace KxVFS
 			return GetNtStatusByWin32LastErrorCode();
 		}
 
-		if (ReadFile(fileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, nullptr))
+		if (::ReadFile(fileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, nullptr))
 		{
 			return STATUS_SUCCESS;
 		}
@@ -214,7 +214,7 @@ namespace KxVFS
 		}
 		else
 		{
-			// Paging IO cannot write after allocate file size.
+			// Paging IO cannot write after allocated file size
 			if (eventInfo.DokanFileInfo->PagingIo)
 			{
 				if ((UINT64)eventInfo.Offset >= fileSize)
@@ -255,7 +255,7 @@ namespace KxVFS
 			}
 		}
 
-		if (WriteFile(fileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, nullptr))
+		if (::WriteFile(fileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, nullptr))
 		{
 			return STATUS_SUCCESS;
 		}
@@ -929,7 +929,7 @@ namespace KxVFS
 				overlappedContext->m_Context = &eventInfo;
 				overlappedContext->m_IOType = Mirror::IOOperationType::Read;
 
-				// Async operation, call before read.
+				// Async operation, call before read
 				OnFileRead(eventInfo, KxNullDynamicStringW);
 
 				StartThreadpoolIo(fileContext->m_IOCompletion);
@@ -1033,7 +1033,7 @@ namespace KxVFS
 				overlappedContext->m_Context = &eventInfo;
 				overlappedContext->m_IOType = Mirror::IOOperationType::Write;
 
-				// Call here, because it's async operation.
+				// Call here, because it's async operation
 				OnFileWritten(eventInfo, KxNullDynamicStringW);
 
 				StartThreadpoolIo(fileContext->m_IOCompletion);
