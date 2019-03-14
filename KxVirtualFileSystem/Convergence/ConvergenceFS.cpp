@@ -275,10 +275,10 @@ namespace KxVFS
 		auto[fileAttributesAndFlags, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
 
 		// When filePath is a directory, needs to change the flag so that the file can be opened.
-		DWORD fileAttributes = ::GetFileAttributesW(targetPath);
-		if (fileAttributes != INVALID_FILE_ATTRIBUTES)
+		const FileAttributes fileAttributes = FromInt<FileAttributes>(::GetFileAttributesW(targetPath));
+		if (fileAttributes != FileAttributes::Invalid)
 		{
-			if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			if (ToBool(fileAttributes & FileAttributes::Directory))
 			{
 				if (!(eventInfo.CreateOptions & FILE_NON_DIRECTORY_FILE))
 				{
@@ -297,7 +297,7 @@ namespace KxVFS
 
 		if (IsUsingAsyncIO())
 		{
-			fileAttributesAndFlags |= FILE_FLAG_OVERLAPPED;
+			fileAttributesAndFlags |= FileAttributesAndFlags::FlagOverlapped;
 		}
 
 		// This is for Impersonate Caller User Option
@@ -311,7 +311,7 @@ namespace KxVFS
 		{
 			/* It is a create directory request */
 
-			if (creationDisposition == CREATE_NEW || creationDisposition == OPEN_ALWAYS)
+			if (creationDisposition == CreationDisposition::CreateNew || creationDisposition == CreationDisposition::OpenAlways)
 			{
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
@@ -323,7 +323,7 @@ namespace KxVFS
 					errorCode = createFolderErrorCode;
 
 					// Fail to create folder for OPEN_ALWAYS is not an error
-					if (errorCode != ERROR_ALREADY_EXISTS || creationDisposition == CREATE_NEW)
+					if (errorCode != ERROR_ALREADY_EXISTS || creationDisposition == CreationDisposition::CreateNew)
 					{
 						statusCode = GetNtStatusByWin32ErrorCode(errorCode);
 					}
@@ -339,7 +339,7 @@ namespace KxVFS
 			if (statusCode == STATUS_SUCCESS)
 			{
 				// Check first if we're trying to open a file as a directory.
-				if (fileAttributes != INVALID_FILE_ATTRIBUTES && !(fileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (eventInfo.CreateOptions & FILE_DIRECTORY_FILE))
+				if (fileAttributes != FileAttributes::Invalid && !ToBool(fileAttributes & FileAttributes::Directory) && (eventInfo.CreateOptions & FILE_DIRECTORY_FILE))
 				{
 					return STATUS_NOT_A_DIRECTORY;
 				}
@@ -347,11 +347,11 @@ namespace KxVFS
 
 				// FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
 				Utility::FileHandle fileHandle = ::CreateFileW(targetPath,
-															   genericDesiredAccess,
+															   ToInt(genericDesiredAccess),
 															   eventInfo.ShareAccess,
 															   &securityAttributes,
 															   OPEN_EXISTING,
-															   fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
+															   ToInt(fileAttributesAndFlags|FileAttributesAndFlags::FlagBackupSemantics),
 															   nullptr
 				);
 				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);
@@ -374,7 +374,7 @@ namespace KxVFS
 					SaveFileContext(eventInfo, fileContext);
 
 					// Open succeed but we need to inform the driver that the dir open and not created by returning STATUS_OBJECT_NAME_COLLISION
-					if (creationDisposition == OPEN_ALWAYS && fileAttributes != INVALID_FILE_ATTRIBUTES)
+					if (creationDisposition == CreationDisposition::OpenAlways && fileAttributes != FileAttributes::Invalid)
 					{
 						statusCode = STATUS_OBJECT_NAME_COLLISION;
 					}
@@ -396,9 +396,9 @@ namespace KxVFS
 			else
 			{
 				// Truncate should always be used with write access
-				if (creationDisposition == TRUNCATE_EXISTING)
+				if (creationDisposition == CreationDisposition::TruncateExisting)
 				{
-					genericDesiredAccess |= GENERIC_WRITE;
+					genericDesiredAccess |= AccessRights::GenericWrite;
 				}
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
@@ -431,11 +431,11 @@ namespace KxVFS
 
 				OpenWithSecurityAccessIfNeeded(genericDesiredAccess, isWriteRequest);
 				Utility::FileHandle fileHandle = CreateFileW(targetPath,
-															 genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
+															 ToInt(genericDesiredAccess),
 															 eventInfo.ShareAccess,
 															 &securityAttributes,
-															 creationDisposition,
-															 fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
+															 ToInt(creationDisposition),
+															 ToInt(fileAttributesAndFlags),
 															 nullptr
 				);
 
@@ -450,13 +450,13 @@ namespace KxVFS
 				else
 				{
 					// Need to update FileAttributes with previous when Overwrite file
-					if (fileAttributes != INVALID_FILE_ATTRIBUTES && creationDisposition == TRUNCATE_EXISTING)
+					if (fileAttributes != FileAttributes::Invalid && creationDisposition == CreationDisposition::TruncateExisting)
 					{
-						SetFileAttributesW(targetPath, fileAttributesAndFlags|fileAttributes);
+						::SetFileAttributesW(targetPath, ToInt(fileAttributesAndFlags) | ToInt(fileAttributes));
 					}
 
 					// Invalidate folder content if file is created or overwritten
-					if (creationDisposition == CREATE_NEW || creationDisposition == CREATE_ALWAYS || creationDisposition == OPEN_ALWAYS || creationDisposition == TRUNCATE_EXISTING)
+					if (creationDisposition == CreationDisposition::CreateNew || creationDisposition == CreationDisposition::CreateAlways || creationDisposition == CreationDisposition::OpenAlways || creationDisposition == CreationDisposition::TruncateExisting)
 					{
 						InvalidateSearchDispatcherVectorUsingFile(eventInfo.FileName);
 					}
@@ -471,9 +471,9 @@ namespace KxVFS
 					{
 						// Save the file handle in m_Context
 						fileHandle.Release();
-						eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(mirrorContext);
+						SaveFileContext(eventInfo, mirrorContext);
 
-						if (creationDisposition == OPEN_ALWAYS || creationDisposition == CREATE_ALWAYS)
+						if (creationDisposition == CreationDisposition::OpenAlways || creationDisposition == CreationDisposition::CreateAlways)
 						{
 							if (errorCode == ERROR_ALREADY_EXISTS)
 							{

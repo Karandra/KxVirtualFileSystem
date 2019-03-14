@@ -52,6 +52,43 @@ namespace KxVFS
 	};
 	KxVFSDeclareEnumOperations(FileFlags);
 	
+	enum class FileAttributesAndFlags: uint32_t
+	{
+		InvalidAttributes = INVALID_FILE_ATTRIBUTES,
+
+		AttributeNormal = FILE_ATTRIBUTE_NORMAL,
+		AttributeHidden = FILE_ATTRIBUTE_HIDDEN,
+		AttributeArchive = FILE_ATTRIBUTE_ARCHIVE,
+		AttributeDevice = FILE_ATTRIBUTE_DEVICE,
+		AttributeDirectory = FILE_ATTRIBUTE_DIRECTORY,
+		AttributeReadOnly = FILE_ATTRIBUTE_READONLY,
+		AttributeSystem = FILE_ATTRIBUTE_SYSTEM,
+		AttributeTemporary = FILE_ATTRIBUTE_TEMPORARY,
+		AttributeCompressed = FILE_ATTRIBUTE_COMPRESSED,
+		AttributeEncrypted = FILE_ATTRIBUTE_ENCRYPTED,
+		AttributeIntegrityStream = FILE_ATTRIBUTE_INTEGRITY_STREAM,
+		AttributeNotContentIndexed = FILE_ATTRIBUTE_NOT_CONTENT_INDEXED,
+		AttributeNoScrubData = FILE_ATTRIBUTE_NO_SCRUB_DATA,
+		AttributeOffline = FILE_ATTRIBUTE_OFFLINE,
+		AttributeRecallOnOpen = 0x40000, // FILE_ATTRIBUTE_RECALL_ON_OPEN is not defined for some reason
+		AttributeReparsePoint = FILE_ATTRIBUTE_REPARSE_POINT,
+		AttributeSparseFile = FILE_ATTRIBUTE_SPARSE_FILE,
+		AttributeVirtual = FILE_ATTRIBUTE_VIRTUAL,
+
+		FlagDeleteOnClose = FILE_FLAG_DELETE_ON_CLOSE,
+		FlagNoBuffering = FILE_FLAG_NO_BUFFERING,
+		FlagOpenNoRecall = FILE_FLAG_OPEN_NO_RECALL,
+		FlagOpenReparsePoint = FILE_FLAG_OPEN_REPARSE_POINT,
+		FlagOverlapped = FILE_FLAG_OVERLAPPED,
+		FlagBackupSemantics = FILE_FLAG_BACKUP_SEMANTICS,
+		FlagPosixSemantics = FILE_FLAG_POSIX_SEMANTICS,
+		FlagRandomAccess = FILE_FLAG_RANDOM_ACCESS,
+		FlagSequentialScan = FILE_FLAG_SEQUENTIAL_SCAN,
+		FlagSessionAware = FILE_FLAG_SESSION_AWARE,
+		FlagWriteThrough = FILE_FLAG_WRITE_THROUGH,
+	};
+	KxVFSDeclareEnumOperations(FileAttributesAndFlags);
+
 	enum class SecurityFlags: uint32_t
 	{
 		Anonymous = SECURITY_ANONYMOUS,
@@ -110,14 +147,29 @@ namespace KxVFS
 	};
 	KxVFSDeclareEnumOperations(FileAccess);
 
-	enum class GenericAccess: uint32_t
+	enum class AccessRights: uint32_t
 	{
-		Read = GENERIC_READ,
-		Write = GENERIC_WRITE,
-		Execute = GENERIC_EXECUTE,
-		All = GENERIC_ALL,
+		Delete = DELETE,
+		ReadControl = READ_CONTROL,
+		WriteDAC = WRITE_DAC,
+		WriteOwner = WRITE_OWNER,
+		Synchronize = SYNCHRONIZE,
+		SystemSecurity = ACCESS_SYSTEM_SECURITY,
+		MaximumAllowed = MAXIMUM_ALLOWED,
+
+		GenericRead = GENERIC_READ,
+		GenericWrite = GENERIC_WRITE,
+		GenericExecute = GENERIC_EXECUTE,
+		GenericAll = GENERIC_ALL,
+
+		StandardRead = STANDARD_RIGHTS_READ,
+		StandardWrite = STANDARD_RIGHTS_WRITE,
+		StandardExecute = STANDARD_RIGHTS_EXECUTE,
+		StandardAll = STANDARD_RIGHTS_ALL,
+		StandardRequired = STANDARD_RIGHTS_REQUIRED,
+		SpecificAll = SPECIFIC_RIGHTS_ALL,
 	};
-	KxVFSDeclareEnumOperations(GenericAccess);
+	KxVFSDeclareEnumOperations(AccessRights);
 
 	enum class ReparsePointTags: uint32_t
 	{

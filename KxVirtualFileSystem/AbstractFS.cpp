@@ -69,7 +69,7 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	bool AbstractFS::IsWriteRequest(KxDynamicStringRefW filePath, ACCESS_MASK desiredAccess, DWORD createDisposition) const
+	bool AbstractFS::IsWriteRequest(KxDynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const
 	{
 		/*
 		https://stackoverflow.com/questions/14469607/difference-between-open-always-and-create-always-in-createfile-of-windows-api
@@ -84,11 +84,11 @@ namespace KxVFS
 		*/
 
 		return (
-			desiredAccess & GENERIC_WRITE ||
-			createDisposition == CREATE_ALWAYS ||
-			(createDisposition == CREATE_NEW && !Utility::IsExist(filePath)) ||
-			(createDisposition == OPEN_ALWAYS && !Utility::IsExist(filePath)) ||
-			(createDisposition == TRUNCATE_EXISTING && Utility::IsExist(filePath))
+			ToBool(desiredAccess & AccessRights::GenericWrite) ||
+			createDisposition == CreationDisposition::CreateAlways ||
+			(createDisposition == CreationDisposition::CreateNew && !Utility::IsExist(filePath)) ||
+			(createDisposition == CreationDisposition::OpenAlways && !Utility::IsExist(filePath)) ||
+			(createDisposition == CreationDisposition::TruncateExisting && Utility::IsExist(filePath))
 			);
 	}
 	bool AbstractFS::IsDirectory(ULONG kernelCreateOptions) const
@@ -109,21 +109,28 @@ namespace KxVFS
 		}
 	}
 
-	std::tuple<DWORD, DWORD, ACCESS_MASK> AbstractFS::MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo) const
+	std::tuple<FileAttributesAndFlags, CreationDisposition, AccessRights> AbstractFS::MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo) const
 	{
 		DWORD fileAttributesAndFlags = 0;
 		DWORD creationDisposition = 0;
 		ACCESS_MASK genericDesiredAccess = 0;
 		Dokany2::DokanMapKernelToUserCreateFileFlags(const_cast<EvtCreateFile*>(&eventInfo), &genericDesiredAccess, &fileAttributesAndFlags, &creationDisposition);
 
-		return {fileAttributesAndFlags, creationDisposition, genericDesiredAccess};
+		return
+		{
+			FromInt<FileAttributesAndFlags>(fileAttributesAndFlags),
+			FromInt<CreationDisposition>(creationDisposition),
+			FromInt<AccessRights>(genericDesiredAccess)
+		};
 	}
-	bool AbstractFS::CheckAttributesToOverwriteFile(DWORD fileAttributes, DWORD fileAttributesAndFlags, DWORD creationDisposition) const
+	bool AbstractFS::CheckAttributesToOverwriteFile(FileAttributes fileAttributes, FileAttributesAndFlags requestAttributes, CreationDisposition creationDisposition) const
 	{
-		if (fileAttributes != INVALID_FILE_ATTRIBUTES && ((!(fileAttributesAndFlags & FILE_ATTRIBUTE_HIDDEN) &&
-			(fileAttributes & FILE_ATTRIBUTE_HIDDEN)) || (!(fileAttributesAndFlags & FILE_ATTRIBUTE_SYSTEM) &&
-														   (fileAttributes & FILE_ATTRIBUTE_SYSTEM))) &&(creationDisposition == TRUNCATE_EXISTING ||
-																										 creationDisposition == CREATE_ALWAYS))
+		const bool fileExist = fileAttributes != FileAttributes::Invalid;
+		const bool fileHidden = !ToBool(requestAttributes & FileAttributesAndFlags::AttributeHidden) && ToBool(fileAttributes & FileAttributes::Hidden);
+		const bool fileSystem = !ToBool(requestAttributes & FileAttributesAndFlags::AttributeSystem) && ToBool(fileAttributes & FileAttributes::System);
+		const bool truncateOrCreateAlways = creationDisposition == CreationDisposition::TruncateExisting || creationDisposition == CreationDisposition::CreateAlways;
+
+		if (fileExist && (fileHidden || fileSystem) && truncateOrCreateAlways)
 		{
 			return false;
 		}

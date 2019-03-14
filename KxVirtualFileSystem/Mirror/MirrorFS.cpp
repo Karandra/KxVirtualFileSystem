@@ -91,14 +91,14 @@ namespace KxVFS
 		}
 		return errorCode;
 	}
-	Utility::SecurityObject MirrorFS::CreateSecurityIfNeeded(EvtCreateFile& eventInfo, SECURITY_ATTRIBUTES& securityAttributes, KxDynamicStringRefW targetPath, DWORD creationDisposition)
+	Utility::SecurityObject MirrorFS::CreateSecurityIfNeeded(EvtCreateFile& eventInfo, SECURITY_ATTRIBUTES& securityAttributes, KxDynamicStringRefW targetPath, CreationDisposition creationDisposition)
 	{
 		securityAttributes.nLength = sizeof(SECURITY_ATTRIBUTES);
 		securityAttributes.lpSecurityDescriptor = eventInfo.SecurityContext.AccessState.SecurityDescriptor;
 		securityAttributes.bInheritHandle = FALSE;
 
 		// We only need security information if there's a possibility a new file could be created
-		if (wcscmp(eventInfo.FileName, L"\\") != 0 && wcscmp(eventInfo.FileName, L"/") != 0	&& creationDisposition != OPEN_EXISTING && creationDisposition != TRUNCATE_EXISTING)
+		if (wcscmp(eventInfo.FileName, L"\\") != 0 && wcscmp(eventInfo.FileName, L"/") != 0	&& creationDisposition != CreationDisposition::OpenExisting && creationDisposition != CreationDisposition::TruncateExisting)
 		{
 			PSECURITY_DESCRIPTOR newFileSecurity = nullptr;
 			if (CreateNewSecurity(eventInfo, targetPath, eventInfo.SecurityContext.AccessState.SecurityDescriptor, &newFileSecurity) == ERROR_SUCCESS)
@@ -110,16 +110,16 @@ namespace KxVFS
 		return nullptr;
 	}
 	
-	void MirrorFS::OpenWithSecurityAccess(ACCESS_MASK& desiredAccess, bool isWriteRequest) const
+	void MirrorFS::OpenWithSecurityAccess(AccessRights& desiredAccess, bool isWriteRequest) const
 	{
-		desiredAccess |= READ_CONTROL;
+		desiredAccess |= AccessRights::ReadControl;
 		if (isWriteRequest)
 		{
-			desiredAccess |= WRITE_DAC;
+			desiredAccess |= AccessRights::WriteDAC;
 		}
 		if (GetService().HasSeSecurityNamePrivilege())
 		{
-			desiredAccess |= ACCESS_SYSTEM_SECURITY;
+			desiredAccess |= AccessRights::SystemSecurity;
 		}
 	}
 }
@@ -198,7 +198,7 @@ namespace KxVFS
 		}
 		return GetNtStatusByWin32LastErrorCode();
 	}
-	NTSTATUS MirrorFS::WriteFileSync(EvtWriteFile& eventInfo, HANDLE fileHandle, UINT64 fileSize) const
+	NTSTATUS MirrorFS::WriteFileSync(EvtWriteFile& eventInfo, HANDLE fileHandle, uint64_t fileSize) const
 	{
 		LARGE_INTEGER distanceToMove;
 
@@ -207,7 +207,7 @@ namespace KxVFS
 			LARGE_INTEGER pos;
 			pos.QuadPart = 0;
 
-			if (!SetFilePointerEx(fileHandle, pos, nullptr, FILE_END))
+			if (!::SetFilePointerEx(fileHandle, pos, nullptr, FILE_END))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
@@ -249,7 +249,7 @@ namespace KxVFS
 			}
 
 			distanceToMove.QuadPart = eventInfo.Offset;
-			if (!SetFilePointerEx(fileHandle, distanceToMove, nullptr, FILE_BEGIN))
+			if (!::SetFilePointerEx(fileHandle, distanceToMove, nullptr, FILE_BEGIN))
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
@@ -478,10 +478,10 @@ namespace KxVFS
 		auto[fileAttributesAndFlags, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
 
 		// When filePath is a directory, needs to change the flag so that the file can be opened.
-		DWORD fileAttributes = ::GetFileAttributesW(targetPath);
-		if (fileAttributes != INVALID_FILE_ATTRIBUTES)
+		FileAttributes fileAttributes = FromInt<FileAttributes>(::GetFileAttributesW(targetPath));
+		if (fileAttributes != FileAttributes::Invalid)
 		{
-			if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+			if (ToBool(fileAttributes & FileAttributes::Directory))
 			{
 				if (!(eventInfo.CreateOptions & FILE_NON_DIRECTORY_FILE))
 				{
@@ -500,7 +500,7 @@ namespace KxVFS
 
 		if (IsUsingAsyncIO())
 		{
-			fileAttributesAndFlags |= FILE_FLAG_OVERLAPPED;
+			fileAttributesAndFlags |= FileAttributesAndFlags::FlagOverlapped;
 		}
 
 		// This is for Impersonate Caller User Option
@@ -513,7 +513,7 @@ namespace KxVFS
 		if (eventInfo.DokanFileInfo->IsDirectory)
 		{
 			// It is a create directory request
-			if (creationDisposition == CREATE_NEW || creationDisposition == OPEN_ALWAYS)
+			if (creationDisposition == CreationDisposition::CreateNew || creationDisposition == CreationDisposition::OpenAlways)
 			{
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
@@ -523,7 +523,7 @@ namespace KxVFS
 					errorCode = GetLastError();
 
 					// Fail to create folder for OPEN_ALWAYS is not an error
-					if (errorCode != ERROR_ALREADY_EXISTS || creationDisposition == CREATE_NEW)
+					if (errorCode != ERROR_ALREADY_EXISTS || creationDisposition == CreationDisposition::CreateNew)
 					{
 						statusCode = GetNtStatusByWin32ErrorCode(errorCode);
 					}
@@ -535,7 +535,7 @@ namespace KxVFS
 			if (statusCode == STATUS_SUCCESS)
 			{
 				// Check first if we're trying to open a file as a directory.
-				if (fileAttributes != INVALID_FILE_ATTRIBUTES && !(fileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (eventInfo.CreateOptions & FILE_DIRECTORY_FILE))
+				if (fileAttributes != FileAttributes::Invalid && !ToBool(fileAttributes & FileAttributes::Directory) && (eventInfo.CreateOptions & FILE_DIRECTORY_FILE))
 				{
 					return STATUS_NOT_A_DIRECTORY;
 				}
@@ -543,11 +543,11 @@ namespace KxVFS
 
 				// FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
 				Utility::FileHandle fileHandle = CreateFileW(targetPath,
-															 genericDesiredAccess,
+															 ToInt(genericDesiredAccess),
 															 eventInfo.ShareAccess,
 															 &securityAttributes,
 															 OPEN_EXISTING,
-															 fileAttributesAndFlags|FILE_FLAG_BACKUP_SEMANTICS,
+															 ToInt(fileAttributesAndFlags|FileAttributesAndFlags::FlagBackupSemantics),
 															 nullptr
 				);
 				CleanupImpersonateCallerUserIfNeeded(userTokenHandle);
@@ -570,7 +570,7 @@ namespace KxVFS
 					SaveFileContext(eventInfo, fileContext);
 
 					// Open succeed but we need to inform the driver that the dir open and not created by returning STATUS_OBJECT_NAME_COLLISION
-					if (creationDisposition == OPEN_ALWAYS && fileAttributes != INVALID_FILE_ATTRIBUTES)
+					if (creationDisposition == CreationDisposition::OpenAlways && fileAttributes != FileAttributes::Invalid)
 					{
 						statusCode = STATUS_OBJECT_NAME_COLLISION;
 					}
@@ -589,26 +589,26 @@ namespace KxVFS
 				OpenWithSecurityAccess(genericDesiredAccess, IsWriteRequest(targetPath, genericDesiredAccess, creationDisposition));
 			}
 
-			if (!CheckAttributesToOverwriteFile(fileAttributes, fileAttributesAndFlags, creationDisposition))
+			if (!CheckAttributesToOverwriteFile(FromInt<FileAttributes>(fileAttributes), fileAttributesAndFlags, creationDisposition))
 			{
 				statusCode = STATUS_ACCESS_DENIED;
 			}
 			else
 			{
 				// Truncate should always be used with write access
-				if (creationDisposition == TRUNCATE_EXISTING)
+				if (creationDisposition == CreationDisposition::TruncateExisting)
 				{
-					genericDesiredAccess |= GENERIC_WRITE;
+					genericDesiredAccess |= AccessRights::GenericWrite;
 				}
 				ImpersonateLoggedOnUserIfNeeded(userTokenHandle);
 
 				KxVFSDebugPrint(L"Trying to create/open file: %s", targetPath.data());
 				Utility::FileHandle fileHandle = CreateFileW(targetPath,
-															 genericDesiredAccess, // GENERIC_READ|GENERIC_WRITE|GENERIC_EXECUTE,
+															 ToInt(genericDesiredAccess),
 															 eventInfo.ShareAccess,
 															 &securityAttributes,
-															 creationDisposition,
-															 fileAttributesAndFlags, // |FILE_FLAG_NO_BUFFERING,
+															 ToInt(creationDisposition),
+															 ToInt(fileAttributesAndFlags),
 															 nullptr
 				);
 
@@ -623,9 +623,9 @@ namespace KxVFS
 				else
 				{
 					// Need to update FileAttributes with previous when Overwrite file
-					if (fileAttributes != INVALID_FILE_ATTRIBUTES && creationDisposition == TRUNCATE_EXISTING)
+					if (fileAttributes != FileAttributes::Invalid && creationDisposition == CreationDisposition::TruncateExisting)
 					{
-						SetFileAttributesW(targetPath, fileAttributesAndFlags|fileAttributes);
+						::SetFileAttributesW(targetPath, ToInt(fileAttributesAndFlags) | ToInt(fileAttributes));
 					}
 
 					Mirror::FileContext* mirrorContext = PopMirrorFileHandle(fileHandle);
@@ -638,9 +638,9 @@ namespace KxVFS
 					{
 						// Save the file handle in m_Context
 						fileHandle.Release();
-						eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(mirrorContext);
+						SaveFileContext(eventInfo, mirrorContext);
 
-						if (creationDisposition == OPEN_ALWAYS || creationDisposition == CREATE_ALWAYS)
+						if (creationDisposition == CreationDisposition::OpenAlways || creationDisposition == CreationDisposition::CreateAlways)
 						{
 							if (errorCode == ERROR_ALREADY_EXISTS)
 							{

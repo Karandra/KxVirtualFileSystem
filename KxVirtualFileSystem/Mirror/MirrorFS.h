@@ -41,10 +41,10 @@ namespace KxVFS
 			// Security section
 			DWORD GetParentSecurity(KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const;
 			DWORD CreateNewSecurity(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const;
-			Utility::SecurityObject CreateSecurityIfNeeded(EvtCreateFile& eventInfo, SECURITY_ATTRIBUTES& securityAttributes, KxDynamicStringRefW targetPath, DWORD creationDisposition);
+			Utility::SecurityObject CreateSecurityIfNeeded(EvtCreateFile& eventInfo, SECURITY_ATTRIBUTES& securityAttributes, KxDynamicStringRefW targetPath, CreationDisposition creationDisposition);
 			
-			void OpenWithSecurityAccess(ACCESS_MASK& desiredAccess, bool isWriteRequest) const;
-			void OpenWithSecurityAccessIfNeeded(ACCESS_MASK& desiredAccess, bool isWriteRequest) const
+			void OpenWithSecurityAccess(AccessRights& desiredAccess, bool isWriteRequest) const;
+			void OpenWithSecurityAccessIfNeeded(AccessRights& desiredAccess, bool isWriteRequest) const
 			{
 				if (m_EnableSecurityFunctions)
 				{
@@ -95,7 +95,7 @@ namespace KxVFS
 
 			// Sync Read/Write section
 			NTSTATUS ReadFileSync(EvtReadFile& eventInfo, HANDLE fileHandle) const;
-			NTSTATUS WriteFileSync(EvtWriteFile& eventInfo, HANDLE fileHandle, UINT64 fileSize) const;
+			NTSTATUS WriteFileSync(EvtWriteFile& eventInfo, HANDLE fileHandle, uint64_t fileSize) const;
 			
 			// On delete
 			bool CheckDeleteOnClose(Dokany2::PDOKAN_FILE_INFO fileInfo, KxDynamicStringRefW filePath) const;
