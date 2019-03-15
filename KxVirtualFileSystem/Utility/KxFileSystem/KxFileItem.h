@@ -6,6 +6,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/IncludeDokan.h"
 #include "KxVirtualFileSystem/Utility.h"
 
 namespace KxVFS::Utility
@@ -225,6 +226,7 @@ namespace KxVFS::Utility
 				m_Source = TrimNamespace(source);
 			}
 			
+		public:
 			void FromWIN32_FIND_DATA(const WIN32_FIND_DATAW& findInfo);
 			void ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const;
 			WIN32_FIND_DATAW ToWIN32_FIND_DATA() const
@@ -233,5 +235,15 @@ namespace KxVFS::Utility
 				ToWIN32_FIND_DATA(findData);
 				return findData;
 			}
+	
+			void ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& byHandleInfo) const;
+			BY_HANDLE_FILE_INFORMATION ToBY_HANDLE_FILE_INFORMATION() const
+			{
+				BY_HANDLE_FILE_INFORMATION byHandleInfo = {};
+				ToBY_HANDLE_FILE_INFORMATION(byHandleInfo);
+				return byHandleInfo;
+			}
+			void FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& byHandleInfo);
+			void FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& basicInfo);
 	};
 }

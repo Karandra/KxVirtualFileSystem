@@ -154,4 +154,45 @@ namespace KxVFS::Utility
 		// File size
 		Utility::Int64ToHighLow(IsFile() ? m_FileSize : 0, findData.nFileSizeHigh, findData.nFileSizeLow);
 	}
+
+	void KxFileItem::ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& byHandleInfo) const
+	{
+		byHandleInfo.dwFileAttributes = ToInt(m_Attributes);
+		byHandleInfo.ftCreationTime = m_CreationTime;
+		byHandleInfo.ftLastAccessTime = m_LastAccessTime;
+		byHandleInfo.ftLastWriteTime = m_ModificationTime;
+
+		if (IsFile())
+		{
+			Utility::Int64ToHighLow(m_FileSize, byHandleInfo.nFileSizeHigh, byHandleInfo.nFileSizeLow);
+		}
+		else
+		{
+			byHandleInfo.nFileIndexLow = 0;
+			byHandleInfo.nFileSizeHigh = 0;
+		}
+	}
+	void KxFileItem::FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& byHandleInfo)
+	{
+		m_Attributes = FromInt<FileAttributes>(byHandleInfo.dwFileAttributes);
+		m_CreationTime = byHandleInfo.ftCreationTime;
+		m_LastAccessTime = byHandleInfo.ftLastAccessTime;
+		m_ModificationTime = byHandleInfo.ftLastWriteTime;
+
+		if (IsFile())
+		{
+			Utility::HighLowToInt64(m_FileSize, byHandleInfo.nFileSizeHigh, byHandleInfo.nFileSizeLow);
+		}
+		else
+		{
+			m_FileSize = 0;
+		}
+	}
+	void KxFileItem::FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& basicInfo)
+	{
+		m_Attributes = FromInt<FileAttributes>(basicInfo.FileAttributes);
+		m_CreationTime = FileTimeFromLARGE_INTEGER(basicInfo.CreationTime);
+		m_LastAccessTime = FileTimeFromLARGE_INTEGER(basicInfo.LastAccessTime);
+		m_ModificationTime = FileTimeFromLARGE_INTEGER(basicInfo.LastWriteTime);
+	}
 }
