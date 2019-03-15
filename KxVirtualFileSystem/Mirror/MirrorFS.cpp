@@ -909,18 +909,15 @@ namespace KxVFS
 					return STATUS_MEMORY_NOT_ALLOCATED;
 				}
 
-				Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->m_InternalOverlapped);
+				Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->GetOverlapped());
 				overlappedContext->m_FileContext = fileContext;
 				overlappedContext->m_Context = &eventInfo;
 				overlappedContext->m_IOType = Mirror::IOOperationType::Read;
 
-				// Async operation, call before read
-				OnFileRead(eventInfo, KxNullDynamicStringW);
-
 				StartThreadpoolIo(fileContext->m_IOCompletion);
-				if (!::ReadFile(fileContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, &overlappedContext->m_InternalOverlapped))
+				if (!::ReadFile(fileContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToRead, &eventInfo.NumberOfBytesRead, &overlappedContext->GetOverlapped()))
 				{
-					DWORD errorCode = GetLastError();
+					const DWORD errorCode = GetLastError();
 					if (errorCode != ERROR_IO_PENDING)
 					{
 						::CancelThreadpoolIo(fileContext->m_IOCompletion);
@@ -1013,18 +1010,15 @@ namespace KxVFS
 					return STATUS_MEMORY_NOT_ALLOCATED;
 				}
 
-				Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->m_InternalOverlapped);
+				Utility::Int64ToOverlappedOffset(eventInfo.Offset, overlappedContext->GetOverlapped());
 				overlappedContext->m_FileContext = fileContext;
 				overlappedContext->m_Context = &eventInfo;
 				overlappedContext->m_IOType = Mirror::IOOperationType::Write;
 
-				// Call here, because it's async operation
-				OnFileWritten(eventInfo, KxNullDynamicStringW);
-
 				StartThreadpoolIo(fileContext->m_IOCompletion);
-				if (!::WriteFile(fileContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, &overlappedContext->m_InternalOverlapped))
+				if (!::WriteFile(fileContext->m_FileHandle, eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, &eventInfo.NumberOfBytesWritten, &overlappedContext->GetOverlapped()))
 				{
-					DWORD errorCode = ::GetLastError();
+					const DWORD errorCode = ::GetLastError();
 					if (errorCode != ERROR_IO_PENDING)
 					{
 						::CancelThreadpoolIo(fileContext->m_IOCompletion);
@@ -1307,7 +1301,7 @@ namespace KxVFS
 
 		if (!mirrorContext)
 		{
-			mirrorContext = new Mirror::FileContext(this);
+			mirrorContext = new Mirror::FileContext(*this);
 		}
 		mirrorContext->m_FileHandle = fileHandle;
 		mirrorContext->m_IsCleanedUp = false;
@@ -1449,31 +1443,31 @@ namespace KxVFS
 											 PTP_IO portIO
 	)
 	{
-		UNREFERENCED_PARAMETER(instance);
-		UNREFERENCED_PARAMETER(portIO);
-
 		Mirror::FileContext* mirrorContext = reinterpret_cast<Mirror::FileContext*>(context);
 		Mirror::OverlappedContext* overlappedContext = reinterpret_cast<Mirror::OverlappedContext*>(overlapped);
-		EvtReadFile* readFileEvent = nullptr;
-		EvtWriteFile* writeFileEvent = nullptr;
+		MirrorFS& fileSystemInstance = mirrorContext->GetFSInstance();
 
 		switch (overlappedContext->m_IOType)
 		{
 			case Mirror::IOOperationType::Read:
 			{
-				readFileEvent = (EvtReadFile*)overlappedContext->m_Context;
-				readFileEvent->NumberOfBytesRead = (DWORD)numberOfBytesTransferred;
-				DokanEndDispatchRead(readFileEvent, Dokany2::DokanNtStatusFromWin32(resultIO));
+				EvtReadFile& readFileEvent = *reinterpret_cast<EvtReadFile*>(overlappedContext->m_Context);
+				readFileEvent.NumberOfBytesRead = (DWORD)numberOfBytesTransferred;
+				fileSystemInstance.OnFileRead(readFileEvent, KxNullDynamicStringW);
+
+				Dokany2::DokanEndDispatchRead(&readFileEvent, Dokany2::DokanNtStatusFromWin32(resultIO));
 				break;
 			}
 			case Mirror::IOOperationType::Write:
 			{
-				writeFileEvent = (EvtWriteFile*)overlappedContext->m_Context;
-				writeFileEvent->NumberOfBytesWritten = (DWORD)numberOfBytesTransferred;
-				DokanEndDispatchWrite(writeFileEvent, Dokany2::DokanNtStatusFromWin32(resultIO));
+				EvtWriteFile& writeFileEvent = *reinterpret_cast<EvtWriteFile*>(overlappedContext->m_Context);
+				writeFileEvent.NumberOfBytesWritten = (DWORD)numberOfBytesTransferred;
+				fileSystemInstance.OnFileWritten(writeFileEvent, KxNullDynamicStringW);
+
+				Dokany2::DokanEndDispatchWrite(&writeFileEvent, Dokany2::DokanNtStatusFromWin32(resultIO));
 				break;
 			}
 		};
-		mirrorContext->GetFSInstance()->PushMirrorOverlapped(overlappedContext);
+		mirrorContext->GetFSInstance().PushMirrorOverlapped(overlappedContext);
 	}
 }

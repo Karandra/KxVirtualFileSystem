@@ -15,11 +15,29 @@ namespace KxVFS
 
 namespace KxVFS::Mirror
 {
-	class FileContext
+	class KxVFS_API FSContext
 	{
 		private:
-			MirrorFS* const m_FSInstance = nullptr;
-			
+			MirrorFS* m_FSInstance = nullptr;
+
+		public:
+			FSContext(MirrorFS& instance)
+				:m_FSInstance(&instance)
+			{
+			}
+
+		public:
+			MirrorFS& GetFSInstance() const
+			{
+				return *m_FSInstance;
+			}
+	};
+}
+
+namespace KxVFS::Mirror
+{
+	class FileContext: public FSContext
+	{
 		public:
 			CriticalSection m_Lock;
 			HANDLE m_FileHandle = INVALID_HANDLE_VALUE;
@@ -29,16 +47,11 @@ namespace KxVFS::Mirror
 			bool m_IsClosed = false;
 
 		public:
-			FileContext(MirrorFS* mirror)
-				:m_FSInstance(mirror)
+			FileContext(MirrorFS& instance)
+				:FSContext(instance)
 			{
 			}
-	
-		public:
-			MirrorFS* GetFSInstance() const
-			{
-				return m_FSInstance;
-			}
+
 	};
 
 	enum class IOOperationType: int
@@ -49,10 +62,23 @@ namespace KxVFS::Mirror
 	};
 	class OverlappedContext
 	{
-		public:
+		private:
 			OVERLAPPED m_InternalOverlapped = {0};
+
+		public:
 			FileContext* m_FileContext = nullptr;
 			IOOperationType m_IOType = IOOperationType::Unknown;
 			void* m_Context = nullptr;
+
+		public:
+			OVERLAPPED& GetOverlapped()
+			{
+				return m_InternalOverlapped;
+			}
+
+			MirrorFS& GetFSInstance() const
+			{
+				return m_FileContext->GetFSInstance();
+			}
 	};
 }
