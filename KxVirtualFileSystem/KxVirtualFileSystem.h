@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -21,7 +21,9 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include <unordered_set>
 #include <unordered_map>
 
-#include "IncludeWindows.h"
+#include "Misc/Setup.h"
+#include "Misc/IncludeWindows.h"
+#include "Utility/KxDynamicString/KxDynamicString.h"
 #pragma warning(disable: 4251) // DLL interface
 
 #if defined KxVFS_EXPORTS

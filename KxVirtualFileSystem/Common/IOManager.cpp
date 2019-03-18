@@ -1,0 +1,375 @@
+/*
+Copyright © 2019 Kerber. All rights reserved.
+
+You should have received a copy of the GNU LGPL v3
+along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
+*/
+#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Misc/IncludeWindows.h"
+#include "KxVirtualFileSystem/IFileSystem.h"
+#include "KxVirtualFileSystem/Utility.h"
+#include "IOManager.h"
+#include "FileContextManager.h"
+
+namespace KxVFS
+{
+	bool IOManager::InitializeAsyncIO()
+	{
+		if (!m_IsInitialized)
+		{
+			if (!InitializePendingAsyncIO())
+			{
+				return false;
+			}
+			m_AsyncContextPool.reserve(128);
+
+			m_IsInitialized = true;
+			return true;
+		}
+		return false;
+	}
+	bool IOManager::InitializePendingAsyncIO()
+	{
+		m_ThreadPool = Dokany2::DokanGetThreadPool();
+		if (!m_ThreadPool)
+		{
+			return false;
+		}
+
+		m_ThreadPoolCleanupGroup = ::CreateThreadpoolCleanupGroup();
+		if (!m_ThreadPoolCleanupGroup)
+		{
+			return false;
+		}
+
+		::InitializeThreadpoolEnvironment(&m_ThreadPoolEnvironment);
+		::SetThreadpoolCallbackPool(&m_ThreadPoolEnvironment, m_ThreadPool);
+		::SetThreadpoolCallbackCleanupGroup(&m_ThreadPoolEnvironment, m_ThreadPoolCleanupGroup, nullptr);
+		return true;
+	}
+	
+	void IOManager::CleanupPendingAsyncIO()
+	{
+		if (CriticalSectionLocker lock(m_ThreadPoolCS); m_ThreadPoolCleanupGroup)
+		{
+			::CloseThreadpoolCleanupGroupMembers(m_ThreadPoolCleanupGroup, FALSE, nullptr);
+			::CloseThreadpoolCleanupGroup(m_ThreadPoolCleanupGroup);
+			m_ThreadPoolCleanupGroup = nullptr;
+
+			::DestroyThreadpoolEnvironment(&m_ThreadPoolEnvironment);
+		}
+	}
+	void IOManager::CleanupAsyncIO()
+	{
+		if (m_IsInitialized)
+		{
+			CleanupPendingAsyncIO();
+			if (CriticalSectionLocker lock(m_AsyncContextPoolCS); true)
+			{
+				for (AsyncIOContext* asyncContext: m_AsyncContextPool)
+				{
+					DeleteContext(asyncContext);
+				}
+
+				m_AsyncContextPool.clear();
+				m_AsyncContextPool.shrink_to_fit();
+				m_AsyncContextPoolMaxSize = 0;
+			}
+
+			m_IsInitialized = false;
+		}
+	}
+	
+	void CALLBACK IOManager::AsyncCallback(PTP_CALLBACK_INSTANCE instance,
+										   PVOID context,
+										   PVOID overlapped,
+										   ULONG resultIO,
+										   ULONG_PTR bytesTransferred,
+										   PTP_IO completionPort
+	)
+	{
+		FileContext& fileContext = *reinterpret_cast<FileContext*>(context);
+		AsyncIOContext& asyncContext = *reinterpret_cast<AsyncIOContext*>(overlapped);
+		IFileSystem& fileSystemInstance = fileContext.GetFileSystem();
+
+		switch (asyncContext.GetOperationType())
+		{
+			case AsyncIOContext::OperationType::Read:
+			{
+				EvtReadFile& readFileEvent = *asyncContext.GetOperationContext<EvtReadFile>();
+				readFileEvent.NumberOfBytesRead = (DWORD)bytesTransferred;
+				fileSystemInstance.OnFileRead(readFileEvent, fileContext);
+
+				Dokany2::DokanEndDispatchRead(&readFileEvent, Dokany2::DokanNtStatusFromWin32(resultIO));
+				break;
+			}
+			case AsyncIOContext::OperationType::Write:
+			{
+				EvtWriteFile& writeFileEvent = *asyncContext.GetOperationContext<EvtWriteFile>();
+				writeFileEvent.NumberOfBytesWritten = (DWORD)bytesTransferred;
+				fileSystemInstance.OnFileWritten(writeFileEvent, fileContext);
+
+				Dokany2::DokanEndDispatchWrite(&writeFileEvent, Dokany2::DokanNtStatusFromWin32(resultIO));
+				break;
+			}
+			default:
+			{
+				KxVFS_DebugPrint(L"Unknown operation type in async IO callback: %d", (int)asyncContext.GetOperationType());
+				break;
+			}
+		};
+
+		fileSystemInstance.GetIOManager().PushContext(asyncContext);
+	}
+
+	void IOManager::OnDeleteFileContext(FileContext& fileContext)
+	{
+		if (m_IsAsyncIOEnabled && fileContext.IsThreadpoolIOCreated())
+		{
+			if (CriticalSectionLocker lock(m_ThreadPoolCS); m_ThreadPoolCleanupGroup && fileContext.IsThreadpoolIOCreated())
+			{
+				fileContext.CloseThreadpoolIO();
+			}
+		}
+	}
+	void IOManager::OnPushFileContext(FileContext& fileContext)
+	{
+		if (m_IsAsyncIOEnabled && fileContext.IsThreadpoolIOCreated())
+		{
+			if (CriticalSectionLocker lock(m_ThreadPoolCS); m_ThreadPoolCleanupGroup)
+			{
+				fileContext.CloseThreadpoolIO();
+			}
+		}
+	}
+	bool IOManager::OnPopFileContext(FileContext& fileContext)
+	{
+		if (m_IsAsyncIOEnabled)
+		{
+			bool success = false;
+			if (CriticalSectionLocker lock(m_ThreadPoolCS); m_ThreadPoolCleanupGroup)
+			{
+				success = fileContext.CreateThreadpoolIO(AsyncCallback, m_ThreadPoolEnvironment);
+			}
+
+			if (!success)
+			{
+				m_FileContextManager.PushContext(fileContext);
+				return false;
+			}
+		}
+		return true;
+	}
+
+	IOManager::IOManager(IFileSystem& fileSystem)
+		:m_FileSystem(fileSystem), m_FileContextManager(fileSystem.GetFileContextManager())
+	{
+	}
+
+	bool IOManager::Init()
+	{
+		if (m_IsAsyncIOEnabled)
+		{
+			return InitializeAsyncIO();
+		}
+		return false;
+	}
+	void IOManager::Cleanup()
+	{
+		if (m_IsAsyncIOEnabled)
+		{
+			CleanupAsyncIO();
+		}
+	}
+
+	void IOManager::DeleteContext(AsyncIOContext* asyncContext)
+	{
+		delete asyncContext;
+	}
+	void IOManager::PushContext(AsyncIOContext& asyncContext)
+	{
+		if (CriticalSectionLocker lock(m_AsyncContextPoolCS); true)
+		{
+			m_AsyncContextPool.push_back(&asyncContext);
+			m_AsyncContextPoolMaxSize = std::max(m_AsyncContextPoolMaxSize, m_AsyncContextPool.size());
+		}
+	}
+	AsyncIOContext* IOManager::PopContext(FileContext& fileContext)
+	{
+		AsyncIOContext* asyncContext = nullptr;
+		if (CriticalSectionLocker lock(m_AsyncContextPoolCS); true)
+		{
+			if (!m_AsyncContextPool.empty())
+			{
+				asyncContext = m_AsyncContextPool.back();
+				m_AsyncContextPool.pop_back();
+			}
+		}
+
+		if (!asyncContext)
+		{
+			asyncContext = new AsyncIOContext(fileContext);
+		}
+		else
+		{
+			asyncContext->AssignFileContext(fileContext);
+		}
+		return asyncContext;
+	}
+
+	NTSTATUS IOManager::ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext) const
+	{
+		if (!fileHandle.Seek(eventInfo.Offset, FileSeekMode::Start))
+		{
+			return IFileSystem::GetNtStatusByWin32LastErrorCode();
+		}
+		if (fileHandle.Read(eventInfo.Buffer, eventInfo.NumberOfBytesToRead, eventInfo.NumberOfBytesRead, nullptr))
+		{
+			if (fileContext)
+			{
+				m_FileSystem.OnFileRead(eventInfo, *fileContext);
+			}
+			return STATUS_SUCCESS;
+		}
+		return IFileSystem::GetNtStatusByWin32LastErrorCode();
+	}
+	NTSTATUS IOManager::WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext) const
+	{
+		if (eventInfo.DokanFileInfo->WriteToEndOfFile)
+		{
+			if (!fileHandle.Seek(0, FileSeekMode::End))
+			{
+				return IFileSystem::GetNtStatusByWin32LastErrorCode();
+			}
+		}
+		else
+		{
+			int64_t fileSize = 0;
+			if (!fileHandle.GetFileSize(fileSize))
+			{
+				return IFileSystem::GetNtStatusByWin32LastErrorCode();
+			}
+
+			// Paging IO can not write after allocated file size
+			if (eventInfo.DokanFileInfo->PagingIo)
+			{
+				if (eventInfo.Offset >= fileSize)
+				{
+					eventInfo.NumberOfBytesWritten = 0;
+					return STATUS_SUCCESS;
+				}
+
+				// WFT is happening here?
+				if ((uint64_t)(eventInfo.Offset + eventInfo.NumberOfBytesToWrite) > (uint64_t)fileSize)
+				{
+					uint64_t bytes = fileSize - eventInfo.Offset;
+					if (bytes >> 32)
+					{
+						eventInfo.NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
+					}
+					else
+					{
+
+						eventInfo.NumberOfBytesToWrite = (DWORD)bytes;
+					}
+				}
+			}
+
+			if (eventInfo.Offset > fileSize)
+			{
+				// In the mirror sample helperZeroFileData is not necessary. NTFS will zero a hole.
+				// But if user's file system is different from NTFS (or other Windows
+				// file systems) then  users will have to zero the hole themselves.
+
+				// If only Dokany devs can explain more clearly what they are talking about
+			}
+
+			if (!fileHandle.Seek(eventInfo.Offset, FileSeekMode::Start))
+			{
+				return IFileSystem::GetNtStatusByWin32LastErrorCode();
+			}
+		}
+
+		if (fileHandle.Write(eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, eventInfo.NumberOfBytesWritten))
+		{
+			if (fileContext)
+			{
+				m_FileSystem.OnFileWritten(eventInfo, *fileContext);
+			}
+			return STATUS_SUCCESS;
+		}
+		return IFileSystem::GetNtStatusByWin32LastErrorCode();
+	}
+
+	NTSTATUS IOManager::ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo)
+	{
+		AsyncIOContext* asyncContext = PopContext(fileContext);
+		if (!asyncContext)
+		{
+			return STATUS_MEMORY_NOT_ALLOCATED;
+		}
+		asyncContext->SetOperationContext(eventInfo, eventInfo.Offset, AsyncIOContext::OperationType::Read);
+
+		fileContext.StartThreadpoolIO();
+		if (!fileContext.GetHandle().Read(eventInfo.Buffer, eventInfo.NumberOfBytesToRead, eventInfo.NumberOfBytesRead, &asyncContext->GetOverlapped()))
+		{
+			const DWORD errorCode = ::GetLastError();
+			if (errorCode != ERROR_IO_PENDING)
+			{
+				fileContext.CancelThreadpoolIO();
+				return IFileSystem::GetNtStatusByWin32ErrorCode(errorCode);
+			}
+		}
+		return STATUS_PENDING;
+	}
+	NTSTATUS IOManager::WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo)
+	{
+		int64_t fileSize = 0;
+		if (!fileContext.GetHandle().GetFileSize(fileSize))
+		{
+			return IFileSystem::GetNtStatusByWin32LastErrorCode();
+		}
+
+		// Paging IO, I need to read about it at some point. Until then, don't touch this code.
+		if (eventInfo.DokanFileInfo->PagingIo)
+		{
+			if (eventInfo.Offset >= fileSize)
+			{
+				eventInfo.NumberOfBytesWritten = 0;
+				return STATUS_SUCCESS;
+			}
+
+			if ((uint64_t)(eventInfo.Offset + eventInfo.NumberOfBytesToWrite) > (uint64_t)fileSize)
+			{
+				uint64_t bytes = fileSize - eventInfo.Offset;
+				if (bytes >> 32)
+				{
+					eventInfo.NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
+				}
+				else
+				{
+					eventInfo.NumberOfBytesToWrite = (DWORD)bytes;
+				}
+			}
+		}
+
+		AsyncIOContext* asyncContext = PopContext(fileContext);
+		if (!asyncContext)
+		{
+			return STATUS_MEMORY_NOT_ALLOCATED;
+		}
+		asyncContext->SetOperationContext(eventInfo, eventInfo.Offset, AsyncIOContext::OperationType::Write);
+
+		fileContext.StartThreadpoolIO();
+		if (!fileContext.GetHandle().Write(eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, eventInfo.NumberOfBytesWritten, &asyncContext->GetOverlapped()))
+		{
+			const DWORD errorCode = ::GetLastError();
+			if (errorCode != ERROR_IO_PENDING)
+			{
+				fileContext.CancelThreadpoolIO();
+				return IFileSystem::GetNtStatusByWin32ErrorCode(errorCode);
+			}
+		}
+		return STATUS_PENDING;
+	}
+}

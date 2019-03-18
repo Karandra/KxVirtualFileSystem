@@ -6,13 +6,15 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/IncludeWindows.h"
+#include "KxVirtualFileSystem/Misc/IncludeWindows.h"
 #include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 namespace KxVFS
 {
 	enum class FileAttributes: uint32_t
 	{
+		None = 0,
+
 		Invalid = INVALID_FILE_ATTRIBUTES,
 		Normal = FILE_ATTRIBUTE_NORMAL,
 		Hidden = FILE_ATTRIBUTE_HIDDEN,
@@ -45,7 +47,7 @@ namespace KxVFS
 		FlagSessionAware = FILE_FLAG_SESSION_AWARE,
 		FlagWriteThrough = FILE_FLAG_WRITE_THROUGH,
 	};
-	KxVFSDeclareEnumOperations(FileAttributes);
+	KxVFS_AllowEnumBitwiseOp(FileAttributes);
 	
 	enum class FileFlags: uint32_t
 	{
@@ -61,7 +63,7 @@ namespace KxVFS
 		SessionAware = FILE_FLAG_SESSION_AWARE,
 		WriteThrough = FILE_FLAG_WRITE_THROUGH,
 	};
-	KxVFSDeclareEnumOperations(FileFlags);
+	KxVFS_AllowEnumBitwiseOp(FileFlags);
 	
 	enum class SecurityFlags: uint32_t
 	{
@@ -72,16 +74,18 @@ namespace KxVFS
 		ContextTracking = SECURITY_CONTEXT_TRACKING,
 		EffectiveOnly = SECURITY_EFFECTIVE_ONLY,
 	};
-	KxVFSDeclareEnumOperations(SecurityFlags);
+	KxVFS_AllowEnumBitwiseOp(SecurityFlags);
 	
 	enum class FileShare: uint32_t
 	{
 		None = 0,
+		All = FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
+
 		Read = FILE_SHARE_READ,
 		Write = FILE_SHARE_WRITE,
 		Delete = FILE_SHARE_DELETE,
 	};
-	KxVFSDeclareEnumOperations(FileShare);
+	KxVFS_AllowEnumBitwiseOp(FileShare);
 	
 	enum class CreationDisposition: uint32_t
 	{
@@ -91,7 +95,7 @@ namespace KxVFS
 		OpenExisting = OPEN_EXISTING,
 		TruncateExisting = TRUNCATE_EXISTING,
 	};
-	KxVFSDeclareEnumOperations(CreationDisposition);
+	KxVFS_AllowEnumBitwiseOp(CreationDisposition);
 	
 	enum class FileAccess: uint32_t
 	{
@@ -119,7 +123,7 @@ namespace KxVFS
 		StandardRightsRead = STANDARD_RIGHTS_READ,
 		StandardRightsWrite = STANDARD_RIGHTS_WRITE,
 	};
-	KxVFSDeclareEnumOperations(FileAccess);
+	KxVFS_AllowEnumBitwiseOp(FileAccess);
 
 	enum class AccessRights: uint32_t
 	{
@@ -143,7 +147,7 @@ namespace KxVFS
 		StandardRequired = STANDARD_RIGHTS_REQUIRED,
 		SpecificAll = SPECIFIC_RIGHTS_ALL,
 	};
-	KxVFSDeclareEnumOperations(AccessRights);
+	KxVFS_AllowEnumBitwiseOp(AccessRights);
 
 	enum class ReparsePointTags: uint32_t
 	{
@@ -164,5 +168,5 @@ namespace KxVFS
 		ReservedZero = IO_REPARSE_TAG_RESERVED_ZERO,
 		ReservedRange = IO_REPARSE_TAG_RESERVED_RANGE,
 	};
-	KxVFSDeclareEnumOperations(ReparsePointTags);
+	KxVFS_AllowEnumBitwiseOp(ReparsePointTags);
 }

@@ -6,12 +6,12 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/IncludeWindows.h"
-#include "KxVirtualFileSystem/Utility/HandleWrapper.h"
+#include "KxVirtualFileSystem/Misc/IncludeWindows.h"
+#include "HandleWrapper.h"
 
 namespace KxVFS
 {
-	class KxVFS_API TokenHandle: public HandleWrapper<TokenHandle, size_t, std::numeric_limits<size_t>::max()>
+	class KxVFS_API TokenHandle: public HandleWrapper<TokenHandle, HANDLE, size_t, std::numeric_limits<size_t>::max()>
 	{
 		friend class TWrapper;
 

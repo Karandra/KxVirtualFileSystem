@@ -6,10 +6,10 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/IncludeDokan.h"
+#include "KxVirtualFileSystem/Misc/IncludeDokan.h"
 #include "KxVirtualFileSystem/Utility.h"
 
-namespace KxVFS::Utility
+namespace KxVFS
 {
 	class KxVFS_API KxFileFinder;
 
@@ -214,7 +214,7 @@ namespace KxVFS::Utility
 			}
 			KxDynamicStringW GetFullPathWithNS() const
 			{
-				KxDynamicStringW fullPath = Utility::LongPathPrefix;
+				KxDynamicStringW fullPath = Utility::GetLongPathPrefix();
 				fullPath += m_Source;
 				fullPath += L'\\';
 				fullPath += m_Name;
@@ -236,14 +236,14 @@ namespace KxVFS::Utility
 				return findData;
 			}
 	
-			void ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& byHandleInfo) const;
+			void ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& fileInfo) const;
 			BY_HANDLE_FILE_INFORMATION ToBY_HANDLE_FILE_INFORMATION() const
 			{
-				BY_HANDLE_FILE_INFORMATION byHandleInfo = {};
-				ToBY_HANDLE_FILE_INFORMATION(byHandleInfo);
-				return byHandleInfo;
+				BY_HANDLE_FILE_INFORMATION fileInfo = {};
+				ToBY_HANDLE_FILE_INFORMATION(fileInfo);
+				return fileInfo;
 			}
-			void FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& byHandleInfo);
+			void FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& fileInfo);
 			void FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& basicInfo);
 	};
 }

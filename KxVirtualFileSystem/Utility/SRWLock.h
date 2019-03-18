@@ -5,7 +5,7 @@ You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
 #pragma once
-#include "KxVirtualFileSystem/IncludeWindows.h"
+#include "KxVirtualFileSystem/Misc/IncludeWindows.h"
 #include <utility>
 
 namespace KxVFS
@@ -24,29 +24,45 @@ namespace KxVFS
 		public:
 			void AcquireShared() noexcept
 			{
+				#if !KxVFS_DEBUG_DISABLE_LOCKS
 				::AcquireSRWLockShared(&m_Lock);
+				#endif
 			}
 			void AcquireExclusive() noexcept
 			{
+				#if !KxVFS_DEBUG_DISABLE_LOCKS
 				::AcquireSRWLockExclusive(&m_Lock);
+				#endif
 			}
 
 			bool TryAcquireShared() noexcept
 			{
-				::TryAcquireSRWLockShared(&m_Lock);
+				#if !KxVFS_DEBUG_DISABLE_LOCKS
+				return ::TryAcquireSRWLockShared(&m_Lock);
+				#else
+				return true;
+				#endif
 			}
 			bool TryAcquireExclusive() noexcept
 			{
-				::TryAcquireSRWLockExclusive(&m_Lock);
+				#if !KxVFS_DEBUG_DISABLE_LOCKS
+				return ::TryAcquireSRWLockExclusive(&m_Lock);
+				#else
+				return true;
+				#endif
 			}
 
 			void ReleaseShared() noexcept
 			{
+				#if !KxVFS_DEBUG_DISABLE_LOCKS
 				::ReleaseSRWLockShared(&m_Lock);
+				#endif
 			}
 			void ReleaseExclusive() noexcept
 			{
+				#if !KxVFS_DEBUG_DISABLE_LOCKS
 				::ReleaseSRWLockExclusive(&m_Lock);
+				#endif
 			}
 	};
 }

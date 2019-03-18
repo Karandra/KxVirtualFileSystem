@@ -6,10 +6,10 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/IncludeWindows.h"
+#include "KxVirtualFileSystem/Misc/IncludeWindows.h"
 #include "KxVirtualFileSystem/Utility.h"
 
-namespace KxVFS::Utility
+namespace KxVFS
 {
 	class [[nodiscard]] SecurityObject
 	{

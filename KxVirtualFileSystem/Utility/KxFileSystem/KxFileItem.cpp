@@ -9,7 +9,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxFileItem.h"
 #include "KxFileFinder.h"
 
-namespace KxVFS::Utility
+namespace KxVFS
 {
 	void KxFileItem::MakeNull(bool attribuesOnly)
 	{
@@ -46,8 +46,8 @@ namespace KxVFS::Utility
 	}
 	KxDynamicStringRefW KxFileItem::TrimNamespace(KxDynamicStringRefW path) const
 	{
-		const size_t prefixLength = std::size(Utility::LongPathPrefix) - 1;
-		if (path.substr(0, prefixLength) == Utility::LongPathPrefix)
+		const size_t prefixLength = Utility::GetLongPathPrefix().size();
+		if (path.substr(0, prefixLength) == Utility::GetLongPathPrefix())
 		{
 			path.remove_prefix(prefixLength);
 		}
@@ -136,15 +136,12 @@ namespace KxVFS::Utility
 	void KxFileItem::ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const
 	{
 		// File name
-		wcsncpy_s(findData.cFileName, m_Name.data(), m_Name.size());
-		wcsncpy_s(findData.cAlternateFileName, m_ShortName.data(), m_ShortName.size());
+		wcsncpy_s(findData.cFileName, m_Name, m_Name.size());
+		wcsncpy_s(findData.cAlternateFileName, m_ShortName, m_ShortName.size());
 
 		// Attributes
 		findData.dwFileAttributes = ToInt(m_Attributes);
-		if (IsReparsePoint())
-		{
-			findData.dwReserved0 = ToInt(m_ReparsePointTags);
-		}
+		findData.dwReserved0 = IsReparsePoint() ? ToInt(m_ReparsePointTags) : 0;
 
 		// Time
 		findData.ftCreationTime = m_CreationTime;
@@ -155,44 +152,46 @@ namespace KxVFS::Utility
 		Utility::Int64ToHighLow(IsFile() ? m_FileSize : 0, findData.nFileSizeHigh, findData.nFileSizeLow);
 	}
 
-	void KxFileItem::ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& byHandleInfo) const
+	void KxFileItem::ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& fileInfo) const
 	{
-		byHandleInfo.dwFileAttributes = ToInt(m_Attributes);
-		byHandleInfo.ftCreationTime = m_CreationTime;
-		byHandleInfo.ftLastAccessTime = m_LastAccessTime;
-		byHandleInfo.ftLastWriteTime = m_ModificationTime;
+		fileInfo.dwFileAttributes = ToInt(m_Attributes);
+		fileInfo.ftCreationTime = m_CreationTime;
+		fileInfo.ftLastAccessTime = m_LastAccessTime;
+		fileInfo.ftLastWriteTime = m_ModificationTime;
 
 		if (IsFile())
 		{
-			Utility::Int64ToHighLow(m_FileSize, byHandleInfo.nFileSizeHigh, byHandleInfo.nFileSizeLow);
+			Utility::Int64ToHighLow(m_FileSize, fileInfo.nFileSizeHigh, fileInfo.nFileSizeLow);
 		}
 		else
 		{
-			byHandleInfo.nFileIndexLow = 0;
-			byHandleInfo.nFileSizeHigh = 0;
+			fileInfo.nFileIndexLow = 0;
+			fileInfo.nFileSizeHigh = 0;
 		}
 	}
-	void KxFileItem::FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& byHandleInfo)
+	void KxFileItem::FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& fileInfo)
 	{
-		m_Attributes = FromInt<FileAttributes>(byHandleInfo.dwFileAttributes);
-		m_CreationTime = byHandleInfo.ftCreationTime;
-		m_LastAccessTime = byHandleInfo.ftLastAccessTime;
-		m_ModificationTime = byHandleInfo.ftLastWriteTime;
+		m_Attributes = FromInt<FileAttributes>(fileInfo.dwFileAttributes);
+		m_ReparsePointTags = ReparsePointTags::None;
+		m_CreationTime = fileInfo.ftCreationTime;
+		m_LastAccessTime = fileInfo.ftLastAccessTime;
+		m_ModificationTime = fileInfo.ftLastWriteTime;
 
 		if (IsFile())
 		{
-			Utility::HighLowToInt64(m_FileSize, byHandleInfo.nFileSizeHigh, byHandleInfo.nFileSizeLow);
+			Utility::HighLowToInt64(m_FileSize, fileInfo.nFileSizeHigh, fileInfo.nFileSizeLow);
 		}
 		else
 		{
 			m_FileSize = 0;
 		}
 	}
-	void KxFileItem::FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& basicInfo)
+	void KxFileItem::FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& fileInfo)
 	{
-		m_Attributes = FromInt<FileAttributes>(basicInfo.FileAttributes);
-		m_CreationTime = FileTimeFromLARGE_INTEGER(basicInfo.CreationTime);
-		m_LastAccessTime = FileTimeFromLARGE_INTEGER(basicInfo.LastAccessTime);
-		m_ModificationTime = FileTimeFromLARGE_INTEGER(basicInfo.LastWriteTime);
+		m_Attributes = FromInt<FileAttributes>(fileInfo.FileAttributes);
+		m_ReparsePointTags = ReparsePointTags::None;
+		m_CreationTime = FileTimeFromLARGE_INTEGER(fileInfo.CreationTime);
+		m_LastAccessTime = FileTimeFromLARGE_INTEGER(fileInfo.LastAccessTime);
+		m_ModificationTime = FileTimeFromLARGE_INTEGER(fileInfo.LastWriteTime);
 	}
 }

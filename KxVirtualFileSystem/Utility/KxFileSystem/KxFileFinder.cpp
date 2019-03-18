@@ -14,19 +14,19 @@ namespace
 {
 	using namespace KxVFS;
 
-	HANDLE CallFindFirstFile(KxDynamicStringRefW query, WIN32_FIND_DATAW& fileInfo, bool isCaseSensitive, bool queryShortNames)
+	SearchHandle BeginSearch(KxDynamicStringRefW query, WIN32_FIND_DATAW& fileInfo, bool isCaseSensitive, bool queryShortNames)
 	{
 		const DWORD searchFlags = FIND_FIRST_EX_LARGE_FETCH|(isCaseSensitive ? FIND_FIRST_EX_CASE_SENSITIVE : 0);
 		const FINDEX_INFO_LEVELS infoLevel = queryShortNames ? FindExInfoStandard : FindExInfoBasic;
 		return ::FindFirstFileExW(query.data(), infoLevel, &fileInfo, FindExSearchNameMatch, nullptr, searchFlags);
 	}
-	bool CallFindNextFile(HANDLE handle, WIN32_FIND_DATAW& fileInfo)
+	bool ContinueSearch(SearchHandle& handle, WIN32_FIND_DATAW& fileInfo)
 	{
 		return ::FindNextFileW(handle, &fileInfo);
 	}
 }
 
-namespace KxVFS::Utility
+namespace KxVFS
 {
 	bool KxFileFinder::IsDirectoryEmpty(KxDynamicStringRefW directoryPath)
 	{
@@ -76,17 +76,17 @@ namespace KxVFS::Utility
 
 	bool KxFileFinder::IsOK() const
 	{
-		return m_Handle.IsOK() && !m_Handle.IsNull();
+		return m_Handle.IsValid() && !m_Handle.IsNull();
 	}
 	bool KxFileFinder::Run()
 	{
 		WIN32_FIND_DATAW fileInfo = {0};
-		SearchHandle searchHandle = CallFindFirstFile(m_SearchQuery, fileInfo, m_CaseSensitive, m_QueryShortNames);
+		SearchHandle searchHandle = BeginSearch(m_SearchQuery, fileInfo, m_CaseSensitive, m_QueryShortNames);
 		if (searchHandle)
 		{
 			if (OnFound(fileInfo))
 			{
-				while (CallFindNextFile(searchHandle, fileInfo) && OnFound(fileInfo))
+				while (ContinueSearch(searchHandle, fileInfo) && OnFound(fileInfo))
 				{
 				}
 			}
@@ -96,10 +96,10 @@ namespace KxVFS::Utility
 	}
 	KxFileItem KxFileFinder::FindNext()
 	{
-		if (!m_Handle.IsOK())
+		if (!m_Handle.IsValid())
 		{
 			// No search handle available, begin operation.
-			m_Handle = CallFindFirstFile(m_SearchQuery, m_FindData, m_CaseSensitive, m_QueryShortNames);
+			m_Handle = BeginSearch(m_SearchQuery, m_FindData, m_CaseSensitive, m_QueryShortNames);
 			if (m_Handle)
 			{
 				m_IsCanceled = false;
@@ -109,7 +109,7 @@ namespace KxVFS::Utility
 		else
 		{
 			// We have handle, find next file.
-			if (CallFindNextFile(m_Handle, m_FindData))
+			if (ContinueSearch(m_Handle, m_FindData))
 			{
 				return KxFileItem(*this, m_FindData);
 			}

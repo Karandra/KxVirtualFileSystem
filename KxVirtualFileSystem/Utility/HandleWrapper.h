@@ -6,21 +6,20 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/IncludeWindows.h"
 
 namespace KxVFS
 {
-	template<class t_Derived, class t_HandleIntType, t_HandleIntType t_InvalidValue>
+	template<class t_Derived, class t_HandleType, class t_HandleIntType, t_HandleIntType t_InvalidValue>
 	class HandleWrapper
 	{
 		public:
 			using TWrapper = HandleWrapper;
 			using TDerived = t_Derived;
 
+			using THandle = t_HandleType;
 			using TIntHandle = t_HandleIntType;
-			using THandle = HANDLE;
 
-			static constexpr THandle GetInvalidHandle()
+			static constexpr THandle GetInvalidHandle() noexcept
 			{
 				return reinterpret_cast<THandle>(t_InvalidValue);
 			}
@@ -29,60 +28,64 @@ namespace KxVFS
 			THandle m_Handle = GetInvalidHandle();
 
 		public:
-			HandleWrapper(THandle value = GetInvalidHandle())
+			HandleWrapper(THandle value = GetInvalidHandle()) noexcept
 				:m_Handle(value)
 			{
 			}
-			HandleWrapper(HandleWrapper&& other)
+			HandleWrapper(HandleWrapper&& other) noexcept
 			{
 				*this = std::move(other);
 			}
 			HandleWrapper(const HandleWrapper&) = delete;
-			~HandleWrapper()
+			~HandleWrapper() noexcept
 			{
 				Close();
 			}
 			
-			HandleWrapper& operator=(THandle handle)
+			HandleWrapper& operator=(THandle handle) noexcept
 			{
 				return Assign(handle);
 			}
-			HandleWrapper& operator=(HandleWrapper&& other)
+			HandleWrapper& operator=(HandleWrapper&& other) noexcept
 			{
 				return Assign(other.Release());
 			}
 			HandleWrapper& operator=(const HandleWrapper&) = delete;
 
 		public:
-			bool IsOK() const
+			bool IsValidNonNull() const noexcept
+			{
+				return IsValid() && !IsNull();
+			}
+			bool IsValid() const noexcept
 			{
 				return m_Handle != GetInvalidHandle();
 			}
-			bool IsNull() const
+			bool IsNull() const noexcept
 			{
-				return m_Handle != nullptr;
+				return m_Handle == nullptr;
 			}
 			
-			THandle Get() const
+			THandle Get() const noexcept
 			{
 				return m_Handle;
 			}
-			HandleWrapper& Assign(THandle value)
+			HandleWrapper& Assign(THandle value) noexcept
 			{
 				Close();
 				m_Handle = value;
 				return *this;
 			}
-		
-			THandle Release()
+			
+			THandle Release() noexcept
 			{
 				THandle value = m_Handle;
 				m_Handle = GetInvalidHandle();
 				return value;
 			}
-			bool Close()
+			bool Close() noexcept
 			{
-				if (IsOK())
+				if (IsValid())
 				{
 					TDerived::DoCloseHandle(Release());
 					return true;
@@ -91,26 +94,35 @@ namespace KxVFS
 			}
 
 		public:
-			bool operator==(const HandleWrapper& other) const
+			bool operator==(const HandleWrapper& other) const noexcept
 			{
 				return m_Handle == other.m_Handle;
 			}
-			bool operator!=(const HandleWrapper& other) const
+			bool operator!=(const HandleWrapper& other) const noexcept
 			{
 				return !(*this == other);
 			}
 
-			explicit operator bool() const
+			explicit operator bool() const noexcept
 			{
-				return IsOK();
+				return IsValid();
 			}
-			bool operator!() const
+			bool operator!() const noexcept
 			{
-				return !IsOK();
+				return !IsValid();
 			}
-			operator THandle() const
+			operator THandle() const noexcept
 			{
 				return Get();
+			}
+			
+			const THandle* operator&() const noexcept
+			{
+				return &m_Handle;
+			}
+			THandle* operator&() noexcept
+			{
+				return &m_Handle;
 			}
 	};
 }

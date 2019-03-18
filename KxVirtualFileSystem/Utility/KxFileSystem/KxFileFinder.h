@@ -11,7 +11,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxIFileFinder.h"
 #include "KxFileItem.h"
 
-namespace KxVFS::Utility
+namespace KxVFS
 {
 	class KxVFS_API KxFileFinder: public KxIFileFinder
 	{

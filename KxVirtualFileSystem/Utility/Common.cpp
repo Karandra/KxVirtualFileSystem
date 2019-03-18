@@ -32,44 +32,10 @@ namespace KxVFS::Utility
 		return KxDynamicStringW::Format(L"[%u] %s", code, message.data());
 	}
 
-	KxDynamicStringW GetDriveFromPath(KxDynamicStringRefW path)
+	bool CreateDirectoryTree(KxDynamicStringRefW pathW, bool skipLastPart, SECURITY_ATTRIBUTES* securityAttributes, DWORD* errorCodeOut)
 	{
-		if (!path.empty())
-		{
-			size_t index = path.find(L':');
-			if (index != KxDynamicStringRefW::npos && index >= 1)
-			{
-				WCHAR volumeRoot[4] = {0};
-				volumeRoot[0] = path[index - 1];
-				volumeRoot[1] = L':';
-				volumeRoot[2] = L'\\';
-				volumeRoot[3] = L'\0';
-				return volumeRoot;
-			}
-		}
-		return L"";
-	}
-	DWORD GetFileAttributes(KxDynamicStringRefW path)
-	{
-		return ::GetFileAttributesW(path.data());
-	}
-	bool IsExist(KxDynamicStringRefW path)
-	{
-		return ::GetFileAttributesW(path.data()) != INVALID_FILE_ATTRIBUTES;
-	}
-	bool IsFileExist(KxDynamicStringRefW path)
-	{
-		DWORD attributes = GetFileAttributesW(path.data());
-		return (attributes != INVALID_FILE_ATTRIBUTES) && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
-	}
-	bool IsFolderExist(KxDynamicStringRefW path)
-	{
-		DWORD attributes = GetFileAttributesW(path.data());
-		return (attributes != INVALID_FILE_ATTRIBUTES) && (attributes & FILE_ATTRIBUTE_DIRECTORY);
-	}
+		::SetLastError(ERROR_SUCCESS);
 
-	bool CreateFolderTree(KxDynamicStringRefW pathW, bool skipLastPart, SECURITY_ATTRIBUTES* securityAttributes, DWORD* errorCodeOut)
-	{
 		if (!IsFolderExist(pathW))
 		{
 			KxDynamicStringW path = pathW;
@@ -125,8 +91,126 @@ namespace KxVFS::Utility
 		SetIfNotNull(errorCodeOut, 0);
 		return true;
 	}
-	bool IsFolderEmpty(KxDynamicStringRefW path)
+	bool CreateDirectoryTreeEx(KxDynamicStringRefW baseDirectory, KxDynamicStringRefW path, SECURITY_ATTRIBUTES* securityAttributes)
 	{
-		return KxFileFinder::IsDirectoryEmpty(path);
+		::SetLastError(ERROR_SUCCESS);
+
+		bool isSuccess = true;
+		KxDynamicStringW fullPath = baseDirectory;
+		String::SplitBySeparator(path, L"\\", [&fullPath, &isSuccess, securityAttributes](KxDynamicStringRefW directoryName)
+		{
+			fullPath += L'\\';
+			fullPath += directoryName;
+			
+			if (!CreateDirectory(fullPath, securityAttributes))
+			{
+				const DWORD errorCode = ::GetLastError();
+				isSuccess = errorCode == ERROR_ALREADY_EXISTS;
+				return isSuccess;
+			}
+			return true;
+		});
+		return isSuccess;
+	}
+
+	KxDynamicStringW GetDriveFromPath(KxDynamicStringRefW path)
+	{
+		if (!path.empty())
+		{
+			size_t index = path.find(L':');
+			if (index != KxDynamicStringRefW::npos && index >= 1)
+			{
+				WCHAR volumeRoot[4] = {0};
+				volumeRoot[0] = path[index - 1];
+				volumeRoot[1] = L':';
+				volumeRoot[2] = L'\\';
+				volumeRoot[3] = L'\0';
+				return volumeRoot;
+			}
+		}
+		return L"";
+	}
+	
+	KxDynamicStringRefW NormalizeFilePath(KxDynamicStringRefW path)
+	{
+		// See if path starts with '\' and remove it. Don't touch '\\?\'.
+		auto ExtractPrefix = [](KxDynamicStringRefW& path)
+		{
+			return path.substr(0, Utility::GetLongPathPrefix().size());
+		};
+
+		if (!path.empty() && ExtractPrefix(path) != Utility::GetLongPathPrefix())
+		{
+			size_t count = 0;
+			for (const auto& c: path)
+			{
+				if (c == L'\\')
+				{
+					++count;
+				}
+				else
+				{
+					break;
+				}
+			}
+			path.remove_prefix(count);
+		}
+
+		// Remove any trailing '\\'
+		size_t count = 0;
+		for (auto it = path.rbegin(); it != path.rend(); ++it)
+		{
+			if (*it == L'\\')
+			{
+				++count;
+			}
+			else
+			{
+				break;
+			}
+		}
+		path.remove_suffix(count);
+		return path;
+	}
+	size_t WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength)
+	{
+		const size_t dstBytesLength = maxDstLength * sizeof(wchar_t);
+		const size_t srcBytesLength = std::min(dstBytesLength, source.length() * sizeof(wchar_t));
+
+		memcpy_s(destination, dstBytesLength, source.data(), srcBytesLength);
+		return srcBytesLength / sizeof(wchar_t);
+	}
+}
+
+namespace KxVFS::Utility
+{
+	namespace
+	{
+		static SRWLock PrintLock;
+	}
+
+	size_t Print(KxDynamicStringRefA text)
+	{
+		ExclusiveSRWLocker lock(PrintLock);
+
+		// Print to VS 'Output' window
+		::OutputDebugStringA(text.data());
+
+		// Print to console stdout
+		DWORD charsWritten = 0;
+		::WriteConsoleA(::GetStdHandle(STD_OUTPUT_HANDLE), text.data(), static_cast<DWORD>(text.size()), &charsWritten, nullptr);
+		return text.length();
+	}
+	size_t Print(KxDynamicStringRefW text)
+	{
+		ExclusiveSRWLocker lock(PrintLock);
+
+		// Print to VS 'Output' window
+		::OutputDebugStringW(text.data());
+
+		// Print to console stdout
+		DWORD charsWritten = 0;
+		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), text.data(), static_cast<DWORD>(text.size()), &charsWritten, nullptr);
+		return text.length();
 	}
 }

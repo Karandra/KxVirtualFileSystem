@@ -6,13 +6,12 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/IncludeWindows.h"
-#include "KxVirtualFileSystem/Utility/KxDynamicString/KxDynamicString.h"
+#include "KxVirtualFileSystem/Misc/IncludeWindows.h"
+#include "KxDynamicString/KxDynamicString.h"
+#include "Win32Constants.h"
 
-namespace KxVFS::Utility
+namespace KxVFS::Utility::Internal
 {
-	using StringSearcherHash = std::unordered_set<size_t>;
-
 	const wchar_t LongPathPrefix[] = L"\\\\?\\";
 }
 
@@ -53,35 +52,61 @@ namespace KxVFS::Utility
 		return flag & value;
 	}
 
-	bool CreateFolderTree(KxDynamicStringRefW pathW, bool skipLastPart = false, SECURITY_ATTRIBUTES* securityAttributes = nullptr, DWORD* errorCodeOut = nullptr);
-	bool IsFolderEmpty(KxDynamicStringRefW path);
+	inline bool CreateDirectory(KxDynamicStringRefW path, SECURITY_ATTRIBUTES* securityAttributes = nullptr)
+	{
+		return ::CreateDirectoryW(path.data(), securityAttributes);
+	}
+	bool CreateDirectoryTree(KxDynamicStringRefW pathW, bool skipLastPart = false, SECURITY_ATTRIBUTES* securityAttributes = nullptr, DWORD* errorCodeOut = nullptr);
+	bool CreateDirectoryTreeEx(KxDynamicStringRefW baseDirectory, KxDynamicStringRefW path, SECURITY_ATTRIBUTES* securityAttributes = nullptr);
+
+	inline FileAttributes GetFileAttributes(KxDynamicStringRefW path)
+	{
+		return FromInt<FileAttributes>(::GetFileAttributesW(path.data()));
+	}
+	inline bool IsAnyExist(KxDynamicStringRefW path)
+	{
+		return GetFileAttributes(path) != FileAttributes::Invalid;
+	}
+	inline bool IsFileExist(KxDynamicStringRefW path)
+	{
+		const FileAttributes attributes = GetFileAttributes(path);
+		return (attributes != FileAttributes::Invalid) && !ToBool(attributes & FileAttributes::Directory);
+	}
+	inline bool IsFolderExist(KxDynamicStringRefW path)
+	{
+		const FileAttributes attributes = GetFileAttributes(path);
+		return (attributes != FileAttributes::Invalid) && ToBool(attributes & FileAttributes::Directory);
+	}
+
+	constexpr inline KxDynamicStringRefW GetLongPathPrefix()
+	{
+		return KxDynamicStringRefW(Internal::LongPathPrefix, std::size(Internal::LongPathPrefix) - 1);
+	}
+	inline KxDynamicStringW GetVolumeDevicePath(wchar_t volumeLetter)
+	{
+		KxDynamicStringW path = L"\\\\.\\";
+		path += tolower(volumeLetter);
+		path += L':';
+
+		return path;
+	}
 	KxDynamicStringW GetDriveFromPath(KxDynamicStringRefW path);
-	DWORD GetFileAttributes(KxDynamicStringRefW path);
-	bool IsExist(KxDynamicStringRefW path);
-	bool IsFileExist(KxDynamicStringRefW path);
-	bool IsFolderExist(KxDynamicStringRefW path);
+	KxDynamicStringRefW NormalizeFilePath(KxDynamicStringRefW path);
+
+	// Writes a string 'source' into specified buffer but no more than 'maxDstLength' CHARS. Returns number of BYTES written.
+	size_t WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength);
 
 	inline size_t HashString(KxDynamicStringRefW string)
 	{
 		return std::hash<KxDynamicStringRefW>()(string);
 	}
 
-	template<class TInt64, class TInt32> void Int64ToHighLow(const TInt64 value, TInt32& high, TInt32& low)
+	template<class TInt64, class TInt32> TInt64 HighLowToInt64(const TInt32 high, const TInt32 low)
 	{
-		static_assert(sizeof(TInt64) == sizeof(uint64_t), "Value must be 64-bit integer");
-		static_assert(sizeof(TInt32) == sizeof(uint32_t), "High and low values must be 32-bit integers");
-
-		LARGE_INTEGER largeInt;
-		largeInt.QuadPart = value;
-
-		high = largeInt.HighPart;
-		low = largeInt.LowPart;
+		TInt64 value = 0;
+		HighLowToInt64(value, high, low);
+		return value;
 	}
-	template<class TInt64> void Int64ToOverlappedOffset(const TInt64 offset, OVERLAPPED& overlapped)
-	{
-		Utility::Int64ToHighLow(offset, overlapped.OffsetHigh, overlapped.Offset);
-	}
-
 	template<class TInt64, class TInt32> void HighLowToInt64(TInt64& value, const TInt32 high, const TInt32 low)
 	{
 		static_assert(sizeof(TInt64) == sizeof(uint64_t), "Value must be 64-bit integer");
@@ -92,11 +117,29 @@ namespace KxVFS::Utility
 		largeInt.LowPart = low;
 		value = largeInt.QuadPart;
 	}
-	template<class TInt64, class TInt32> TInt64 HighLowToInt64(const TInt32 high, const TInt32 low)
+	template<class TInt64, class TInt32> void Int64ToHighLow(const TInt64 value, TInt32& high, TInt32& low)
 	{
-		TInt64 value = 0;
-		HighLowToInt64(value, high, low);
-		return value;
+		static_assert(sizeof(TInt64) == sizeof(uint64_t), "Value must be 64-bit integer");
+		static_assert(sizeof(TInt32) == sizeof(uint32_t), "High and low values must be 32-bit integers");
+
+		LARGE_INTEGER largeInt = {0};
+		largeInt.QuadPart = value;
+
+		high = largeInt.HighPart;
+		low = largeInt.LowPart;
+	}
+
+	template<class TInt64> TInt64 OverlappedOffsetToInt64(const OVERLAPPED& overlapped)
+	{
+		return Utility::HighLowToInt64<TInt64>(overlapped.OffsetHigh, overlapped.Offset);
+	}
+	template<class TInt64> void OverlappedOffsetToInt64(TInt64& offset, const OVERLAPPED& overlapped)
+	{
+		Utility::HighLowToInt64(offset, overlapped.OffsetHigh, overlapped.Offset);
+	}
+	template<class TInt64> void Int64ToOverlappedOffset(const TInt64 offset, OVERLAPPED& overlapped)
+	{
+		Utility::Int64ToHighLow(offset, overlapped.OffsetHigh, overlapped.Offset);
 	}
 
 	template<class T> void MoveValue(T& left, T& right, T resetTo = {})
@@ -136,24 +179,29 @@ namespace KxVFS::Utility
 
 namespace KxVFS::Utility
 {
-	template<class... Args> size_t DebugPrint(const wchar_t* fmt, Args&&... arg)
+	size_t Print(KxDynamicStringRefA text);
+	size_t Print(KxDynamicStringRefW text);
+
+	template<class... Args> size_t Print(const char* format, Args&&... arg)
 	{
-		KxDynamicStringW output = KxDynamicStringW::Format(L"[Thread:%u] ", ::GetCurrentThreadId());
-		output += KxDynamicStringW::Format(fmt, std::forward<Args>(arg)...);
-		output += L"\r\n";
+		KxDynamicStringA text = KxDynamicStringA::Format("[Thread:%u] ", ::GetCurrentThreadId());
+		text += KxDynamicStringA::Format(format, std::forward<Args>(arg)...);
+		text += "\r\n";
 
-		// Print to VS 'Output' window 
-		::OutputDebugStringW(output.data());
+		return Print(text);
+	}
+	template<class... Args> size_t Print(const wchar_t* format, Args&&... arg)
+	{
+		KxDynamicStringW text = KxDynamicStringW::Format(L"[Thread:%u] ", ::GetCurrentThreadId());
+		text += KxDynamicStringW::Format(format, std::forward<Args>(arg)...);
+		text += L"\r\n";
 
-		// Print to console stdout
-		DWORD writtenCount = 0;
-		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), output.data(), static_cast<DWORD>(output.size()), &writtenCount, nullptr);
-		return output.length();
+		return Print(text);
 	}
 };
 
-#ifdef _DEBUG
-	#define KxVFSDebugPrint KxVFS::Utility::DebugPrint
+#if KxVFS_DEBUG_ENABLE_LOG
+	#define KxVFS_DebugPrint KxVFS::Utility::Print
 #else
-	#define KxVFSDebugPrint
+	#define KxVFS_DebugPrint
 #endif

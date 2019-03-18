@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxFramework. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -18,34 +18,62 @@ namespace KxVFS::Utility::Comparator::Internal
 		GreaterThan = CSTR_GREATER_THAN,
 	};
 
-	inline CompareResult CompareStrings(KxDynamicStringRefW v1, KxDynamicStringRefW v2, bool ignoreCase)
+	inline CompareResult CompareStrings(KxDynamicStringRefW left, KxDynamicStringRefW right, bool ignoreCase)
 	{
-		return static_cast<CompareResult>(::CompareStringOrdinal(v1.data(), static_cast<int>(v1.length()), v2.data(), static_cast<int>(v2.length()), ignoreCase));
+		return static_cast<CompareResult>(::CompareStringOrdinal(left.data(), static_cast<int>(left.length()), right.data(), static_cast<int>(right.length()), ignoreCase));
 	}
-	inline CompareResult CompareStrings(KxDynamicStringRefW v1, KxDynamicStringRefW v2)
+	inline CompareResult CompareStrings(KxDynamicStringRefW left, KxDynamicStringRefW right)
 	{
-		return CompareStrings(v1, v2, false);
+		return CompareStrings(left, right, false);
 	}
-	inline CompareResult CompareStringsNoCase(KxDynamicStringRefW v1, KxDynamicStringRefW v2)
+	inline CompareResult CompareStringsNoCase(KxDynamicStringRefW left, KxDynamicStringRefW right)
 	{
-		return CompareStrings(v1, v2, true);
+		return CompareStrings(left, right, true);
 	}
 }
 
 namespace KxVFS::Utility::Comparator
 {
 	// ==
-	template<class T> bool IsEqual(const T& v1, const T& v2)
+	template<class T> bool IsEqual(const T& left, const T& right)
 	{
-		return v1 == v2;
+		return left == right;
 	}
-	inline bool IsEqual(KxDynamicStringRefW v1, KxDynamicStringRefW v2)
+	inline bool IsEqual(KxDynamicStringRefW left, KxDynamicStringRefW right)
 	{
-		return Internal::CompareStrings(v1, v2) == Internal::CompareResult::Equal;
+		return Internal::CompareStrings(left, right) == Internal::CompareResult::Equal;
 	}
-	inline bool IsEqualNoCase(KxDynamicStringRefW v1, KxDynamicStringRefW v2)
+	inline bool IsEqualNoCase(KxDynamicStringRefW left, KxDynamicStringRefW right)
 	{
-		return Internal::CompareStringsNoCase(v1, v2) == Internal::CompareResult::Equal;
+		return Internal::CompareStringsNoCase(left, right) == Internal::CompareResult::Equal;
+	}
+
+	// <
+	template<class T> bool IsLess(const T& left, const T& right)
+	{
+		return left < right;
+	}
+	inline bool IsLess(KxDynamicStringRefW left, KxDynamicStringRefW right)
+	{
+		return Internal::CompareStrings(left, right) == Internal::CompareResult::LessThan;
+	}
+	inline bool IsLessNoCase(KxDynamicStringRefW left, KxDynamicStringRefW right)
+	{
+		return Internal::CompareStringsNoCase(left, right) == Internal::CompareResult::LessThan;
+	}
+
+	// >
+	template<class T> bool IsGreater(const T& left, const T& right)
+	{
+		return left > right;
+	}
+	inline bool IsGreater(KxDynamicStringRefW left, KxDynamicStringRefW right)
+	{
+		return Internal::CompareStrings(left, right) == Internal::CompareResult::GreaterThan;
+	}
+	inline bool IsGreaterNoCase(KxDynamicStringRefW left, KxDynamicStringRefW right)
+	{
+		return Internal::CompareStringsNoCase(left, right) == Internal::CompareResult::GreaterThan;
 	}
 }
 
@@ -53,16 +81,16 @@ namespace KxVFS::Utility::Comparator
 {
 	struct StringEqualTo
 	{
-		bool operator()(KxDynamicStringRefW v1, KxDynamicStringRefW v2) const
+		bool operator()(KxDynamicStringRefW left, KxDynamicStringRefW right) const
 		{
-			return IsEqual(v1, v2);
+			return IsEqual(left, right);
 		}
 	};
 	struct StringEqualToNoCase
 	{
-		bool operator()(KxDynamicStringRefW v1, KxDynamicStringRefW v2) const
+		bool operator()(KxDynamicStringRefW left, KxDynamicStringRefW right) const
 		{
-			return IsEqualNoCase(v1, v2);
+			return IsEqualNoCase(left, right);
 		}
 	};
 

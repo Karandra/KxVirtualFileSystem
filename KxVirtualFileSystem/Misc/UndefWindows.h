@@ -7,5 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #undef CreateService
 #undef StartService
 #undef GetFileAttributes
+#undef DeleteFile
+#undef CreateDirectory
 #undef FormatMessage
 #undef GetMessage

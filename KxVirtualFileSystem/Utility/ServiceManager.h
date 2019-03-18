@@ -6,32 +6,27 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/IncludeWindows.h"
+#include "KxVirtualFileSystem/Misc/IncludeWindows.h"
+#include "ServiceConstants.h"
+#include "ServiceHandle.h"
 
 namespace KxVFS
 {
-	class KxVFS_API ServiceManager
+	class KxVFS_API ServiceManager final
 	{
 		private:
-			SC_HANDLE m_Handle = nullptr;
-			uint32_t m_LastError = 0;
+			ServiceHandle m_Handle;
 
 		public:
-			ServiceManager(uint32_t accessMode = SERVICE_ALL_ACCESS)
-			{
-				m_Handle = ::OpenSCManagerW(nullptr, nullptr, accessMode);
-				m_LastError = ::GetLastError();
-			}
-			~ServiceManager()
-			{
-				::CloseServiceHandle(m_Handle);
-			}
+			ServiceManager(ServiceAccess accessMode = ServiceAccess::All);
 
 		public:
 			bool IsOK() const
 			{
-				return m_Handle != nullptr;
+				return m_Handle.IsValid();
 			}
+
+		public:
 			operator SC_HANDLE() const
 			{
 				return m_Handle;

@@ -8,6 +8,9 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 // Common utilities
 #include "Utility/Common.h"
+#include "Utility/Win32Constants.h"
+#include "Utility/WinKernelConstants.h"
+#include "Utility/EnumClassOperations.h"
 
 // KxDynamicString
 #include "Utility/KxDynamicString/KxDynamicString.h"
@@ -15,18 +18,21 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 // Ported from KxFramework
 #include "Utility/KxCallAtScopeExit.h"
 #include "Utility/KxComparator.h"
+#include "Utility/KxStringUtility.h"
 
 #include "Utility/KxFileSystem/KxIFileFinder.h"
 #include "Utility/KxFileSystem/KxFileFinder.h"
 #include "Utility/KxFileSystem/KxFileItem.h"
 
 // Own classes
-#include "Utility/IContext.h"
 #include "Utility/HandleWrapper.h"
+#include "Utility/GenericHandle.h"
 #include "Utility/FileHandle.h"
 #include "Utility/TokenHandle.h"
+#include "Utility/SearchHandle.h"
 #include "Utility/SecurityObject.h"
 #include "Utility/ServiceManager.h"
+#include "Utility/ServiceHandle.h"
 #include "Utility/CriticalSection.h"
 #include "Utility/SRWLock.h"
-#include "Utility/DispatcherMapBuilder.h"
+#include "Utility/RawPtr.h"

@@ -5,10 +5,9 @@ You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/Service.h"
-#include "KxVirtualFileSystem/Convergence/ConvergenceFS.h"
-#include "KxVirtualFileSystem/MultiMirror/MultiMirrorFS.h"
-#include "KxVirtualFileSystem/Mirror/MirrorFS.h"
+#include "KxVirtualFileSystem/FileSystemService.h"
+#include "KxVirtualFileSystem/ConvergenceFS.h"
+#include "KxVirtualFileSystem/MirrorFS.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include <iostream>
 #include <thread>
@@ -22,21 +21,23 @@ int _tmain()
 {
 	using namespace KxVFS;
 
-	auto service = std::make_unique<Service>(L"KortexVFS");
+	auto service = std::make_unique<FileSystemService>(L"KortexVFS");
 	service->Install(L"C:\\Users\\Kerber\\Documents\\Visual Studio 2017\\Projects\\Kortex Mod Manager\\Kortex\\Bin\\Data\\VFS\\Drivers\\Win7 x64\\dokan2.sys");
 	service->Start();
 
 	#if 1
 	auto mainVFS = std::make_unique<ConvergenceFS>(*service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
-	mainVFS->EnableSecurityFunctions(true);
 
 	mainVFS->AddVirtualFolder(L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
-	mainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\Mod Organizer 2");
+	mainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\Mod Organizer 2\\Mods");
 	mainVFS->AddVirtualFolder(L"C:\\Users\\Kerber\\Desktop\\Resources");
+	#else
+	auto mainVFS = std::make_unique<MirrorFS>(*service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
 	#endif
 
-	//auto mainVFS = std::make_unique<MirrorFS>(*service, L"C:\\Users\\Kerber\\Desktop\\Test", L"D:\\Game Files\\The Elder Scrolls\\Skyrim");
-	//auto mainVFS = std::make_unique<MirrorFS>(*service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
+	mainVFS->GetIOManager().EnableAsyncIO(false);
+	mainVFS->EnableExtendedSecurity(true);
+	mainVFS->EnableImpersonateCallerUser(false);
 
 	wchar_t fileName[1024] = L"\"C:\\Users\\Kerber\\Desktop\\Test\\WolfTime x64.exe\"";
 	wchar_t workingDir[1024] = L"C:\\Users\\Kerber\\Desktop\\Test";
@@ -86,7 +87,7 @@ int _tmain()
 			case 'm':
 			{
 				FSError error = mainVFS->Mount();
-				fwprintf(stdout, L"%d: %s\r\n", error.GetCode(), error.GetMessage().data());
+				Utility::Print(L"%d: %s\r\n", error.GetCode(), error.GetMessage().data());
 				break;
 			}
 			case 'r':
@@ -99,23 +100,80 @@ int _tmain()
 				OpenFileDialog();
 				break;
 			}
+			case 'p':
+			{
+				#if 1
+				SHELLEXECUTEINFOW info = {0};
+				info.cbSize = sizeof(info);
+				info.fMask = SEE_MASK_DEFAULT|SEE_MASK_INVOKEIDLIST;
+				info.hwnd = nullptr;
+				info.lpVerb = L"properties";
+				info.lpFile = L"\"C:\\Users\\Kerber\\Desktop\\Test\\VeryHigh.ini\"";
+				info.lpDirectory = nullptr;
+				info.lpParameters = nullptr;
+				info.nShow = SW_SHOWNORMAL;
+
+				::CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED|COINIT_DISABLE_OLE1DDE);
+				BOOL status = ::ShellExecuteExW(&info);
+				::CoUninitialize();
+				#endif
+
+				#if 0
+				FileHandle handle = ::CreateFileW(L"C:\\Users\\Kerber\\Desktop\\Test\\VeryHigh.ini",
+														   GENERIC_READ,
+														   FILE_SHARE_READ,
+														   nullptr,
+														   OPEN_EXISTING,
+														   FILE_ATTRIBUTE_NORMAL,
+														   nullptr);
+
+				BY_HANDLE_FILE_INFORMATION info = {0};
+				::GetFileInformationByHandle(handle, &info);
+				#endif
+
+				#if 0
+				FileAttributes attributes = FromInt<FileAttributes>(::GetFileAttributesW(L"C:\\Users\\Kerber\\Desktop\\Test\\VeryHigh.ini"));
+				#endif
+				break;
+			}
 			case 'c':
 			{
-				size_t count = mainVFS->BuildDispatcherIndex();
-				wprintf(L"BuildDispatcherIndex: %zu entries built\r\n", count);
+				//constexpr auto source = L"C:\\Users\\Kerber\\Desktop\\FreeFlyCamSKSE_v10_2_1.zip";
+				//constexpr auto source = L"C:\\Users\\Kerber\\Desktop\\Test\\VeryHigh.ini";
+				constexpr auto source = L"C:\\Users\\Kerber\\Desktop\\FreeFlyCamSKSE_v10_2_1.zip";
+
+				//constexpr auto target = L"C:\\Users\\Kerber\\Desktop\\Test\\FreeFlyCamSKSE_v10_2_1.zip";
+				//constexpr auto target = L"C:\\Users\\Kerber\\Desktop\\Test\\VeryHigh2.ini";
+				constexpr auto target = L"C:\\Users\\Kerber\\Desktop\\Test\\123\\456\\FreeFlyCamSKSE_v10_2_1.zip";
+
+				Utility::CreateDirectory(L"C:\\Users\\Kerber\\Desktop\\Test\\123");
+				Utility::CreateDirectory(L"C:\\Users\\Kerber\\Desktop\\Test\\123\\456");
+				::CopyFileW(source, target, FALSE);
+				Utility::Print("Done: %u", ::GetLastError());
+
 				break;
 			}
 
 			case 'u':
 			{
-				mainVFS->UnMount();
-				fprintf(stderr, "%s\r\n", mainVFS->UnMount() ? "true" : "false");
+				Utility::Print("%s\r\n", mainVFS->UnMount() ? "true" : "false");
 				break;
 			}
 			case 'x':
 			{
+				mainVFS->UnMount();
 				mainVFS.reset();
 				service.reset();
+				break;
+			}
+			case '0':
+			{
+				system("cls");
+				break;
+			}
+			case '1':
+			{
+				IFileSystem::UnMountDirectory(mainVFS->GetMountPoint());
 				break;
 			}
 		};
