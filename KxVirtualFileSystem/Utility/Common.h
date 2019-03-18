@@ -20,7 +20,7 @@ namespace KxVFS::Utility
 	WORD LocaleIDToLangID(WORD localeID);
 	KxDynamicStringW FormatMessage(DWORD flags, const void* source, DWORD messageID, WORD langID = 0);
 	KxDynamicStringW GetErrorMessage(DWORD code = GetLastError(), WORD langID = 0);
-	
+
 	template<class T1, class T2> static bool SetIfNotNull(T1* pointer, T2&& value)
 	{
 		if (pointer)
@@ -101,26 +101,35 @@ namespace KxVFS::Utility
 		return std::hash<KxDynamicStringRefW>()(string);
 	}
 
-	template<class TInt64, class TInt32> TInt64 HighLowToInt64(const TInt32 high, const TInt32 low)
+	template<class T> void MoveValue(T& left, T& right, T resetTo = {})
+	{
+		left = right;
+		right = resetTo;
+	}
+}
+
+namespace KxVFS::Utility
+{
+	template<class TInt64 = int64_t> TInt64 HighLowToInt64(int32_t high, uint32_t low)
 	{
 		TInt64 value = 0;
 		HighLowToInt64(value, high, low);
 		return value;
 	}
-	template<class TInt64, class TInt32> void HighLowToInt64(TInt64& value, const TInt32 high, const TInt32 low)
+	template<class TInt64> void HighLowToInt64(TInt64& value, int32_t high, uint32_t low)
 	{
 		static_assert(sizeof(TInt64) == sizeof(uint64_t), "Value must be 64-bit integer");
-		static_assert(sizeof(TInt32) == sizeof(uint32_t), "High and low values must be 32-bit integers");
 
-		LARGE_INTEGER largeInt;
+		LARGE_INTEGER largeInt = {};
 		largeInt.HighPart = high;
 		largeInt.LowPart = low;
 		value = largeInt.QuadPart;
 	}
-	template<class TInt64, class TInt32> void Int64ToHighLow(const TInt64 value, TInt32& high, TInt32& low)
+
+	template<class TInt64, class TInt32H = int32_t, class TInt32L = uint32_t>
+	void Int64ToHighLow(TInt64 value, TInt32H& high, TInt32L& low)
 	{
 		static_assert(sizeof(TInt64) == sizeof(uint64_t), "Value must be 64-bit integer");
-		static_assert(sizeof(TInt32) == sizeof(uint32_t), "High and low values must be 32-bit integers");
 
 		LARGE_INTEGER largeInt = {0};
 		largeInt.QuadPart = value;
@@ -129,23 +138,17 @@ namespace KxVFS::Utility
 		low = largeInt.LowPart;
 	}
 
-	template<class TInt64> TInt64 OverlappedOffsetToInt64(const OVERLAPPED& overlapped)
+	template<class TInt64 = int64_t> TInt64 OverlappedOffsetToInt64(const OVERLAPPED& overlapped)
 	{
-		return Utility::HighLowToInt64<TInt64>(overlapped.OffsetHigh, overlapped.Offset);
+		return HighLowToInt64<TInt64>(overlapped.OffsetHigh, overlapped.Offset);
 	}
 	template<class TInt64> void OverlappedOffsetToInt64(TInt64& offset, const OVERLAPPED& overlapped)
 	{
-		Utility::HighLowToInt64(offset, overlapped.OffsetHigh, overlapped.Offset);
+		HighLowToInt64(offset, overlapped.OffsetHigh, overlapped.Offset);
 	}
 	template<class TInt64> void Int64ToOverlappedOffset(const TInt64 offset, OVERLAPPED& overlapped)
 	{
-		Utility::Int64ToHighLow(offset, overlapped.OffsetHigh, overlapped.Offset);
-	}
-
-	template<class T> void MoveValue(T& left, T& right, T resetTo = {})
-	{
-		left = right;
-		right = resetTo;
+		Int64ToHighLow(offset, overlapped.OffsetHigh, overlapped.Offset);
 	}
 }
 

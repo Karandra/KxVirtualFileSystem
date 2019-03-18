@@ -235,7 +235,9 @@ namespace KxVFS
 
 			int64_t GetOperationOffset() const
 			{
-				return Utility::OverlappedOffsetToInt64<int64_t>(m_Overlapped);
+				int64_t offset = 0;
+				Utility::OverlappedOffsetToInt64(offset, m_Overlapped);
+				return offset;
 			}
 			OperationType GetOperationType() const
 			{
