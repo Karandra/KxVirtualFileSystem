@@ -167,6 +167,8 @@ namespace KxVFS
 
 	NTSTATUS MirrorFS::OnCreateFile(EvtCreateFile& eventInfo)
 	{
+		KxVFS_DebugPrint(L"Trying to create/open file or directory: %s", eventInfo.FileName);
+
 		IOManager& ioManager = GetIOManager();
 		FileContextManager& fileContextManager = GetFileContextManager();
 
@@ -174,10 +176,11 @@ namespace KxVFS
 		NTSTATUS statusCode = STATUS_SUCCESS;
 		KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
+		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
 		auto[fileAttributesAndFlags, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
 
 		// When filePath is a directory, needs to change the flag so that the file can be opened.
-		FileAttributes fileAttributes = FromInt<FileAttributes>(::GetFileAttributesW(targetPath));
+		const FileAttributes fileAttributes = FromInt<FileAttributes>(::GetFileAttributesW(targetPath));
 		if (fileAttributes != FileAttributes::Invalid)
 		{
 			if (ToBool(fileAttributes & FileAttributes::Directory))
@@ -212,8 +215,8 @@ namespace KxVFS
 			{
 				ImpersonateLoggedOnUserIfEnabled(userTokenHandle);
 
-				// We create folder
-				if (!CreateDirectoryW(targetPath, &newFileSecurity.GetAttributes()))
+				// Create folder
+				if (!Utility::CreateDirectory(targetPath, &newFileSecurity.GetAttributes()))
 				{
 					errorCode = GetLastError();
 
@@ -234,16 +237,15 @@ namespace KxVFS
 				{
 					return STATUS_NOT_A_DIRECTORY;
 				}
-				ImpersonateLoggedOnUserIfEnabled(userTokenHandle);
 
 				// FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
-				FileHandle directoryHandle = CreateFileW(targetPath,
-															 ToInt(genericDesiredAccess),
-															 eventInfo.ShareAccess,
-															 &newFileSecurity.GetAttributes(),
-															 OPEN_EXISTING,
-															 ToInt(fileAttributesAndFlags|FileAttributes::FlagBackupSemantics),
-															 nullptr
+				ImpersonateLoggedOnUserIfEnabled(userTokenHandle);
+				FileHandle directoryHandle(targetPath,
+										   genericDesiredAccess,
+										   fileShareOptions,
+										   CreationDisposition::OpenExisting,
+										   fileAttributesAndFlags|FileAttributes::FlagBackupSemantics,
+										   &newFileSecurity.GetAttributes()
 				);
 				CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
 
@@ -292,15 +294,13 @@ namespace KxVFS
 				OpenWithSecurityAccessIfEnabled(genericDesiredAccess, isWriteRequest);
 
 				KxVFS_DebugPrint(L"Trying to create/open file: %s", targetPath.data());
-				FileHandle fileHandle = CreateFileW(targetPath,
-															 ToInt(genericDesiredAccess),
-															 eventInfo.ShareAccess,
-															 &newFileSecurity.GetAttributes(),
-															 ToInt(creationDisposition),
-															 ToInt(fileAttributesAndFlags),
-															 nullptr
+				FileHandle fileHandle(targetPath,
+									  genericDesiredAccess,
+									  fileShareOptions,
+									  creationDisposition,
+									  fileAttributesAndFlags,
+									  &newFileSecurity.GetAttributes()
 				);
-
 				CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
 				errorCode = GetLastError();
 

@@ -260,14 +260,14 @@ namespace KxVFS
 	}
 	NTSTATUS ConvergenceFS::OnCreateFile(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode)
 	{
+		KxVFS_DebugPrint(L"Trying to create/open file: %s", eventInfo.FileName);
+
 		IOManager& ioManager = GetIOManager();
 		FileContextManager& fileContextManager = GetFileContextManager();
 
-		auto[targetPath, virtualDirectory] = GetTargetPath(targetNode, eventInfo.FileName, true);
-		KxVFS_DebugPrint(L"Trying to create/open file: %s", targetPath.data());
-
 		// Flags and attributes
 		const FileAttributes fileAttributes = targetNode ? targetNode->GetAttributes() : FileAttributes::Invalid;
+		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
 
 		auto[requestAttributes, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
 		if (ioManager.IsAsyncIOEnabled())
@@ -295,6 +295,7 @@ namespace KxVFS
 
 		// Now test if there are possibility to create file
 		const bool isWriteRequest = IsWriteRequest(targetNode, genericDesiredAccess, creationDisposition);
+		auto[targetPath, virtualDirectory] = GetTargetPath(targetNode, eventInfo.FileName, true);
 
 		// This is for Impersonate Caller User Option
 		TokenHandle userTokenHandle = ImpersonateCallerUserIfEnabled(eventInfo);
@@ -303,13 +304,12 @@ namespace KxVFS
 		// Create or open file
 		ImpersonateLoggedOnUserIfEnabled(userTokenHandle);
 		OpenWithSecurityAccessIfEnabled(genericDesiredAccess, isWriteRequest);
-		FileHandle fileHandle = CreateFileW(targetPath,
-													 ToInt(genericDesiredAccess),
-													 eventInfo.ShareAccess,
-													 &newFileSecurity.GetAttributes(),
-													 ToInt(creationDisposition),
-													 ToInt(requestAttributes),
-													 nullptr
+		FileHandle fileHandle(targetPath,
+							  genericDesiredAccess,
+							  fileShareOptions,
+							  creationDisposition,
+							  requestAttributes,
+							  &newFileSecurity.GetAttributes()
 		);
 		const DWORD errorCode = ::GetLastError();
 		CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
@@ -380,13 +380,13 @@ namespace KxVFS
 	}
 	NTSTATUS ConvergenceFS::OnCreateDirectory(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode)
 	{
+		KxVFS_DebugPrint(L"Trying to create/open directory: %s", eventInfo.FileName);
+
 		IOManager& ioManager = GetIOManager();
 		FileContextManager& fileContextManager = GetFileContextManager();
 
-		auto[targetPath, virtualDirectory] = GetTargetPath(targetNode, eventInfo.FileName, true);
-		KxVFS_DebugPrint(L"Trying to create/open directory: %s", targetPath.data());
-
 		// Flags and attributes
+		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
 		auto[requestAttributes, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
 		if (ioManager.IsAsyncIOEnabled())
 		{
@@ -398,6 +398,9 @@ namespace KxVFS
 		{
 			return STATUS_OBJECT_PATH_NOT_FOUND;
 		}
+
+		// Get directory path
+		auto[targetPath, virtualDirectory] = GetTargetPath(targetNode, eventInfo.FileName, true);
 
 		SecurityObject newDirectorySecurity = CreateSecurityIfEnabled(eventInfo, targetPath, creationDisposition);
 		TokenHandle userTokenHandle = ImpersonateCallerUserIfEnabled(eventInfo);
@@ -449,13 +452,11 @@ namespace KxVFS
 
 		// FileAttributes::FlagBackupSemantics is required for opening directory handles
 		ImpersonateLoggedOnUserIfEnabled(userTokenHandle);
-		FileHandle directoryHandle = ::CreateFileW(targetPath,
-												   ToInt(genericDesiredAccess),
-												   eventInfo.ShareAccess,
-												   &newDirectorySecurity.GetAttributes(),
-												   OPEN_EXISTING,
-												   ToInt(requestAttributes|FileAttributes::FlagBackupSemantics),
-												   nullptr
+		FileHandle directoryHandle(targetPath,
+								   genericDesiredAccess,
+								   fileShareOptions,
+								   CreationDisposition::OpenExisting,
+								   requestAttributes|FileAttributes::FlagBackupSemantics
 		);
 		const DWORD errorCode = ::GetLastError();
 		CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
