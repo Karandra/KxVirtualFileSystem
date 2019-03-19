@@ -6,7 +6,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/Common/FSContext.h"
+#include "KxVirtualFileSystem/Common/FileContext.h"
 
 namespace KxVFS
 {

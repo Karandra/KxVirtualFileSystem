@@ -253,7 +253,7 @@ namespace KxVFS
 					FileContext* fileContext = SaveFileContext(eventInfo, fileContextManager.PopContext(std::move(directoryHandle)));
 					if (fileContext)
 					{
-						fileContext->GetOptions().Assign(eventInfo);
+						fileContext->GetEventInfo().Assign(eventInfo);
 						OnFileCreated(eventInfo, *fileContext);
 					}
 					else
@@ -328,7 +328,7 @@ namespace KxVFS
 					{
 						// Save the file handle in m_Context
 						SaveFileContext(eventInfo, fileContext);
-						fileContext->GetOptions().Assign(eventInfo);
+						fileContext->GetEventInfo().Assign(eventInfo);
 
 						if (creationDisposition == CreationDisposition::OpenAlways || creationDisposition == CreationDisposition::CreateAlways)
 						{

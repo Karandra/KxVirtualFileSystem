@@ -20,12 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KxVirtualFileSystem\BasicFileSystem.h" />
+    <ClInclude Include="KxVirtualFileSystem\Common\AsyncIOContext.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\BranchLocker.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\CallerUserImpersonation.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\ExtendedSecurity.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\FileContextManager.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\FileNode.h" />
-    <ClInclude Include="KxVirtualFileSystem\Common\FSContext.h" />
+    <ClInclude Include="KxVirtualFileSystem\Common\FileContext.h" />
+    <ClInclude Include="KxVirtualFileSystem\Common\FileContextEventInfo.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\FSError.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\FSFlags.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\IOManager.h" />
@@ -72,7 +74,7 @@
     <ClCompile Include="KxVirtualFileSystem\Common\ExtendedSecurity.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Common\FileContextManager.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Common\FileNode.cpp" />
-    <ClCompile Include="KxVirtualFileSystem\Common\FSContext.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Common\FileContextEventInfo.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Common\FSError.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Common\IOManager.cpp" />
     <ClCompile Include="KxVirtualFileSystem\IFileSystem.cpp" />

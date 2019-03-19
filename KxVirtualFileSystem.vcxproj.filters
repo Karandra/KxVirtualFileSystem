@@ -114,9 +114,6 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\GenericHandle.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\FSContext.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\Common\BranchLocker.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
@@ -182,6 +179,15 @@
     </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\Utility\WinKernelConstants.h">
       <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Common\FileContextEventInfo.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Common\FileContext.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Common\AsyncIOContext.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -251,7 +257,7 @@
     <ClCompile Include="KxVirtualFileSystem\FileSystemService.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Common\FSContext.cpp">
+    <ClCompile Include="KxVirtualFileSystem\Common\FileContextEventInfo.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>
   </ItemGroup>

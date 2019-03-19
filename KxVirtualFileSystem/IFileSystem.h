@@ -10,7 +10,6 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Misc/IncludeDokan.h"
 #include "Common/FSError.h"
 #include "Common/FSFlags.h"
-#include "Common/FSContext.h"
 #include "Common/FileNode.h"
 #include "Common/IOManager.h"
 #include "Common/FileContextManager.h"

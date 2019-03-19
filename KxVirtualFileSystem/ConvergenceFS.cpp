@@ -350,7 +350,7 @@ namespace KxVFS
 			{
 				// Save the file context
 				fileContext->AssignFileNode(*targetNode);
-				fileContext->GetOptions().Assign(eventInfo);
+				fileContext->GetEventInfo().Assign(eventInfo);
 				OnFileCreated(eventInfo, *fileContext);
 
 				if (creationDisposition == CreationDisposition::OpenAlways || creationDisposition == CreationDisposition::CreateAlways)
@@ -472,7 +472,7 @@ namespace KxVFS
 			if (fileContext)
 			{
 				fileContext->AssignFileNode(*targetNode);
-				fileContext->GetOptions().Assign(eventInfo);
+				fileContext->GetEventInfo().Assign(eventInfo);
 				OnFileCreated(eventInfo, *fileContext);
 			}
 			else

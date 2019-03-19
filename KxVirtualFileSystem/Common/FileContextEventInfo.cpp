@@ -7,11 +7,11 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
-#include "FSContext.h"
+#include "FileContextEventInfo.h"
 
 namespace KxVFS
 {
-	void FileOptionsStore::Assign(const EvtCreateFile& eventInfo)
+	void FileContextEventInfo::Assign(const EvtCreateFile& eventInfo)
 	{
 		auto[requestAttributes, creationDisposition, genericDesiredAccess] = IFileSystem::MapKernelToUserCreateFileFlags(eventInfo);
 
@@ -20,5 +20,6 @@ namespace KxVFS
 		m_DesiredAccess = genericDesiredAccess;
 		m_ShareMode = FromInt<FileShare>(eventInfo.ShareAccess);
 		m_KernelCreationOptions = FromInt<KernelFileOptions>(eventInfo.CreateOptions);
+		m_OriginProcessID = eventInfo.DokanFileInfo->ProcessId;
 	}
 }

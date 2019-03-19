@@ -83,7 +83,7 @@ namespace KxVFS
 		fileContext->AssignHandle(std::move(fileHandle));
 		fileContext->MarkOpen();
 		fileContext->MarkActive();
-		fileContext->GetOptions().Reset();
+		fileContext->GetEventInfo().Reset();
 
 		if (!m_IOManager.OnPopFileContext(*fileContext))
 		{
