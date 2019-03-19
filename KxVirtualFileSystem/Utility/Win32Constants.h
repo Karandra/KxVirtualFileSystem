@@ -89,6 +89,8 @@ namespace KxVFS
 	
 	enum class CreationDisposition: uint32_t
 	{
+		None = 0,
+
 		CreateNew = CREATE_NEW,
 		CreateAlways = CREATE_ALWAYS,
 		OpenAlways = OPEN_ALWAYS,
@@ -127,6 +129,8 @@ namespace KxVFS
 
 	enum class AccessRights: uint32_t
 	{
+		None = 0,
+
 		Delete = DELETE,
 		ReadControl = READ_CONTROL,
 		WriteDAC = WRITE_DAC,

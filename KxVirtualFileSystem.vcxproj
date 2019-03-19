@@ -72,6 +72,7 @@
     <ClCompile Include="KxVirtualFileSystem\Common\ExtendedSecurity.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Common\FileContextManager.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Common\FileNode.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Common\FSContext.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Common\FSError.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Common\IOManager.cpp" />
     <ClCompile Include="KxVirtualFileSystem\IFileSystem.cpp" />

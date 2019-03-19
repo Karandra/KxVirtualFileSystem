@@ -169,15 +169,12 @@ namespace KxVFS
 	{
 		KxVFS_DebugPrint(L"Trying to create/open file or directory: %s", eventInfo.FileName);
 
-		IOManager& ioManager = GetIOManager();
-		FileContextManager& fileContextManager = GetFileContextManager();
-
 		DWORD errorCode = 0;
 		NTSTATUS statusCode = STATUS_SUCCESS;
 		KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
 		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
-		auto[fileAttributesAndFlags, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
+		auto[requestAttributes, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
 
 		// When filePath is a directory, needs to change the flag so that the file can be opened.
 		const FileAttributes fileAttributes = FromInt<FileAttributes>(::GetFileAttributesW(targetPath));
@@ -200,9 +197,10 @@ namespace KxVFS
 			}
 		}
 
+		IOManager& ioManager = GetIOManager();
 		if (GetIOManager().IsAsyncIOEnabled())
 		{
-			fileAttributesAndFlags |= FileAttributes::FlagOverlapped;
+			requestAttributes |= FileAttributes::FlagOverlapped;
 		}
 
 		TokenHandle userTokenHandle = ImpersonateCallerUserIfEnabled(eventInfo);
@@ -244,16 +242,18 @@ namespace KxVFS
 										   genericDesiredAccess,
 										   fileShareOptions,
 										   CreationDisposition::OpenExisting,
-										   fileAttributesAndFlags|FileAttributes::FlagBackupSemantics,
+										   requestAttributes|FileAttributes::FlagBackupSemantics,
 										   &newFileSecurity.GetAttributes()
 				);
 				CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
 
 				if (directoryHandle.IsValid())
 				{
+					FileContextManager& fileContextManager = GetFileContextManager();
 					FileContext* fileContext = SaveFileContext(eventInfo, fileContextManager.PopContext(std::move(directoryHandle)));
 					if (fileContext)
 					{
+						fileContext->GetOptions().Assign(eventInfo);
 						OnFileCreated(eventInfo, *fileContext);
 					}
 					else
@@ -277,7 +277,7 @@ namespace KxVFS
 		else
 		{
 			// It is a create file request
-			if (!CheckAttributesToOverwriteFile(FromInt<FileAttributes>(fileAttributes), fileAttributesAndFlags, creationDisposition))
+			if (!CheckAttributesToOverwriteFile(FromInt<FileAttributes>(fileAttributes), requestAttributes, creationDisposition))
 			{
 				statusCode = STATUS_ACCESS_DENIED;
 			}
@@ -298,7 +298,7 @@ namespace KxVFS
 									  genericDesiredAccess,
 									  fileShareOptions,
 									  creationDisposition,
-									  fileAttributesAndFlags,
+									  requestAttributes,
 									  &newFileSecurity.GetAttributes()
 				);
 				CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
@@ -314,11 +314,12 @@ namespace KxVFS
 					// Need to update FileAttributes with previous when Overwrite file
 					if (fileAttributes != FileAttributes::Invalid && creationDisposition == CreationDisposition::TruncateExisting)
 					{
-						::SetFileAttributesW(targetPath, ToInt(fileAttributesAndFlags) | ToInt(fileAttributes));
+						::SetFileAttributesW(targetPath, ToInt(requestAttributes) | ToInt(fileAttributes));
 					}
 
-					FileContext* mirrorContext = fileContextManager.PopContext(std::move(fileHandle));
-					if (!mirrorContext)
+					FileContextManager& fileContextManager = GetFileContextManager();
+					FileContext* fileContext = fileContextManager.PopContext(std::move(fileHandle));
+					if (!fileContext)
 					{
 						SetLastError(ERROR_INTERNAL_ERROR);
 						statusCode = STATUS_INTERNAL_ERROR;
@@ -326,7 +327,8 @@ namespace KxVFS
 					else
 					{
 						// Save the file handle in m_Context
-						SaveFileContext(eventInfo, mirrorContext);
+						SaveFileContext(eventInfo, fileContext);
+						fileContext->GetOptions().Assign(eventInfo);
 
 						if (creationDisposition == CreationDisposition::OpenAlways || creationDisposition == CreationDisposition::CreateAlways)
 						{

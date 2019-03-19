@@ -6,6 +6,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
 
 namespace KxVFS
@@ -57,11 +58,58 @@ namespace KxVFS
 
 namespace KxVFS
 {
+	class KxVFS_API FileOptionsStore
+	{
+		private:
+			CreationDisposition m_CreationDisposition = CreationDisposition::None;
+			FileAttributes m_Attributes = FileAttributes::None;
+			AccessRights m_DesiredAccess = AccessRights::None;
+			FileShare m_ShareMode = FileShare::None;
+			KernelFileOptions m_KernelCreationOptions = KernelFileOptions::None;
+
+		public:
+			CreationDisposition GetCreationDisposition() const
+			{
+				return m_CreationDisposition;
+			}
+			FileAttributes GetAttributes() const
+			{
+				return m_Attributes;
+			}
+			AccessRights GetDesiredAccess() const
+			{
+				return m_DesiredAccess;
+			}
+			FileShare GetShareMode() const
+			{
+				return m_ShareMode;
+			}
+			
+			void Assign(CreationDisposition disposition, FileAttributes attributes, AccessRights access, FileShare shareMode, KernelFileOptions kernelOptions)
+			{
+				m_CreationDisposition = disposition;
+				m_Attributes = attributes;
+				m_DesiredAccess = access;
+				m_ShareMode = shareMode;
+				m_KernelCreationOptions = kernelOptions;
+			}
+			void Assign(const EvtCreateFile& eventInfo);
+			void Reset()
+			{
+				*this = FileOptionsStore();
+			}
+	};
+}
+
+namespace KxVFS
+{
 	class KxVFS_API FileContext final: public FSContext
 	{
 		private:
 			mutable CriticalSection m_Lock;
 			FileHandle m_Handle;
+			FileOptionsStore m_Options;
+
 			PTP_IO m_CompletionPort = nullptr;
 			bool m_AsyncIOActive = false;
 
@@ -148,6 +196,19 @@ namespace KxVFS
 				m_Handle.Close();
 			}
 			
+			const FileOptionsStore& GetOptions() const
+			{
+				return m_Options;
+			}
+			FileOptionsStore& GetOptions()
+			{
+				return m_Options;
+			}
+			void ResetOptions()
+			{
+				m_Options.Reset();
+			}
+
 			bool IsThreadpoolIOCreated() const
 			{
 				return m_CompletionPort != nullptr;

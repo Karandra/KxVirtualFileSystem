@@ -209,8 +209,6 @@ namespace KxVFS
 
 		// Attributes and flags
 		const KernelFileOptions kernelOptions = FromInt<KernelFileOptions>(eventInfo.CreateOptions);
-		const bool isFlagsDirectory = ToBool(kernelOptions & KernelFileOptions::DirectoryFile);
-		const bool isFlagsNonDirectory = ToBool(kernelOptions & KernelFileOptions::NonDirectoryFile);
 
 		// Correct flags
 		if (targetNode)
@@ -262,14 +260,12 @@ namespace KxVFS
 	{
 		KxVFS_DebugPrint(L"Trying to create/open file: %s", eventInfo.FileName);
 
-		IOManager& ioManager = GetIOManager();
-		FileContextManager& fileContextManager = GetFileContextManager();
-
 		// Flags and attributes
 		const FileAttributes fileAttributes = targetNode ? targetNode->GetAttributes() : FileAttributes::Invalid;
 		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
-
 		auto[requestAttributes, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
+		
+		const IOManager& ioManager = GetIOManager();
 		if (ioManager.IsAsyncIOEnabled())
 		{
 			requestAttributes |= FileAttributes::FlagOverlapped;
@@ -348,11 +344,13 @@ namespace KxVFS
 				::SetFileAttributesW(targetPath, ToInt(requestAttributes|fileAttributes));
 			}
 
+			FileContextManager& fileContextManager = GetFileContextManager();
 			FileContext* fileContext = SaveFileContext(eventInfo, fileContextManager.PopContext(std::move(fileHandle)));
 			if (fileContext)
 			{
 				// Save the file context
 				fileContext->AssignFileNode(*targetNode);
+				fileContext->GetOptions().Assign(eventInfo);
 				OnFileCreated(eventInfo, *fileContext);
 
 				if (creationDisposition == CreationDisposition::OpenAlways || creationDisposition == CreationDisposition::CreateAlways)
@@ -382,12 +380,11 @@ namespace KxVFS
 	{
 		KxVFS_DebugPrint(L"Trying to create/open directory: %s", eventInfo.FileName);
 
-		IOManager& ioManager = GetIOManager();
-		FileContextManager& fileContextManager = GetFileContextManager();
-
 		// Flags and attributes
 		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
 		auto[requestAttributes, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
+		
+		const IOManager& ioManager = GetIOManager();
 		if (ioManager.IsAsyncIOEnabled())
 		{
 			requestAttributes |= FileAttributes::FlagOverlapped;
@@ -470,10 +467,12 @@ namespace KxVFS
 				return STATUS_INTERNAL_ERROR;
 			}
 
+			FileContextManager& fileContextManager = GetFileContextManager();
 			FileContext* fileContext = SaveFileContext(eventInfo, fileContextManager.PopContext(std::move(directoryHandle)));
 			if (fileContext)
 			{
 				fileContext->AssignFileNode(*targetNode);
+				fileContext->GetOptions().Assign(eventInfo);
 				OnFileCreated(eventInfo, *fileContext);
 			}
 			else
