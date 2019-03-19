@@ -99,8 +99,10 @@ namespace KxVFS
 	};
 	KxVFS_AllowEnumBitwiseOp(CreationDisposition);
 	
-	enum class FileAccess: uint32_t
+	enum class AccessRights: uint32_t
 	{
+		None = 0,
+
 		// For a directory
 		AddFile = FILE_ADD_FILE,
 		AddSubDirectory = FILE_ADD_SUBDIRECTORY,
@@ -119,17 +121,6 @@ namespace KxVFS
 		// Common
 		ReadAttributes = FILE_READ_ATTRIBUTES,
 		WriteAttributes = FILE_WRITE_ATTRIBUTES,
-		
-		// Combinations
-		AllAccess = FILE_ALL_ACCESS,
-		StandardRightsRead = STANDARD_RIGHTS_READ,
-		StandardRightsWrite = STANDARD_RIGHTS_WRITE,
-	};
-	KxVFS_AllowEnumBitwiseOp(FileAccess);
-
-	enum class AccessRights: uint32_t
-	{
-		None = 0,
 
 		Delete = DELETE,
 		ReadControl = READ_CONTROL,
@@ -143,6 +134,10 @@ namespace KxVFS
 		GenericWrite = GENERIC_WRITE,
 		GenericExecute = GENERIC_EXECUTE,
 		GenericAll = GENERIC_ALL,
+		
+		FileGenericRead = FILE_GENERIC_READ,
+		FileGenericWrite = FILE_GENERIC_WRITE,
+		FileGenericExecute = FILE_GENERIC_EXECUTE,
 
 		StandardRead = STANDARD_RIGHTS_READ,
 		StandardWrite = STANDARD_RIGHTS_WRITE,
