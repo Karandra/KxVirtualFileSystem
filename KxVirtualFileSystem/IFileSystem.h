@@ -36,6 +36,7 @@ namespace KxVFS
 		public:
 			static NTSTATUS GetNtStatusByWin32ErrorCode(DWORD errorCode);
 			static NTSTATUS GetNtStatusByWin32LastErrorCode();
+			static std::tuple<FileAttributes, CreationDisposition, AccessRights> MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo);
 
 			static bool UnMountDirectory(KxDynamicStringRefW mountPoint);
 
@@ -51,7 +52,7 @@ namespace KxVFS
 			bool IsRequestingSACLInfo(const PSECURITY_INFORMATION securityInformation) const;
 			void ProcessSESecurityPrivilege(PSECURITY_INFORMATION securityInformation) const;
 
-			std::tuple<FileAttributes, CreationDisposition, AccessRights> MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo) const;
+			
 			bool CheckAttributesToOverwriteFile(FileAttributes fileAttributes, FileAttributes requestAttributes, CreationDisposition creationDisposition) const;
 			bool IsDirectory(ULONG kernelCreateOptions) const;
 

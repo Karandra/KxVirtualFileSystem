@@ -20,6 +20,20 @@ namespace KxVFS
 	{
 		return Dokany2::DokanNtStatusFromWin32(::GetLastError());
 	}
+	std::tuple<FileAttributes, CreationDisposition, AccessRights> IFileSystem::MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo)
+	{
+		DWORD fileAttributesAndFlags = 0;
+		DWORD creationDisposition = 0;
+		ACCESS_MASK genericDesiredAccess = 0;
+		Dokany2::DokanMapKernelToUserCreateFileFlags(const_cast<EvtCreateFile*>(&eventInfo), &genericDesiredAccess, &fileAttributesAndFlags, &creationDisposition);
+
+		return
+		{
+			FromInt<FileAttributes>(fileAttributesAndFlags),
+			FromInt<CreationDisposition>(creationDisposition),
+			FromInt<AccessRights>(genericDesiredAccess)
+		};
+	}
 
 	bool IFileSystem::UnMountDirectory(KxDynamicStringRefW mountPoint)
 	{
@@ -84,20 +98,6 @@ namespace KxVFS
 		}
 	}
 
-	std::tuple<FileAttributes, CreationDisposition, AccessRights> IFileSystem::MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo) const
-	{
-		DWORD fileAttributesAndFlags = 0;
-		DWORD creationDisposition = 0;
-		ACCESS_MASK genericDesiredAccess = 0;
-		Dokany2::DokanMapKernelToUserCreateFileFlags(const_cast<EvtCreateFile*>(&eventInfo), &genericDesiredAccess, &fileAttributesAndFlags, &creationDisposition);
-
-		return
-		{
-			FromInt<FileAttributes>(fileAttributesAndFlags),
-			FromInt<CreationDisposition>(creationDisposition),
-			FromInt<AccessRights>(genericDesiredAccess)
-		};
-	}
 	bool IFileSystem::CheckAttributesToOverwriteFile(FileAttributes fileAttributes, FileAttributes requestAttributes, CreationDisposition creationDisposition) const
 	{
 		const bool fileExist = fileAttributes != FileAttributes::Invalid;
