@@ -35,7 +35,7 @@ int _tmain()
 	auto mainVFS = std::make_unique<MirrorFS>(*service, L"C:\\Users\\Kerber\\Desktop\\Test", L"C:\\Users\\Kerber\\Desktop\\TestWrite");
 	#endif
 
-	mainVFS->GetIOManager().EnableAsyncIO(false);
+	mainVFS->GetIOManager().EnableAsyncIO(true);
 	mainVFS->EnableExtendedSecurity(true);
 	mainVFS->EnableImpersonateCallerUser(false);
 

@@ -76,6 +76,22 @@ namespace KxVFS
 			virtual NTSTATUS GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize) = 0;
 
 		protected:
+			// File context saving and retrieving
+			template<class TEventInfo> FileContext* GetFileContext(TEventInfo& eventInfo) const
+			{
+				return reinterpret_cast<FileContext*>(eventInfo.DokanFileInfo->Context);
+			}
+			template<class TEventInfo> FileContext* SaveFileContext(TEventInfo& eventInfo, FileContext* fileContext) const
+			{
+				eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(fileContext);
+				return fileContext;
+			}
+			template<class TEventInfo> void ResetFileContext(TEventInfo& eventInfo) const
+			{
+				eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(nullptr);
+			}
+
+		protected:
 			// File system events
 			virtual NTSTATUS OnMount(EvtMounted& eventInfo) = 0;
 			virtual NTSTATUS OnUnMount(EvtUnMounted& eventInfo) = 0;

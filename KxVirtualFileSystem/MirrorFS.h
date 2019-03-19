@@ -38,22 +38,6 @@ namespace KxVFS
 			NTSTATUS GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize) override;
 
 		protected:
-			// Saving and retrieving of file context
-			template<class TEventInfo> FileContext* GetFileContext(TEventInfo& eventInfo) const
-			{
-				return reinterpret_cast<FileContext*>(eventInfo.DokanFileInfo->Context);
-			}
-			template<class TEventInfo> FileContext* SaveFileContext(TEventInfo& eventInfo, FileContext* fileContext) const
-			{
-				eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(fileContext);
-				return fileContext;
-			}
-			template<class TEventInfo> void ResetFileContext(TEventInfo& eventInfo) const
-			{
-				eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(nullptr);
-			}
-
-		protected:
 			NTSTATUS OnMount(EvtMounted& eventInfo) override;
 			NTSTATUS OnUnMount(EvtUnMounted& eventInfo) override;
 
