@@ -26,9 +26,9 @@ namespace KxVFS
 			TShortName m_ShortName;
 			FileAttributes m_Attributes = FileAttributes::Invalid;
 			ReparsePointTags m_ReparsePointTags = ReparsePointTags::None;
-			FILETIME m_CreationTime;
-			FILETIME m_LastAccessTime;
-			FILETIME m_ModificationTime;
+			FILETIME m_CreationTime = {};
+			FILETIME m_LastAccessTime = {};
+			FILETIME m_ModificationTime = {};
 			int64_t m_FileSize = -1;
 
 		private:
