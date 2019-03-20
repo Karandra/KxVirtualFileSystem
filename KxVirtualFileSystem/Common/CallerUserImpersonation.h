@@ -24,12 +24,12 @@ namespace KxVFS
 		protected:
 			TokenHandle ImpersonateCallerUser(EvtCreateFile& eventInfo) const;
 			bool ImpersonateLoggedOnUser(TokenHandle& userTokenHandle) const;
-			void CleanupImpersonateCallerUser(TokenHandle& userTokenHandle) const
+			bool CleanupImpersonateCallerUser(TokenHandle& userTokenHandle) const
 			{
 				// Something which is not 'STATUS_SUCCESS'.
-				CleanupImpersonateCallerUser(userTokenHandle, STATUS_NOT_SUPPORTED);
+				return CleanupImpersonateCallerUser(userTokenHandle, STATUS_NOT_SUPPORTED);
 			}
-			void CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NTSTATUS status) const;
+			bool CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NTSTATUS status) const;
 
 			TokenHandle ImpersonateCallerUserIfEnabled(EvtCreateFile& eventInfo) const
 			{
@@ -47,19 +47,21 @@ namespace KxVFS
 				}
 				return false;
 			}
-			void CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle) const
+			bool CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle) const
 			{
 				if (m_Enabled)
 				{
 					return CleanupImpersonateCallerUser(userTokenHandle);
 				}
+				return false;
 			}
-			void CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle, NTSTATUS status) const
+			bool CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle, NTSTATUS status) const
 			{
 				if (m_Enabled)
 				{
-					CleanupImpersonateCallerUser(userTokenHandle, status);
+					return CleanupImpersonateCallerUser(userTokenHandle, status);
 				}
+				return false;
 			}
 			
 		public:

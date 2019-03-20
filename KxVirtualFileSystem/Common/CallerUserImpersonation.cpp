@@ -48,7 +48,7 @@ namespace KxVFS
 			return false;
 		}
 	}
-	void CallerUserImpersonation::CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NTSTATUS status) const
+	bool CallerUserImpersonation::CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NTSTATUS status) const
 	{
 		if (userTokenHandle)
 		{
@@ -61,10 +61,11 @@ namespace KxVFS
 				userTokenHandle.Close();
 			}
 
-			::RevertToSelf();
+			const bool success = ::RevertToSelf();
 			KxVFS_DebugPrint(L"ImpersonateLoggedOnUser: called 'RevertToSelf' with %u error code", ::GetLastError());
-
 			::SetLastError(lastError);
+			return success;
 		}
+		return false;
 	}
 }
