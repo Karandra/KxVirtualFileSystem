@@ -40,10 +40,13 @@ namespace KxVFS
 			{
 				m_Functor = std::move(other.m_Functor);
 				other.m_Functor.reset();
+
+				return *this;
 			}
 			KxCallAtScopeExit& operator=(const KxCallAtScopeExit& other)
 			{
 				m_Functor = other.m_Functor;
+				return *this;
 			}
 
 			~KxCallAtScopeExit()
