@@ -9,6 +9,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
+#include <cstdalign>
 #pragma comment(lib, "Dokan2.lib")
 
 namespace
@@ -83,8 +84,8 @@ namespace KxVFS
 		}
 
 		constexpr size_t privilegesSize = sizeof(TOKEN_PRIVILEGES) + (sizeof(LUID_AND_ATTRIBUTES) * 2);
-		uint8_t tokenPrivilegesBuffer[privilegesSize] = {};
-		uint8_t oldTokenPrivilegesBuffer[privilegesSize] = {};
+		alignas(TOKEN_PRIVILEGES) uint8_t tokenPrivilegesBuffer[privilegesSize] = {};
+		alignas(TOKEN_PRIVILEGES) uint8_t oldTokenPrivilegesBuffer[privilegesSize] = {};
 		TOKEN_PRIVILEGES& tokenPrivileges = *reinterpret_cast<TOKEN_PRIVILEGES*>(tokenPrivilegesBuffer);
 		TOKEN_PRIVILEGES& oldTokenPrivileges = *reinterpret_cast<TOKEN_PRIVILEGES*>(oldTokenPrivilegesBuffer);
 
