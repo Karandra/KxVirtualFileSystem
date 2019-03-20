@@ -326,17 +326,11 @@ namespace KxVFS
 				targetNode->SetVirtualDirectory(virtualDirectory);
 			}
 
-			// File node should absolutely exist at this point
-			if (!targetNode)
-			{
-				::SetLastError(ERROR_INTERNAL_ERROR);
-				return STATUS_INTERNAL_ERROR;
-			}
-			auto targetLock = targetNode->LockExclusive();
-
 			// Need to update FileAttributes with previous when overwriting file
-			if (targetNode && creationDisposition == CreationDisposition::TruncateExisting)
+			if (creationDisposition == CreationDisposition::TruncateExisting)
 			{
+				auto targetLock = targetNode->LockExclusive();
+
 				// Update virtual tree info
 				targetNode->SetAttributes(requestAttributes|fileAttributes);
 
@@ -686,7 +680,7 @@ namespace KxVFS
 						return GetNtStatusByWin32ErrorCode(ERROR_ALREADY_EXISTS);
 					}
 				}
-				else if (!targetNode && originalNode->GetParent() == targetNodeParent)
+				else if (originalNode->GetParent() == targetNodeParent)
 				{
 					// We don't have target file, but original node parent is the same as supposed 
 					// target parent. So this is actually renaming.
