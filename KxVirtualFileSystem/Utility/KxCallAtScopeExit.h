@@ -36,6 +36,15 @@ namespace KxVFS
 			{
 			}
 			
+			~KxCallAtScopeExit()
+			{
+				if (m_Functor)
+				{
+					(void)std::invoke(*m_Functor);
+				}
+			}
+			
+		public:
 			KxCallAtScopeExit& operator=(KxCallAtScopeExit&& other)
 			{
 				m_Functor = std::move(other.m_Functor);
@@ -47,14 +56,6 @@ namespace KxVFS
 			{
 				m_Functor = other.m_Functor;
 				return *this;
-			}
-
-			~KxCallAtScopeExit()
-			{
-				if (m_Functor)
-				{
-					(void)std::invoke(*m_Functor);
-				}
 			}
 	};
 }
