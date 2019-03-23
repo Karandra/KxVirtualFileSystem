@@ -16,7 +16,7 @@ namespace
 		template<class T> static void hash_combine(size_t& seed, T v) noexcept
 		{
 			std::hash<T> hasher;
-			seed ^= hasher(v) + 0x9e3779b9u + (seed << 6) + (seed >> 2);
+			seed ^= hasher(v) + size_t(0x9e3779b9u) + (seed << 6) + (seed >> 2);
 		}
 		
 		size_t operator()(KxVFS::KxDynamicStringRefW value) const noexcept
@@ -76,14 +76,13 @@ namespace KxVFS
 				return finalNode != nullptr;
 			});
 
-			if (finalNode == nullptr || (type == NavigateTo::Folder && !finalNode->IsDirectory()) || (type == NavigateTo::File && !finalNode->IsFile()))
-			{
-				return nullptr;
-			}
-
 			if (finalNode)
 			{
 				lastScanned = finalNode->GetParent();
+			}
+			if (finalNode == nullptr || (type == NavigateTo::Folder && !finalNode->IsDirectory()) || (type == NavigateTo::File && !finalNode->IsFile()))
+			{
+				return nullptr;
 			}
 			return finalNode;
 		}

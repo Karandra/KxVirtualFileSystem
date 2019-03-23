@@ -80,8 +80,11 @@ namespace KxVFS
 			// Make sure write target exist
 			Utility::CreateDirectoryTree(GetWriteTarget());
 
-			// Create index
-			BuildFileTree();
+			// Build virtual tree if it wasn't built before
+			if (!m_VirtualTree.HasChildren())
+			{
+				BuildFileTree();
+			}
 
 			// Mount now
 			return MirrorFS::Mount();
@@ -90,6 +93,7 @@ namespace KxVFS
 	}
 	bool ConvergenceFS::UnMount()
 	{
+		m_VirtualTree.MakeNull();
 		return MirrorFS::UnMount();
 	}
 
