@@ -139,7 +139,7 @@ namespace KxVFS
 			}
 			void InvalidateSorting()
 			{
-				m_IsChildrenSorted = m_Children.size() > 1;
+				m_IsChildrenSorted = m_Children.size() <= 1;
 			}
 			void InvalidateParentSorting()
 			{
