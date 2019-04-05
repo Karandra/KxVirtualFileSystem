@@ -216,22 +216,6 @@ namespace KxVFS
 		auto[it, inserted] = m_Children.insert_or_assign(node->GetName(), std::move(node));
 		return *it->second;
 	}
-	FileNode* FileNode::CreateDirectoryTree(KxDynamicStringRefW basePath, KxDynamicStringRefW branchPath)
-	{
-		KxDynamicStringW fullPath = Utility::GetLongPathPrefix();
-		fullPath += basePath;
-
-		FileNode* parentNode = this;
-		Utility::String::SplitBySeparator(branchPath, L"\\", [&fullPath, &parentNode](KxDynamicStringRefW folderName)
-		{
-			fullPath += L'\\';
-			fullPath += folderName;
-
-			parentNode = &parentNode->AddChild(std::make_unique<FileNode>(fullPath.get_view(), parentNode));
-			return true;
-		});
-		return parentNode != this ? parentNode : nullptr;
-	}
 
 	BranchSharedLocker FileNode::LockBranchShared()
 	{

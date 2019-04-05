@@ -222,7 +222,6 @@ namespace KxVFS
 				}
 			}
 			FileNode& AddChild(std::unique_ptr<FileNode> node);
-			FileNode* CreateDirectoryTree(KxDynamicStringRefW basePath, KxDynamicStringRefW branchPath);
 
 			bool HasParent() const
 			{
