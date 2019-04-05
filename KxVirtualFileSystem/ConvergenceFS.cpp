@@ -326,8 +326,7 @@ namespace KxVFS
 				}
 
 				auto lock = parentNode->LockExclusive();
-				targetNode = &parentNode->AddChild(std::make_unique<FileNode>(targetPath.get_view(), parentNode));
-				targetNode->SetVirtualDirectory(virtualDirectory);
+				targetNode = &parentNode->AddChild(std::make_unique<FileNode>(targetPath.get_view(), parentNode), virtualDirectory);
 			}
 
 			// Need to update FileAttributes with previous when overwriting file
@@ -420,8 +419,7 @@ namespace KxVFS
 				}
 
 				auto lock = parentNode->LockExclusive();
-				targetNode = &parentNode->AddChild(std::make_unique<FileNode>(targetPath.get_view(), parentNode));
-				targetNode->SetVirtualDirectory(virtualDirectory);
+				targetNode = &parentNode->AddChild(std::make_unique<FileNode>(targetPath.get_view(), parentNode), virtualDirectory);
 			}
 			else
 			{
@@ -724,8 +722,7 @@ namespace KxVFS
 					// Move the file
 					if (::MoveFileExW(originalNode->GetFullPathWithNS(), newPath, MOVEFILE_COPY_ALLOWED))
 					{
-						FileNode& newNode = targetNodeParent->AddChild(std::make_unique<FileNode>(newPath.get_view(), targetNodeParent));
-						newNode.SetVirtualDirectory(virtualDirectory);
+						FileNode& newNode = targetNodeParent->AddChild(std::make_unique<FileNode>(newPath.get_view(), targetNodeParent), virtualDirectory);
 
 						// Take original node attributes and remove it
 						newNode.TakeItem(std::move(*originalNode));

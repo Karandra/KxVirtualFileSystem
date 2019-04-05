@@ -221,6 +221,12 @@ namespace KxVFS
 				}
 			}
 			FileNode& AddChild(std::unique_ptr<FileNode> node);
+			FileNode& AddChild(std::unique_ptr<FileNode> node, KxDynamicStringRefW virtualDirectory)
+			{
+				FileNode& ref = AddChild(std::move(node));
+				ref.SetVirtualDirectory(virtualDirectory);
+				return ref;
+			}
 
 			bool HasParent() const
 			{
