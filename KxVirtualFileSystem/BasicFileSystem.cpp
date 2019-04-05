@@ -56,7 +56,7 @@ namespace KxVFS
 			}
 			return FSErrorCode::InvalidMountPoint;
 		}
-		return FSErrorCode::Unknown;
+		return FSErrorCode::CanNotMount;
 	}
 	bool BasicFileSystem::DoUnMount()
 	{
