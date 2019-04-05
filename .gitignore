@@ -8,7 +8,9 @@ Junk/*
 Release/*
 Debug/*
 
+
 # Other files
+
 *.pdb
 *.7z
 *.VC.db

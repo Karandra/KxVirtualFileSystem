@@ -43,7 +43,7 @@ namespace KxVFS
 				}
 				__except (EXCEPTION_EXECUTE_HANDLER)
 				{
-					// Dokany can throw if mount point is used by another process despite spite of all the checks above
+					// Dokany can throw if mount point is used by another process despite of all the checks above
 					// or something else is wrong, so just catch anything and return error.
 					
 					OutputDebugStringA(__FUNCTION__);
