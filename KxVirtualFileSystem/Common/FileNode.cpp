@@ -8,29 +8,6 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/Utility.h"
 #include "FileNode.h"
 
-namespace
-{
-	struct FileNameHasher
-	{
-		// From Boost
-		template<class T> static void hash_combine(size_t& seed, T v) noexcept
-		{
-			std::hash<T> hasher;
-			seed ^= hasher(v) + size_t(0x9e3779b9u) + (seed << 6) + (seed >> 2);
-		}
-		
-		size_t operator()(KxVFS::KxDynamicStringRefW value) const noexcept
-		{
-			size_t hashValue = 0;
-			for (wchar_t c: value)
-			{
-				hash_combine(hashValue, KxVFS::Utility::CharToLower(c));
-			}
-			return hashValue;
-		}
-	};
-}
-
 namespace KxVFS
 {
 	FileNode* FileNode::NavigateToElement(FileNode& rootNode, KxDynamicStringRefW relativePath, NavigateTo type, FileNode*& lastScanned)
@@ -92,7 +69,7 @@ namespace KxVFS
 	}
 	size_t FileNode::HashFileName(KxDynamicStringRefW name)
 	{
-		return FileNameHasher()(name);
+		return Utility::Comparator::StringHashNoCase()(name);
 	}
 
 	KxDynamicStringW FileNode::ConstructPath(PathParts options) const

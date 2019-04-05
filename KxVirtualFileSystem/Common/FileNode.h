@@ -32,7 +32,6 @@ namespace KxVFS
 
 		public:
 			using Map = Utility::Comparator::MapNoCase<std::unique_ptr<FileNode>>;
-			using Vector = std::vector<std::unique_ptr<FileNode>>;
 			using RefVector = std::vector<FileNode*>;
 			using CRefVector = std::vector<const FileNode*>;
 
