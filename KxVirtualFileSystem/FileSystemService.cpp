@@ -9,7 +9,6 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
-#include <cstdalign>
 #pragma comment(lib, "Dokan2.lib")
 
 namespace
