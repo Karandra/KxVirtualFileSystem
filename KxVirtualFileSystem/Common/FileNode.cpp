@@ -45,14 +45,11 @@ namespace KxVFS
 		{
 			auto ScanChildren = [&lastScanned](FileNode& scannedNode, KxDynamicStringRefW folderName) -> FileNode*
 			{
-				const size_t hash = FileNameHasher()(folderName);
-				for (const auto& node: scannedNode.GetChildren())
+				auto it = scannedNode.m_Children.find(folderName);
+				if (it != scannedNode.m_Children.end())
 				{
-					if (hash == node->GetNameHash())
-					{
-						lastScanned = node.get();
-						return node.get();
-					}
+					lastScanned = it->second.get();
+					return lastScanned;
 				}
 				return nullptr;
 			};
@@ -149,8 +146,6 @@ namespace KxVFS
 				if (item.IsNormalItem())
 				{
 					FileNode& node = treeNode.AddChild(std::make_unique<FileNode>(item, parentNode));
-					node.CalcNameHash();
-
 					if (node.IsDirectory())
 					{
 						directories.emplace_back(&node);
@@ -182,17 +177,14 @@ namespace KxVFS
 		m_Item = {};
 		m_VirtualDirectory = {};
 		m_Parent = nullptr;
-		m_IndexWithinParent = std::numeric_limits<size_t>::max();
-		m_NameHash = 0;
-		m_IsChildrenSorted = true;
 	}
 
 	const FileNode* FileNode::WalkTree(const TreeWalker& func) const
 	{
-		std::function<const FileNode*(const FileNode::Vector&)> Recurse;
-		Recurse = [&Recurse, &func](const FileNode::Vector& children) -> const FileNode*
+		std::function<const FileNode*(const FileNode::Map&)> Recurse;
+		Recurse = [&Recurse, &func](const FileNode::Map& children) -> const FileNode*
 		{
-			for (const auto& node: children)
+			for (const auto& [name, node]: children)
 			{
 				if (!func(*node))
 				{
@@ -209,37 +201,20 @@ namespace KxVFS
 		return Recurse(m_Children);
 	}
 
-	void FileNode::SortChildren()
-	{
-		if (!m_IsChildrenSorted)
-		{
-			std::sort(m_Children.begin(), m_Children.end(), [](const auto& node1, const auto& node2)
-			{
-				return Utility::Comparator::IsLessNoCase(node1->GetName(), node2->GetName());
-			});
-			RecalcIndexes();
-			m_IsChildrenSorted = true;
-		}
-	}
 	bool FileNode::RemoveChild(FileNode& node)
 	{
-		const size_t index = node.GetIndexWithinParent();
-		if (index < m_Children.size() && m_Children[index].get() == &node)
+		auto it = m_Children.find(node.GetName());
+		if (it != m_Children.end())
 		{
-			m_Children.erase(m_Children.begin() + index);
-			RecalcIndexes(index);
+			m_Children.erase(it);
 			return true;
 		}
 		return false;
 	}
 	FileNode& FileNode::AddChild(std::unique_ptr<FileNode> node)
 	{
-		FileNode& ref = *m_Children.emplace_back(std::move(node));
-		ref.SetIndexWithinParent(m_Children.size() - 1);
-		ref.CalcNameHash();
-
-		InvalidateSorting();
-		return ref;
+		auto[it, inserted] = m_Children.insert_or_assign(node->GetName(), std::move(node));
+		return *it->second;
 	}
 	FileNode* FileNode::CreateDirectoryTree(KxDynamicStringRefW basePath, KxDynamicStringRefW branchPath)
 	{

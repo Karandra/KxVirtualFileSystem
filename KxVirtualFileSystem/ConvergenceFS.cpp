@@ -130,7 +130,7 @@ namespace KxVFS
 
 		auto BuildTreeBranch = [this, &virtualNodes](FileNode& rootNode, FileNode::RefVector& directories)
 		{
-			std::unordered_map<size_t, size_t> hash;
+			Utility::Comparator::UnorderedSetNoCase hash;
 			hash.reserve(m_VirtualFolders.size());
 			const KxDynamicStringW rootPath = rootNode.GetRelativePath();
 
@@ -146,9 +146,9 @@ namespace KxVFS
 					// Most likely not enough, but at least something
 					rootNode.ReserveChildren(searchNode->GetChildrenCount());
 
-					for (const auto& node: searchNode->GetChildren())
+					for (const auto& [name, node]: searchNode->GetChildren())
 					{
-						auto hashIt = hash.try_emplace(node->GetNameHash(), (size_t)-1);
+						auto hashIt = hash.insert(name);
 						if (hashIt.second)
 						{
 							FileNode& newNode = rootNode.AddChild(std::make_unique<FileNode>(node->GetItem(), &rootNode));
@@ -771,9 +771,7 @@ namespace KxVFS
 			KxVFS_DebugPrint(L"Enumerating files in directory: %s ", eventInfo.PathName);
 			if (FileNode* fileNode = fileContext->GetFileNode())
 			{
-				auto lock = fileNode->LockExclusive();
-
-				fileNode->SortChildren();
+				auto lock = fileNode->LockShared();
 				fileNode->WalkChildren([&eventInfo](const FileNode& node)
 				{
 					WIN32_FIND_DATAW findData = node.GetItem().ToWIN32_FIND_DATA();

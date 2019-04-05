@@ -31,6 +31,7 @@ namespace KxVFS
 		friend class BranchExclusiveLocker;
 
 		public:
+			using Map = Utility::Comparator::MapNoCase<std::unique_ptr<FileNode>>;
 			using Vector = std::vector<std::unique_ptr<FileNode>>;
 			using RefVector = std::vector<FileNode*>;
 			using CRefVector = std::vector<const FileNode*>;
@@ -57,15 +58,6 @@ namespace KxVFS
 				}
 				return node;
 			}
-			template<class NodesVector, class NodesRefVector> static void RepackToRefVector(NodesVector& nodes, NodesRefVector& nodeRefs)
-			{
-				nodeRefs.reserve(nodes.size());
-				for (auto& node: nodes)
-				{
-					nodeRefs.push_back(node.get());
-				}
-			}
-
 			template<class TNode, class TFunctor> auto DoWalkToRoot(TNode*&& leafNode, TFunctor&& func) const
 			{
 				TNode* node = leafNode;
@@ -84,7 +76,7 @@ namespace KxVFS
 			}
 			template<class TItems, class TFunctor> auto DoWalkChildren(TItems&& children, TFunctor&& func) const -> FileNode*
 			{
-				for (auto&& item: children)
+				for (auto&& [name, item]: children)
 				{
 					if (!func(*item))
 					{
@@ -95,27 +87,15 @@ namespace KxVFS
 			}
 
 		public:
-			static void ToRefVector(Vector& nodes, RefVector& refItems)
-			{
-				RepackToRefVector(nodes, refItems);
-			}
-			static void ToCRefVector(const Vector& nodes, CRefVector& refItems)
-			{
-				RepackToRefVector(nodes, refItems);
-			}
-
 			static bool IsRequestToRootNode(KxDynamicStringRefW relativePath);
 			static size_t HashFileName(KxDynamicStringRefW name);
 
 		private:
-			Vector m_Children;
+			Map m_Children;
 			KxFileItem m_Item;
 			KxDynamicStringRefW m_VirtualDirectory;
 			FileNode* m_Parent = nullptr;
 			SRWLock m_Lock;
-			size_t m_NameHash = 0;
-			size_t m_IndexWithinParent = std::numeric_limits<size_t>::max();
-			bool m_IsChildrenSorted = true;
 
 		private:
 			void Init(FileNode* parent = nullptr)
@@ -130,29 +110,6 @@ namespace KxVFS
 				m_Parent = parent;
 			}
 			
-			void RecalcIndexes(size_t startAt = 0)
-			{
-				for (size_t i = startAt; i < m_Children.size(); i++)
-				{
-					m_Children[i]->m_IndexWithinParent = i;
-				}
-			}
-			void InvalidateSorting()
-			{
-				m_IsChildrenSorted = m_Children.size() <= 1;
-			}
-			void InvalidateParentSorting()
-			{
-				if (m_Parent)
-				{
-					m_Parent->InvalidateSorting();
-				}
-			}
-			void SetIndexWithinParent(size_t index)
-			{
-				m_IndexWithinParent = index;
-			}
-
 			SRWLock& GetLock()
 			{
 				return m_Lock;
@@ -180,7 +137,6 @@ namespace KxVFS
 			}
 			void CopyBasicAttributes(const FileNode& other)
 			{
-				m_NameHash = other.m_NameHash;
 				m_VirtualDirectory = other.m_VirtualDirectory;
 			}
 			void UpdateFileTree(KxDynamicStringRefW searchPath, bool queryShortNames = false);
@@ -244,30 +200,18 @@ namespace KxVFS
 			{
 				return m_Children.size();
 			}
-			const Vector& GetChildren() const
+			const Map& GetChildren() const
 			{
 				return m_Children;
 			}
 			void ClearChildren()
 			{
 				m_Children.clear();
-
-				// Well, there are no more children, so they are sorted now, kind of.
-				m_IsChildrenSorted = true;
 			}
 			
-			size_t GetIndexWithinParent() const
-			{
-				return m_IndexWithinParent;
-			}
-			bool IsChildrenSorted() const
-			{
-				return m_IsChildrenSorted;
-			}
-			void SortChildren();
 			void ReserveChildren(size_t capacity)
 			{
-				m_Children.reserve(capacity);
+				//m_Children.reserve(capacity);
 			}
 			bool RemoveChild(FileNode& node);
 			void RemoveThisChild()
@@ -302,15 +246,6 @@ namespace KxVFS
 				return FindRootNode(this);
 			}
 
-			size_t GetNameHash() const
-			{
-				return m_NameHash;
-			}
-			void CalcNameHash()
-			{
-				m_NameHash = HashFileName(GetName());
-			}
-			
 			KxDynamicStringRefW GetName() const
 			{
 				return m_Item.GetName();
@@ -318,9 +253,6 @@ namespace KxVFS
 			void SetName(KxDynamicStringRefW name)
 			{
 				m_Item.SetName(name);
-
-				CalcNameHash();
-				InvalidateParentSorting();
 			}
 			KxDynamicStringW GetFileExtension() const
 			{
@@ -369,17 +301,11 @@ namespace KxVFS
 			const KxFileItem& CopyItem(const FileNode& other)
 			{
 				m_Item = other.m_Item;
-
-				CalcNameHash();
-				InvalidateParentSorting();
 				return m_Item;
 			}
 			const KxFileItem& TakeItem(FileNode&& other)
 			{
 				m_Item = std::move(other.m_Item);
-
-				CalcNameHash();
-				InvalidateParentSorting();
 				return m_Item;
 			}
 			const KxFileItem& UpdateItemInfo(bool queryShortName = false)
@@ -391,9 +317,6 @@ namespace KxVFS
 			{
 				m_Item.SetFullPath(fullPath);
 				m_Item.UpdateInfo(queryShortName);
-				
-				CalcNameHash();
-				InvalidateParentSorting();
 				return m_Item;
 			}
 
