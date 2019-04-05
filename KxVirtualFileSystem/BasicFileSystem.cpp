@@ -51,12 +51,12 @@ namespace KxVFS
 					OutputDebugStringA("Exception thrown\r\n");
 
 					m_Handle = nullptr;
-					return DOKAN_ERROR;
+					return FSErrorCode::Unknown;
 				}
 			}
-			return DOKAN_MOUNT_ERROR;
+			return FSErrorCode::InvalidMountPoint;
 		}
-		return DOKAN_ERROR;
+		return FSErrorCode::Unknown;
 	}
 	bool BasicFileSystem::DoUnMount()
 	{
@@ -125,11 +125,11 @@ namespace KxVFS
 	{
 		if (!m_FileContextManager.Init())
 		{
-			return DOKAN_ERROR;
+			return FSErrorCode::FileContextManagerInitFailed;
 		}
 		if (m_IOManager.IsAsyncIOEnabled() && !m_IOManager.Init())
 		{
-			return DOKAN_ERROR;
+			return FSErrorCode::IOManagerInitFialed;
 		}
 		return DoMount();
 	}

@@ -89,7 +89,7 @@ namespace KxVFS
 			// Mount now
 			return MirrorFS::Mount();
 		}
-		return DOKAN_ERROR;
+		return FSErrorCode::CanNotMount;
 	}
 	bool ConvergenceFS::UnMount()
 	{

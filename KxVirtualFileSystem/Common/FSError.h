@@ -12,21 +12,59 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
+	enum class FSErrorCode
+	{
+		// Special codes
+		Success = 0,
+		Unknown = -1,
+
+		// Dokany-related
+		InternalError,
+		BadDriveLetter,
+		DriverInstallFailed,
+		CanNotStartDriver,
+		CanNotMount,
+		InvalidMountPoint,
+		InvalidVersion,
+
+		// KxVFS codes
+		FileContextManagerInitFailed,
+		IOManagerInitFialed,
+	};
+}
+
+namespace KxVFS
+{
 	class KxVFS_API FSError
 	{
 		private:
-			std::optional<int> m_Code;
+			FSErrorCode m_Code = FSErrorCode::Unknown;
 
 		public:
 			FSError() = default;
-			FSError(int errorCode);
+			FSError(int dokanyErrorCode);
+			FSError(FSErrorCode errorCode)
+				:m_Code(errorCode)
+			{
+			}
 
 		public:
 			bool IsKnownError() const;
-			int GetCode() const;
-			
-			bool IsSuccess() const;
-			bool IsFail() const;
+			FSErrorCode GetCode() const;
+			std::optional<int> GetDokanyCode() const;
 			KxDynamicStringW GetMessage() const;
+			
+			bool IsSuccess() const
+			{
+				return m_Code == FSErrorCode::Success;
+			}
+			bool IsFail() const
+			{
+				return !IsSuccess();
+			}
+			bool IsDokanyError() const
+			{
+				return GetDokanyCode().has_value();
+			}
 	};
 }
