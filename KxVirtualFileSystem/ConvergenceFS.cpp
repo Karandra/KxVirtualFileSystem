@@ -220,7 +220,7 @@ namespace KxVFS
 			// When the item is a directory, we need to change the flag so that the file can be opened
 			if (targetNode->IsDirectory())
 			{
-				if (!ToBool(kernelOptions & KernelFileOptions::NonDirectoryFile))
+				if (!(kernelOptions & KernelFileOptions::NonDirectoryFile))
 				{
 					// Needed by FindFirstFile to list files in it
 					// TODO: use ReOpenFile in 'OnFindFiles' to set share read temporary
@@ -244,7 +244,7 @@ namespace KxVFS
 			}
 			#endif
 		}
-		else if (ToBool(kernelOptions & KernelFileOptions::DirectoryFile))
+		else if (kernelOptions & KernelFileOptions::DirectoryFile)
 		{
 			eventInfo.DokanFileInfo->IsDirectory = TRUE;
 			eventInfo.ShareAccess |= FILE_SHARE_READ;

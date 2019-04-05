@@ -45,7 +45,7 @@ namespace KxVFS
 		uint32_t dokanyOptions = 0;
 		auto TestAndSet = [&dokanyOptions, flags](uint32_t dokanyOption, FSFlags flag)
 		{
-			Utility::ModFlagRef(dokanyOptions, dokanyOption, ToBool(flags & flag));
+			Utility::ModFlagRef(dokanyOptions, dokanyOption, flags & flag);
 		};
 
 		TestAndSet(DOKAN_OPTION_DEBUG, FSFlags::Debug);
@@ -74,11 +74,13 @@ namespace KxVFS
 		TRUNCATE_EXISTING        |            Truncates              Fails
 		*/
 
-		return (ToBool(desiredAccess & AccessRights::GenericWrite) ||
-			createDisposition == CreationDisposition::CreateAlways ||
+		return (
+			(desiredAccess & AccessRights::GenericWrite) ||
+			(createDisposition == CreationDisposition::CreateAlways) ||
 			(createDisposition == CreationDisposition::CreateNew && !isExist) ||
 			(createDisposition == CreationDisposition::OpenAlways && !isExist) ||
-			(createDisposition == CreationDisposition::TruncateExisting && isExist));
+			(createDisposition == CreationDisposition::TruncateExisting && isExist)
+			);
 	}
 	bool IFileSystem::IsWriteRequest(KxDynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const
 	{
@@ -101,8 +103,8 @@ namespace KxVFS
 	bool IFileSystem::CheckAttributesToOverwriteFile(FileAttributes fileAttributes, FileAttributes requestAttributes, CreationDisposition creationDisposition) const
 	{
 		const bool fileExist = fileAttributes != FileAttributes::Invalid;
-		const bool fileHidden = !ToBool(requestAttributes & FileAttributes::Hidden) && ToBool(fileAttributes & FileAttributes::Hidden);
-		const bool fileSystem = !ToBool(requestAttributes & FileAttributes::Hidden) && ToBool(fileAttributes & FileAttributes::System);
+		const bool fileHidden = !(requestAttributes & FileAttributes::Hidden) && fileAttributes & FileAttributes::Hidden;
+		const bool fileSystem = !(requestAttributes & FileAttributes::Hidden) && fileAttributes & FileAttributes::System;
 		const bool truncateOrCreateAlways = creationDisposition == CreationDisposition::TruncateExisting || creationDisposition == CreationDisposition::CreateAlways;
 
 		if (fileExist && (fileHidden || fileSystem) && truncateOrCreateAlways)

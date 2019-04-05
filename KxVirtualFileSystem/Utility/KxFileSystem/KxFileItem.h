@@ -65,12 +65,12 @@ namespace KxVFS
 			bool IsCurrentOrParent() const;
 			bool IsReparsePoint() const
 			{
-				return ToBool(m_Attributes & FileAttributes::ReparsePoint);
+				return m_Attributes & FileAttributes::ReparsePoint;
 			}
 
 			bool IsDirectory() const
 			{
-				return ToBool(m_Attributes & FileAttributes::Directory);
+				return m_Attributes & FileAttributes::Directory;
 			}
 			bool IsDirectoryEmpty() const;
 			KxFileItem& SetDirectory()
@@ -91,7 +91,7 @@ namespace KxVFS
 
 			bool IsReadOnly() const
 			{
-				return ToBool(m_Attributes & FileAttributes::ReadOnly);
+				return m_Attributes & FileAttributes::ReadOnly;
 			}
 			KxFileItem& SetReadOnly(bool value = true)
 			{

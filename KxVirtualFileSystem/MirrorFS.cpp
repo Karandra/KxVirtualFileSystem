@@ -180,7 +180,7 @@ namespace KxVFS
 		const FileAttributes fileAttributes = FromInt<FileAttributes>(::GetFileAttributesW(targetPath));
 		if (fileAttributes != FileAttributes::Invalid)
 		{
-			if (ToBool(fileAttributes & FileAttributes::Directory))
+			if (fileAttributes & FileAttributes::Directory)
 			{
 				if (!(eventInfo.CreateOptions & FILE_NON_DIRECTORY_FILE))
 				{
@@ -231,7 +231,7 @@ namespace KxVFS
 			if (statusCode == STATUS_SUCCESS)
 			{
 				// Check first if we're trying to open a file as a directory.
-				if (fileAttributes != FileAttributes::Invalid && !ToBool(fileAttributes & FileAttributes::Directory) && (eventInfo.CreateOptions & FILE_DIRECTORY_FILE))
+				if (fileAttributes != FileAttributes::Invalid && !(fileAttributes & FileAttributes::Directory) && (eventInfo.CreateOptions & FILE_DIRECTORY_FILE))
 				{
 					return STATUS_NOT_A_DIRECTORY;
 				}

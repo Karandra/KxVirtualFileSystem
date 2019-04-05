@@ -100,14 +100,14 @@ namespace KxVFS
 
 	KxDynamicStringW FileNode::ConstructPath(PathParts options) const
 	{
-		KxDynamicStringW fullPath = ToBool(options & PathParts::Namespace) ? Utility::GetLongPathPrefix() : KxNullDynamicStringW;
-		if (ToBool(options & PathParts::BaseDirectory))
+		KxDynamicStringW fullPath = options & PathParts::Namespace ? Utility::GetLongPathPrefix() : KxNullDynamicStringW;
+		if (options & PathParts::BaseDirectory)
 		{
 			fullPath += m_VirtualDirectory;
 			fullPath += L'\\';
 		}
 
-		if (ToBool(options & PathParts::RelativePath))
+		if (options & PathParts::RelativePath)
 		{
 			KxDynamicStringW relativePath;
 			WalkToRoot([this, &relativePath](const FileNode& node)
@@ -124,7 +124,7 @@ namespace KxVFS
 			fullPath += relativePath;
 		}
 
-		if (ToBool(options & PathParts::Name))
+		if (options & PathParts::Name)
 		{
 			fullPath += GetName();
 		}

@@ -70,12 +70,12 @@ namespace KxVFS::Utility
 	inline bool IsFileExist(KxDynamicStringRefW path)
 	{
 		const FileAttributes attributes = GetFileAttributes(path);
-		return (attributes != FileAttributes::Invalid) && !ToBool(attributes & FileAttributes::Directory);
+		return attributes != FileAttributes::Invalid && !(attributes & FileAttributes::Directory);
 	}
 	inline bool IsFolderExist(KxDynamicStringRefW path)
 	{
 		const FileAttributes attributes = GetFileAttributes(path);
-		return (attributes != FileAttributes::Invalid) && ToBool(attributes & FileAttributes::Directory);
+		return attributes != FileAttributes::Invalid && attributes & FileAttributes::Directory;
 	}
 
 	constexpr inline KxDynamicStringRefW GetLongPathPrefix()

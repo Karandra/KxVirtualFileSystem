@@ -19,6 +19,42 @@ namespace KxVFS
 	#define KxVFS_AllowEnumBitwiseOp(T) template<> struct KxVFS::IsEnumBitwiseOpAllowed<T>: std::true_type {}
 }
 
+namespace KxVFS::Internal
+{
+	template<class TEnum> class EnumClassWrapper final
+	{
+		private:
+			TEnum m_Value;
+
+		private:
+			constexpr auto AsInt() const noexcept
+			{
+				return static_cast<std::underlying_type_t<TEnum>>(m_Value) == 0;
+			}
+
+		public:
+			constexpr EnumClassWrapper() = default;
+			constexpr EnumClassWrapper(TEnum value) noexcept
+				:m_Value(value)
+			{
+			}
+	
+		public:
+			constexpr operator TEnum() const noexcept
+			{
+				return m_Value;
+			}
+			constexpr operator bool() const noexcept
+			{
+				return AsInt() != 0;
+			}
+			constexpr bool operator!() const noexcept
+			{
+				return AsInt() == 0;
+			}
+	};
+}
+
 namespace KxVFS
 {
 	namespace Internal
@@ -54,7 +90,7 @@ namespace KxVFS
 namespace KxVFS
 {
 	template<class TEnum>
-	constexpr std::enable_if_t<IsEnumBitwiseOpAllowedV<TEnum>, TEnum> operator&(TEnum left, TEnum right)
+	constexpr std::enable_if_t<IsEnumBitwiseOpAllowedV<TEnum>, Internal::EnumClassWrapper<TEnum>> operator&(TEnum left, TEnum right)
 	{
 		using Tint = std::underlying_type_t<TEnum>;
 		return static_cast<TEnum>(static_cast<Tint>(left) & static_cast<Tint>(right));
