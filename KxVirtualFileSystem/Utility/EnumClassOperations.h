@@ -29,7 +29,7 @@ namespace KxVFS::Internal
 		private:
 			constexpr auto AsInt() const noexcept
 			{
-				return static_cast<std::underlying_type_t<TEnum>>(m_Value) == 0;
+				return static_cast<std::underlying_type_t<TEnum>>(m_Value);
 			}
 
 		public:

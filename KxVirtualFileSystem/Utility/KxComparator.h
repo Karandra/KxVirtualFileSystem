@@ -118,7 +118,7 @@ namespace KxVFS::Utility::Comparator
 			return std::hash<KxDynamicStringRefW>()(value);
 		}
 	};
-	struct StringHashOnCase
+	struct StringHashNoCase
 	{
 		// From Boost
 		template<class T> static void hash_combine(size_t& seed, const T& v)
@@ -145,11 +145,11 @@ namespace KxVFS::Utility::Comparator
 	template<class TValue> using MapNoCase = std::map<KxDynamicStringW, TValue, StringLessThanNoCase>;
 
 	template<class TValue> using UnorderedMap = std::unordered_map<KxDynamicStringW, TValue, StringHash, StringEqualTo>;
-	template<class TValue> using UnorderedMapNoCase = std::unordered_map<KxDynamicStringW, TValue, StringHashOnCase, StringEqualToNoCase>;
+	template<class TValue> using UnorderedMapNoCase = std::unordered_map<KxDynamicStringW, TValue, StringHashNoCase, StringEqualToNoCase>;
 
 	using Set = std::set<KxDynamicStringW, StringLessThan>;
 	using SetNoCase = std::set<KxDynamicStringW, StringLessThanNoCase>;
 
 	using UnorderedSet = std::unordered_set<KxDynamicStringW, StringHash, StringEqualTo>;
-	using UnorderedSetNoCase = std::unordered_set<KxDynamicStringW, StringHashOnCase, StringEqualToNoCase>;
+	using UnorderedSetNoCase = std::unordered_set<KxDynamicStringW, StringHashNoCase, StringEqualToNoCase>;
 }
