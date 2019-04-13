@@ -27,12 +27,6 @@ namespace KxVFS
 	{
 		friend class TWrapper;
 
-		protected:
-			static void DoCloseHandle(THandle handle)
-			{
-				::CloseHandle(handle);
-			}
-
 		public:
 			FileHandle(THandle fileHandle = GetInvalidHandle())
 				:GenericHandle(fileHandle)

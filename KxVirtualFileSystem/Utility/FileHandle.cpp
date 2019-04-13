@@ -24,7 +24,12 @@ namespace KxVFS
 	}
 	bool FileHandle::OpenVolumeDevice(wchar_t volume, FileAttributes attributesAndFlags)
 	{
-		return Create(Utility::GetVolumeDevicePath(volume), AccessRights::GenericRead, FileShare::Read|FileShare::Write, CreationDisposition::OpenExisting, attributesAndFlags);
+		return Create(Utility::GetVolumeDevicePath(volume),
+					  AccessRights::GenericRead,
+					  FileShare::Read|FileShare::Write,
+					  CreationDisposition::OpenExisting,
+					  attributesAndFlags
+		);
 	}
 
 	bool FileHandle::SetDeleteOnClose(bool deleteOnClose)
