@@ -64,6 +64,10 @@ namespace KxVFS
 		}
 		return false;
 	}
+	bool ConvergenceFS::IsWriteTargetNode(const FileNode& fileNode) const
+	{
+		return fileNode.GetVirtualDirectory() == GetWriteTarget();
+	}
 }
 
 namespace KxVFS
@@ -304,17 +308,31 @@ namespace KxVFS
 		// Create or open file
 		ImpersonateLoggedOnUserIfEnabled(userTokenHandle);
 		OpenWithSecurityAccessIfEnabled(genericDesiredAccess, isWriteRequest);
-		FileHandle fileHandle(targetPath,
-							  genericDesiredAccess,
-							  fileShareOptions,
-							  creationDisposition,
-							  requestAttributes,
-							  &newFileSecurity.GetAttributes()
-		);
+		
+		auto OpenOrCreateFile = [&]()
+		{
+			return FileHandle(targetPath, genericDesiredAccess, fileShareOptions, creationDisposition, requestAttributes, &newFileSecurity.GetAttributes());
+		};
+		
+		FileHandle fileHandle = OpenOrCreateFile();
+		if (isWriteRequest && !fileHandle && ::GetLastError() == ERROR_PATH_NOT_FOUND)
+		{
+			// That probably means that we're trying to create a file in write target, but there's
+			// no corresponding directory tree there. So create the directory three and try again.
+			KxVFS_DebugPrint(L"Attempt to create a file in non-existent directory tree in write target: %s", eventInfo.FileName);
+
+			::SetLastError(ERROR_SUCCESS);
+			KxDynamicStringW folderPath = KxDynamicStringW(eventInfo.FileName).before_last(L'\\');
+			KxVFS_DebugPrint(L"Creating directory tree in write target: %s", folderPath.data());
+
+			Utility::CreateDirectoryTreeEx(virtualDirectory, folderPath);
+			fileHandle = OpenOrCreateFile();
+		}
+
 		const DWORD errorCode = ::GetLastError();
 		CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
 
-		if (fileHandle.IsValid())
+		if (fileHandle)
 		{
 			// Add file to the virtual tree if it's new file
 			if (!targetNode)

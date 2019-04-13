@@ -22,7 +22,7 @@ int _tmain()
 	using namespace KxVFS;
 
 	auto service = std::make_unique<FileSystemService>(L"KortexVFS");
-	service->Install(L"C:\\Users\\Kerber\\Documents\\Visual Studio 2017\\Projects\\Kortex Mod Manager\\Kortex\\Bin\\Data\\VFS\\Drivers\\Win7 x64\\dokan2.sys");
+	service->Install(L"C:\\Users\\Kerber\\Documents\\Visual Studio 2019\\Projects\\Kortex Mod Manager\\Kortex\\Bin\\Data\\VFS\\Drivers\\Win7 x64\\dokan2.sys");
 	service->Start();
 
 	#if 1
@@ -151,6 +151,20 @@ int _tmain()
 				::CopyFileW(source, target, FALSE);
 				Utility::Print("Done: %u", ::GetLastError());
 
+				break;
+			}
+			case 'v':
+			{
+				constexpr auto path = L"C:\\Users\\Kerber\\Desktop\\Test\\Data\\Scripts\\TestFile.json";
+				FileHandle handle(path, AccessRights::GenericWrite, FileShare::All, CreationDisposition::CreateAlways);
+				Utility::Print("Done: %u", ::GetLastError());
+				break;
+			}
+			case 'b':
+			{
+				constexpr auto path = L"C:\\Users\\Kerber\\Desktop\\Test\\Data\\Scripts\\TestFolder";
+				Utility::CreateDirectory(path, nullptr);
+				Utility::Print("Done: %u", ::GetLastError());
 				break;
 			}
 

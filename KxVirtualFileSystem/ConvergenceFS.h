@@ -27,6 +27,7 @@ namespace KxVFS
 			KxDynamicStringW DispatchLocationRequest(KxDynamicStringRefW requestedPath) override;
 
 			bool ProcessDeleteOnClose(Dokany2::DOKAN_FILE_INFO& fileInfo, FileNode& fileNode) const;
+			bool IsWriteTargetNode(const FileNode& fileNode) const;
 
 			const TVirtualFoldersVector& GetVirtualFolders() const
 			{
