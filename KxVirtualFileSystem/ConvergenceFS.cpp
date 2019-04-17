@@ -712,16 +712,24 @@ namespace KxVFS
 						const KxDynamicStringW originalName = originalNode->GetName();
 						const KxDynamicStringW originalPath = originalNode->GetFullPathWithNS();
 
-						// Set new name and get new path
-						originalNode->SetName(newName);
-						const KxDynamicStringW newPath = originalNode->GetFullPathWithNS();
-
-						// Rename
-						const NTSTATUS status = fileContext->GetHandle().SetPath(newPath, eventInfo.ReplaceIfExists);
-						if (status != STATUS_SUCCESS)
+						// Set name to temporary item to get new path
+						auto GetNewPath = [originalNode, &newName]()
 						{
-							// Rename failed for some reason, restore node name
-							originalNode->SetName(originalName);
+							KxFileItem item;
+							item.SetName(newName);
+							item.SetSource(originalNode->GetSource());
+
+							return item.GetFullPathWithNS();
+						};
+						const KxDynamicStringW newPath = GetNewPath();
+
+						// Rename file system object
+						const NTSTATUS status = fileContext->GetHandle().SetPath(newPath, eventInfo.ReplaceIfExists);
+						if (status == STATUS_SUCCESS)
+						{
+							// Rename the node if we successfully renamed file system object
+							auto parentLock = targetNodeParent->LockExclusive();
+							originalNode->SetName(newName);
 						}
 						return status;
 					}

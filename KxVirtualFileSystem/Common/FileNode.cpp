@@ -72,6 +72,22 @@ namespace KxVFS
 		return Utility::Comparator::StringHashNoCase()(name);
 	}
 
+	bool FileNode::RenameThisNode(KxDynamicStringRefW newName)
+	{
+		// Rename this node in parent's children
+		Map& parentItems = m_Parent->m_Children;
+
+		// Node name in 'm_Item' must still be old name when this function is called
+		if (auto nodeHandle = parentItems.extract(m_Item.GetName()))
+		{
+			nodeHandle.key() = newName;
+			parentItems.insert(std::move(nodeHandle));
+
+			// If we succeed, the caller must change the name in 'm_Item'
+			return true;
+		}
+		return false;
+	}
 	KxDynamicStringW FileNode::ConstructPath(PathParts options) const
 	{
 		KxDynamicStringW fullPath = options & PathParts::Namespace ? Utility::GetLongPathPrefix() : KxNullDynamicStringW;
@@ -190,7 +206,8 @@ namespace KxVFS
 	}
 	FileNode& FileNode::AddChild(std::unique_ptr<FileNode> node)
 	{
-		auto[it, inserted] = m_Children.insert_or_assign(node->GetName(), std::move(node));
+		KxDynamicStringW name = node->GetName();
+		auto[it, inserted] = m_Children.insert_or_assign(name, std::move(node));
 		return *it->second;
 	}
 

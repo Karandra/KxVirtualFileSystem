@@ -108,7 +108,8 @@ namespace KxVFS
 			{
 				m_Parent = parent;
 			}
-			
+			bool RenameThisNode(KxDynamicStringRefW newName);
+
 			SRWLock& GetLock()
 			{
 				return m_Lock;
@@ -254,9 +255,14 @@ namespace KxVFS
 			{
 				return m_Item.GetName();
 			}
-			void SetName(KxDynamicStringRefW name)
+			bool SetName(KxDynamicStringRefW name)
 			{
-				m_Item.SetName(name);
+				if (!HasParent() || RenameThisNode(name))
+				{
+					m_Item.SetName(name);
+					return true;
+				}
+				return false;
 			}
 			KxDynamicStringW GetFileExtension() const
 			{
