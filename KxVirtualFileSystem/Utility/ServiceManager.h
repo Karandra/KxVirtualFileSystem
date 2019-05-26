@@ -31,5 +31,14 @@ namespace KxVFS
 			{
 				return m_Handle;
 			}
+
+			explicit operator bool() const noexcept
+			{
+				return IsOK();
+			}
+			bool operator!() const noexcept
+			{
+				return !IsOK();
+			}
 	};
 }

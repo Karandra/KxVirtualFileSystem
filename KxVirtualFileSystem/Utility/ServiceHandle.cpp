@@ -17,7 +17,7 @@ namespace KxVFS
 	}
 
 	bool ServiceHandle::Create(ServiceManager& serviceManger,
-							   ServiceStartType startType,
+							   ServiceStartMode startType,
 							   KxDynamicStringRefW binaryPath,
 							   KxDynamicStringRefW serviceName,
 							   KxDynamicStringRefW displayName,
@@ -46,25 +46,79 @@ namespace KxVFS
 		}
 		return false;
 	}
-	bool ServiceHandle::Open(ServiceManager& serviceManger, KxDynamicStringRefW serviceName, ServiceAccess serviceAccess, AccessRights otherRights)
+	bool ServiceHandle::Open(ServiceManager& serviceManger,
+							 KxDynamicStringRefW serviceName,
+							 ServiceAccess serviceAccess,
+							 AccessRights otherRights
+	)
 	{
 		Assign(::OpenServiceW(serviceManger, serviceName.data(), ToInt(serviceAccess)|ToInt(otherRights)));
 		return IsValid();
 	}
-	bool ServiceHandle::Reconfigure(ServiceManager& serviceManger, ServiceStartType startType, KxDynamicStringRefW binaryPath)
+	
+	std::optional<ServiceConfig> ServiceHandle::GetConfig() const
+	{
+		DWORD reqSize = 0;
+		if (!::QueryServiceConfigW(m_Handle, nullptr, 0, &reqSize) && reqSize != 0)
+		{
+			std::vector<uint8_t> buffer(reqSize, 0);
+			QUERY_SERVICE_CONFIGW& serviceConfig = *reinterpret_cast<QUERY_SERVICE_CONFIGW*>(buffer.data());
+			if (::QueryServiceConfigW(m_Handle, &serviceConfig, reqSize, &reqSize))
+			{
+				ServiceConfig config;
+
+				config.BinaryPath = serviceConfig.lpBinaryPathName;
+				if (config.BinaryPath.length() > 4)
+				{
+					config.BinaryPath.erase(0, 4); // Remove '\??\' from the beginning
+				}
+
+				config.DisplayName = serviceConfig.lpDisplayName;
+				config.StartName = serviceConfig.lpServiceStartName;
+				config.LoadOrderGroup = serviceConfig.lpLoadOrderGroup;
+				config.Type = FromInt<ServiceType>(serviceConfig.dwServiceType);
+				config.StartMode = FromInt<ServiceStartMode>(serviceConfig.dwStartType);
+				config.ErrorControl = FromInt<ServiceErrorControl>(serviceConfig.dwErrorControl);
+				config.TagID = serviceConfig.dwTagId;
+
+				return config;
+			}
+		}
+		return std::nullopt;
+	}
+	bool ServiceHandle::SetConfig(ServiceManager& serviceManger,
+									KxDynamicStringRefW binaryPath,
+									ServiceType type,
+									ServiceStartMode startMode,
+									ServiceErrorControl errorControl
+	)
 	{
 		const bool success = ChangeServiceConfigW
 		(
 			m_Handle,
-			SERVICE_FILE_SYSTEM_DRIVER,
-			ToInt(startType),
-			SERVICE_ERROR_IGNORE,
+			ToInt(type),
+			ToInt(startMode),
+			ToInt(errorControl),
 			binaryPath.data(),
 			nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
 		);
 		return success;
 	}
-	
+
+	KxDynamicStringW ServiceHandle::GetDescription() const
+	{
+		DWORD reqSize = 0;
+		if (!::QueryServiceConfig2W(m_Handle, SERVICE_CONFIG_DESCRIPTION, nullptr, 0, &reqSize) && reqSize != 0)
+		{
+			std::vector<uint8_t> buffer(reqSize, 0);
+			if (::QueryServiceConfig2W(m_Handle, SERVICE_CONFIG_DESCRIPTION, buffer.data(), reqSize, &reqSize))
+			{
+				SERVICE_DESCRIPTION& desc = *reinterpret_cast<SERVICE_DESCRIPTION*>(buffer.data());
+				return desc.lpDescription;
+			}
+		}
+		return {};
+	}
 	bool ServiceHandle::SetDescription(KxDynamicStringRefW description)
 	{
 		SERVICE_DESCRIPTION desc = {0};

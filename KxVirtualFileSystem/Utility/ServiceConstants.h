@@ -11,15 +11,17 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	enum class ServiceStartType: uint32_t
+	enum class ServiceStartMode: uint32_t
 	{
+		None = 0,
+
 		Auto = SERVICE_AUTO_START,
 		Boot = SERVICE_BOOT_START,
 		System = SERVICE_SYSTEM_START,
 		OnDemand = SERVICE_DEMAND_START,
 		Disabled = SERVICE_DISABLED,
 	};
-	KxVFS_AllowEnumBitwiseOp(ServiceStartType);
+	KxVFS_AllowEnumBitwiseOp(ServiceStartMode);
 
 	enum class ServiceStatus: uint32_t
 	{
@@ -54,4 +56,25 @@ namespace KxVFS
 		All = SERVICE_ALL_ACCESS,
 	};
 	KxVFS_AllowEnumBitwiseOp(ServiceAccess);
+
+	enum class ServiceType: uint32_t
+	{
+		None = 0,
+
+		FileSystemDriver = SERVICE_FILE_SYSTEM_DRIVER,
+		KernelDriver = SERVICE_KERNEL_DRIVER,
+		Win32OwnProcess = SERVICE_WIN32_OWN_PROCESS,
+		Win32SharedProcess = SERVICE_WIN32_SHARE_PROCESS,
+		InteractiveProcess = SERVICE_INTERACTIVE_PROCESS,
+	};
+	KxVFS_AllowEnumBitwiseOp(ServiceType);
+
+	enum class ServiceErrorControl: uint32_t
+	{
+		Ignore = SERVICE_ERROR_IGNORE,
+		Normal = SERVICE_ERROR_NORMAL,
+		Severe = SERVICE_ERROR_SEVERE,
+		Critical = SERVICE_ERROR_CRITICAL,
+	};
+	KxVFS_AllowEnumCastOp(ServiceErrorControl);
 }

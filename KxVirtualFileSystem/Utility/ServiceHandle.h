@@ -17,6 +17,22 @@ namespace KxVFS
 
 namespace KxVFS
 {
+	struct ServiceConfig
+	{
+		KxDynamicStringW BinaryPath;
+		KxDynamicStringW LoadOrderGroup;
+		KxDynamicStringW DisplayName;
+		KxDynamicStringW Description;
+		KxDynamicStringW StartName;
+		ServiceType Type = ServiceType::None;
+		ServiceStartMode StartMode = ServiceStartMode::None;
+		ServiceErrorControl ErrorControl = ServiceErrorControl::Ignore;
+		uint32_t TagID = 0;
+	};
+}
+
+namespace KxVFS
+{
 	class KxVFS_API ServiceHandle: public HandleWrapper<ServiceHandle, SC_HANDLE, size_t, 0>
 	{
 		friend class TWrapper;
@@ -32,15 +48,27 @@ namespace KxVFS
 
 		public:
 			bool Create(ServiceManager& serviceManger,
-						ServiceStartType startType,
+						ServiceStartMode startType,
 						KxDynamicStringRefW binaryPath,
 						KxDynamicStringRefW serviceName,
 						KxDynamicStringRefW displayName = {},
 						KxDynamicStringRefW description = {}
 			);
-			bool Open(ServiceManager& serviceManger, KxDynamicStringRefW serviceName, ServiceAccess serviceAccess, AccessRights otherRights);
-			bool Reconfigure(ServiceManager& serviceManger, ServiceStartType startType, KxDynamicStringRefW binaryPath);
+			bool Open(ServiceManager& serviceManger,
+					  KxDynamicStringRefW serviceName,
+					  ServiceAccess serviceAccess,
+					  AccessRights otherRights = AccessRights::None
+			);
+
+			std::optional<ServiceConfig> GetConfig() const;
+			bool SetConfig(ServiceManager& serviceManger,
+							 KxDynamicStringRefW binaryPath,
+							 ServiceType type,
+							 ServiceStartMode startMode,
+							 ServiceErrorControl errorControl
+			);
 			
+			KxDynamicStringW GetDescription() const;
 			bool SetDescription(KxDynamicStringRefW description);
 			ServiceStatus GetStatus() const;
 
