@@ -93,6 +93,8 @@ namespace KxVFS::Utility
 	KxDynamicStringW GetDriveFromPath(KxDynamicStringRefW path);
 	KxDynamicStringRefW NormalizeFilePath(KxDynamicStringRefW path);
 
+	KxDynamicStringW ExpandEnvironmentStrings(KxDynamicStringRefW variables);
+
 	// Writes a string 'source' into specified buffer but no more than 'maxDstLength' CHARS. Returns number of BYTES written.
 	size_t WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength);
 

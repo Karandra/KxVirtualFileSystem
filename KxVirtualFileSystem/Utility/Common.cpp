@@ -130,7 +130,6 @@ namespace KxVFS::Utility
 		}
 		return L"";
 	}
-	
 	KxDynamicStringRefW NormalizeFilePath(KxDynamicStringRefW path)
 	{
 		// See if path starts with '\' and remove it. Don't touch '\\?\'.
@@ -172,6 +171,20 @@ namespace KxVFS::Utility
 		path.remove_suffix(count);
 		return path;
 	}
+	KxDynamicStringW ExpandEnvironmentStrings(KxDynamicStringRefW variables)
+	{
+		DWORD requiredLength = ::ExpandEnvironmentStringsW(variables.data(), nullptr, 0);
+		if (requiredLength != 0)
+		{
+			KxDynamicStringW expandedString;
+			expandedString.resize(requiredLength - 1);
+			::ExpandEnvironmentStringsW(variables.data(), expandedString.data(), requiredLength);
+
+			return expandedString;
+		}
+		return {};
+	}
+	
 	size_t WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength)
 	{
 		const size_t dstBytesLength = maxDstLength * sizeof(wchar_t);
