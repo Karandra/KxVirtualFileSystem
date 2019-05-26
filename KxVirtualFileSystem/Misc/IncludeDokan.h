@@ -19,6 +19,7 @@ extern "C"
 		#define _EXPORTING 1
 
 		#include "Dokan/dokan.h"
+		#include "Dokan/dokanc.h"
 		#include "Dokan/fileinfo.h"
 
 		#undef _EXPORTING

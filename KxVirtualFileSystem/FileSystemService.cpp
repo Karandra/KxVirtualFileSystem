@@ -7,26 +7,37 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
+#include "KxVirtualFileSystem/Utility/Wow64RedirectionDisabler.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
 #pragma comment(lib, "Dokan2.lib")
 
 namespace
 {
-	void InitDokany()
+	bool InitDokany()
 	{
-		Dokany2::DokanInit(nullptr);
+		__try
+		{
+			Dokany2::DokanInit(nullptr);
+			return true;
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			return false;
+		}
 	}
-	void UninitDokany()
+	bool UninitDokany()
 	{
 		// If VFS fails, it will uninitialize itself. I have no way to tell if it's failed, so just ignore that.
 		__try
 		{
 			Dokany2::DokanShutdown();
+			return true;
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER)
 		{
 			// DOKAN_EXCEPTION_NOT_INITIALIZED was thrown
+			return false;
 		}
 	}
 
@@ -51,6 +62,32 @@ namespace KxVFS
 
 		const KxDynamicStringW temp = KxDynamicStringW::Format(L"%d", static_cast<int>(DOKAN_VERSION));
 		return KxDynamicStringW::Format(L"%c.%c.%c", temp[0], temp[1], temp[2]);
+	}
+
+	KxDynamicStringW FileSystemService::GetDokanyDefaultServiceName()
+	{
+		return DOKAN_DRIVER_SERVICE;
+	}
+	KxDynamicStringW FileSystemService::GetDokanyDefaultDriverPath()
+	{
+		// There's a 'DOKAN_DRIVER_FULL_PATH' constant in Dokany control app, but it's defined in the .cpp file
+		return Utility::ExpandEnvironmentStrings(L"%SystemRoot%\\system32\\drivers\\Dokan" DOKAN_MAJOR_API_VERSION L".sys");
+	}
+	bool FileSystemService::IsDokanyDefaultInstallPresent()
+	{
+		ServiceManager serviceManager(ServiceAccess::QueryStatus);
+		if (serviceManager)
+		{
+			ServiceHandle dokanyService;
+			if (dokanyService.Open(serviceManager, GetDokanyDefaultServiceName(), ServiceAccess::QueryStatus))
+			{
+				KxDynamicStringW driverPath = GetDokanyDefaultDriverPath();
+
+				Wow64RedirectionDisabler disable;
+				return Utility::IsFileExist(driverPath);
+			}
+		}
+		return false;
 	}
 
 	bool FileSystemService::AddSeSecurityNamePrivilege()
@@ -127,24 +164,52 @@ namespace KxVFS
 		}
 		return true;
 	}
+	bool FileSystemService::InitDriver()
+	{
+		if (m_DriverService.Open(m_ServiceManager, m_ServiceName, ServiceAccess::All, AccessRights::Delete))
+		{
+			if (!m_IsFSInitialized)
+			{
+				m_IsFSInitialized = InitDokany();
+			}
+			return m_IsFSInitialized;
+		}
+		return false;
+	}
 
 	FileSystemService::FileSystemService(KxDynamicStringRefW serviceName)
-		:m_ServiceName(serviceName), m_ServiceManager(ServiceAccess::Start|ServiceAccess::Stop|ServiceAccess::QueryStatus|ServiceAccess::ChangeConfig)
+		:m_ServiceName(serviceName),
+		m_ServiceManager(ServiceAccess::Start|ServiceAccess::Stop|ServiceAccess::QueryStatus|ServiceAccess::ChangeConfig),
+		m_HasSeSecurityNamePrivilege(AddSeSecurityNamePrivilege())
 	{
-		m_DriverService.Open(m_ServiceManager, serviceName, ServiceAccess::All, AccessRights::Delete);
-		m_HasSeSecurityNamePrivilege = AddSeSecurityNamePrivilege();
-
-		InitDokany();
+		if (!serviceName.empty())
+		{
+			InitDriver();
+		}
 	}
 	FileSystemService::~FileSystemService()
 	{
-		UninitDokany();
+		if (m_IsFSInitialized)
+		{
+			UninitDokany();
+			m_IsFSInitialized = false;
+		}
 	}
 
 	bool FileSystemService::IsOK() const
 	{
 		return m_ServiceManager.IsOK();
 	}
+	bool FileSystemService::InitService(KxDynamicStringRefW name)
+	{
+		if (m_ServiceName.empty())
+		{
+			m_ServiceName = name;
+			return InitDriver();
+		}
+		return false;
+	}
+	
 	KxDynamicStringRefW FileSystemService::GetServiceName() const
 	{
 		return m_ServiceName;
@@ -171,11 +236,11 @@ namespace KxVFS
 		if (Utility::IsFileExist(binaryPath))
 		{
 			// Create new service or reconfigure existing
-			constexpr ServiceStartType startMode = ServiceStartType::OnDemand;
+			constexpr ServiceStartMode startMode = ServiceStartMode::OnDemand;
 
 			if (m_DriverService.IsValid())
 			{
-				if (m_DriverService.Reconfigure(m_ServiceManager, startMode, binaryPath))
+				if (m_DriverService.SetConfig(m_ServiceManager, binaryPath, ServiceType::FileSystemDriver, startMode, ServiceErrorControl::Ignore))
 				{
 					m_DriverService.SetDescription(description);
 					return true;
@@ -198,6 +263,22 @@ namespace KxVFS
 	bool FileSystemService::Uninstall()
 	{
 		return m_DriverService.Delete();
+	}
+
+	bool FileSystemService::UseDefaultDokanyInstallation()
+	{
+		KxDynamicStringW binaryPath = GetDokanyDefaultDriverPath();
+		if (Wow64RedirectionDisabler disable; Utility::IsFileExist(binaryPath))
+		{
+			m_ServiceName = GetDokanyDefaultServiceName();
+			return InitDriver();
+		}
+		return false;
+	}
+	bool FileSystemService::IsUsingDefaultDokanyInstallation() const
+	{
+		auto config = m_DriverService.GetConfig();
+		return config && config->DisplayName == GetDokanyDefaultServiceName();
 	}
 
 	void FileSystemService::AddActiveFS(IFileSystem& fileSystem)

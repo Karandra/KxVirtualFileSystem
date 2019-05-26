@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -22,8 +22,12 @@ namespace KxVFS
 			static KxDynamicStringW GetLibraryVersion();
 			static KxDynamicStringW GetDokanyVersion();
 
+			static KxDynamicStringW GetDokanyDefaultServiceName();
+			static KxDynamicStringW GetDokanyDefaultDriverPath();
+			static bool IsDokanyDefaultInstallPresent();
+
 		public:
-			typedef std::list<IFileSystem*> TActiveFileSystems;
+			using TActiveFileSystems = std::list<IFileSystem*>;
 
 		private:
 			TActiveFileSystems m_ActiveFileSystems;
@@ -31,17 +35,25 @@ namespace KxVFS
 			KxDynamicStringW m_ServiceName;
 			ServiceManager m_ServiceManager;
 			ServiceHandle m_DriverService;
-			bool m_HasSeSecurityNamePrivilege = false;
+			const bool m_HasSeSecurityNamePrivilege = false;
+			bool m_IsFSInitialized = false;
 
 		private:
 			bool AddSeSecurityNamePrivilege();
+			bool InitDriver();
 
 		public:
-			FileSystemService(KxDynamicStringRefW serviceName);
+			FileSystemService(KxDynamicStringRefW serviceName = {});
 			virtual ~FileSystemService();
 
 		public:
 			bool IsOK() const;
+			const ServiceHandle& GetDriverService() const
+			{
+				return m_DriverService;
+			}
+			bool InitService(KxDynamicStringRefW name);
+			
 			KxDynamicStringRefW GetServiceName() const;
 			bool IsInstalled() const;
 			bool IsStarted() const;
@@ -54,6 +66,9 @@ namespace KxVFS
 			bool Stop();
 			bool Install(KxDynamicStringRefW binaryPath, KxDynamicStringRefW displayName = {}, KxDynamicStringRefW description = {});
 			bool Uninstall();
+			
+			bool IsUsingDefaultDokanyInstallation() const;
+			bool UseDefaultDokanyInstallation();
 
 			TActiveFileSystems& GetActiveFileSystems()
 			{
