@@ -62,11 +62,11 @@ namespace KxVFS
 				return m_Value;
 			}
 
-			TValue* operator->() const noexcept
+			pointer operator->() const noexcept
 			{
 				return m_Value;
 			}
-			TValue& operator*() const
+			pointer& operator*() const
 			{
 				return *m_Value;
 			}

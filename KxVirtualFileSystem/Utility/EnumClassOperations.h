@@ -69,15 +69,16 @@ namespace KxVFS
 		return static_cast<Tint>(value) != 0;
 	}
 
-	template<class Tint, class TEnum>
-	constexpr std::enable_if_t<Internal::IntCastAllowed<TEnum>, Tint> ToInt(TEnum value)
+	template<class TInt, class TEnum>
+	constexpr std::enable_if_t<Internal::IntCastAllowed<TEnum>, TInt> ToInt(TEnum value)
 	{
-		return static_cast<Tint>(value);
+		return static_cast<TInt>(value);
 	}
-	template<class TEnum, class Tint = std::underlying_type_t<TEnum>>
-	constexpr std::enable_if_t<Internal::IntCastAllowed<TEnum>, Tint> ToInt(TEnum value)
+
+	template<class TEnum, class TInt = std::underlying_type_t<TEnum>>
+	constexpr std::enable_if_t<Internal::IntCastAllowed<TEnum>, TInt> ToInt(TEnum value)
 	{
-		return static_cast<Tint>(value);
+		return static_cast<TInt>(value);
 	}
 
 	template<class TEnum, class TInt>
