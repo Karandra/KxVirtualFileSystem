@@ -55,6 +55,7 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\SRWLock.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\TokenHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\WinKernelConstants.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\Wow64RedirectionDisabler.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h" />
     <ClInclude Include="KxVirtualFileSystem\FileSystemService.h" />

@@ -189,6 +189,9 @@
     <ClInclude Include="KxVirtualFileSystem\Common\AsyncIOContext.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\Wow64RedirectionDisabler.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
