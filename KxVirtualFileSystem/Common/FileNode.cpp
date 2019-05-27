@@ -207,7 +207,7 @@ namespace KxVFS
 	FileNode& FileNode::AddChild(std::unique_ptr<FileNode> node)
 	{
 		KxDynamicStringW name = node->GetName();
-		auto[it, inserted] = m_Children.insert_or_assign(name, std::move(node));
+		auto[it, inserted] = m_Children.insert_or_assign(std::move(name), std::move(node));
 		return *it->second;
 	}
 
