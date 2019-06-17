@@ -12,17 +12,21 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 namespace KxVFS
 {
 	class KxVFS_API KxFileFinder;
+}
 
-	class KxVFS_API KxFileItem
+namespace KxVFS
+{
+	class KxVFS_API KxFileItemBase
 	{
-		friend class KxFileFinder;
-
 		public:
 			using TShortName = KxBasicDynamicString<wchar_t, ARRAYSIZE(WIN32_FIND_DATAW::cAlternateFileName)>;
 
-		private:
+		public:
+			void ExtractSourceAndName(KxDynamicStringRefW fullPath, KxDynamicStringW& source, KxDynamicStringW& name);
+			static KxFileItemBase FromPath(KxDynamicStringRefW fullPath);
+
+		protected:
 			KxDynamicStringW m_Name;
-			KxDynamicStringW m_Source;
 			TShortName m_ShortName;
 			FileAttributes m_Attributes = FileAttributes::Invalid;
 			ReparsePointTags m_ReparsePointTags = ReparsePointTags::None;
@@ -31,32 +35,28 @@ namespace KxVFS
 			FILETIME m_ModificationTime = {};
 			int64_t m_FileSize = -1;
 
-		private:
-			void MakeNull(bool attribuesOnly = false);
+		protected:
 			FILETIME FileTimeFromLARGE_INTEGER(const LARGE_INTEGER& value) const
 			{
 				return *reinterpret_cast<const FILETIME*>(&value);
 			}
-			bool DoUpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName = false);
 			KxDynamicStringRefW TrimNamespace(KxDynamicStringRefW path) const;
 
 		public:
-			KxFileItem() = default;
-			KxFileItem(KxDynamicStringRefW fullPath);
-			KxFileItem(KxDynamicStringRefW source, KxDynamicStringRefW fileName);
-
-		private:
-			KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& fileInfo);
+			KxFileItemBase() = default;
+			KxFileItemBase(KxDynamicStringRefW fileName)
+				:m_Name(fileName)
+			{
+			}
+			virtual ~KxFileItemBase() = default;
 
 		public:
 			bool IsOK() const
 			{
 				return m_Attributes != FileAttributes::Invalid;
 			}
-			bool UpdateInfo(bool queryShortName = false)
-			{
-				return DoUpdateInfo(GetFullPath(), queryShortName);
-			}
+			virtual void MakeNull(bool attribuesOnly = false);
+			bool UpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName = false);
 
 			bool IsNormalItem() const
 			{
@@ -72,8 +72,7 @@ namespace KxVFS
 			{
 				return m_Attributes & FileAttributes::Directory;
 			}
-			bool IsDirectoryEmpty() const;
-			KxFileItem& SetDirectory()
+			KxFileItemBase& SetDirectory()
 			{
 				Utility::ModFlagRef(m_Attributes, FileAttributes::Directory, true);
 				return *this;
@@ -83,7 +82,7 @@ namespace KxVFS
 			{
 				return !IsDirectory();
 			}
-			KxFileItem& SetFile()
+			KxFileItemBase& SetFile()
 			{
 				Utility::ModFlagRef(m_Attributes, FileAttributes::Directory, false);
 				return *this;
@@ -93,7 +92,7 @@ namespace KxVFS
 			{
 				return m_Attributes & FileAttributes::ReadOnly;
 			}
-			KxFileItem& SetReadOnly(bool value = true)
+			KxFileItemBase& SetReadOnly(bool value = true)
 			{
 				Utility::ModFlagRef(m_Attributes, FileAttributes::ReadOnly, value);
 				return *this;
@@ -175,15 +174,6 @@ namespace KxVFS
 				}
 			}
 
-			KxDynamicStringRefW GetSource() const
-			{
-				return m_Source;
-			}
-			void SetSource(KxDynamicStringRefW source)
-			{
-				m_Source = TrimNamespace(source);
-			}
-			
 			KxDynamicStringRefW GetName() const
 			{
 				return m_Name;
@@ -205,27 +195,6 @@ namespace KxVFS
 			KxDynamicStringW GetFileExtension() const;
 			void SetFileExtension(KxDynamicStringRefW ext);
 
-			KxDynamicStringW GetFullPath() const
-			{
-				KxDynamicStringW fullPath = m_Source;
-				fullPath += L'\\';
-				fullPath += m_Name;
-				return fullPath;
-			}
-			KxDynamicStringW GetFullPathWithNS() const
-			{
-				KxDynamicStringW fullPath = Utility::GetLongPathPrefix();
-				fullPath += m_Source;
-				fullPath += L'\\';
-				fullPath += m_Name;
-				return fullPath;
-			}
-			void SetFullPath(KxDynamicStringRefW fullPath)
-			{
-				KxDynamicStringW source = KxDynamicStringW(fullPath).before_last(L'\\', &m_Name);
-				m_Source = TrimNamespace(source);
-			}
-			
 		public:
 			void FromWIN32_FIND_DATA(const WIN32_FIND_DATAW& findInfo);
 			void ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const;
@@ -247,3 +216,82 @@ namespace KxVFS
 			void FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& basicInfo);
 	};
 }
+
+namespace KxVFS
+{
+	class KxVFS_API KxFileItem: public KxFileItemBase
+	{
+		friend class KxFileFinder;
+
+		private:
+			KxDynamicStringW m_Source;
+
+		public:
+			KxFileItem() = default;
+			KxFileItem(KxDynamicStringRefW fullPath)
+			{
+				SetFullPath(fullPath);
+				KxFileItemBase::UpdateInfo(fullPath);
+			}
+			KxFileItem(KxDynamicStringRefW source, KxDynamicStringRefW fileName)
+				:KxFileItemBase(fileName), m_Source(TrimNamespace(source))
+			{
+				UpdateInfo();
+			}
+			
+		protected:
+			KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& fileInfo);
+
+		public:
+			KxFileItem& SetFile()
+			{
+				KxFileItemBase::SetFile();
+				return *this;
+			}
+			KxFileItem& SetDirectory()
+			{
+				KxFileItemBase::SetDirectory();
+				return *this;
+			}
+			KxFileItem& SetReadOnly(bool value = true)
+			{
+				KxFileItemBase::SetReadOnly(value);
+				return *this;
+			}
+
+		public:
+			void MakeNull(bool attribuesOnly) override;
+			bool UpdateInfo(bool queryShortName = false);
+			bool IsDirectoryEmpty() const;
+
+			KxDynamicStringRefW GetSource() const
+			{
+				return m_Source;
+			}
+			void SetSource(KxDynamicStringRefW source)
+			{
+				m_Source = TrimNamespace(source);
+			}
+
+			KxDynamicStringW GetFullPath() const
+			{
+				KxDynamicStringW fullPath = m_Source;
+				fullPath += L'\\';
+				fullPath += m_Name;
+				return fullPath;
+			}
+			KxDynamicStringW GetFullPathWithNS() const
+			{
+				KxDynamicStringW fullPath = Utility::GetLongPathPrefix();
+				fullPath += m_Source;
+				fullPath += L'\\';
+				fullPath += m_Name;
+				return fullPath;
+			}
+			void SetFullPath(KxDynamicStringRefW fullPath)
+			{
+				ExtractSourceAndName(fullPath, m_Source, m_Name);
+			}
+	};
+}
+ 

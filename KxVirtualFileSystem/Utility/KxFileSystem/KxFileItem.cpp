@@ -19,11 +19,56 @@ namespace
 	{
 		memcpy(destination, source, length * sizeof(T));
 	}
+
+	template<class TItem> bool DoUpdateInfo(TItem& fileItem, KxVFS::KxDynamicStringRefW fullPath, bool queryShortName)
+	{
+		using namespace KxVFS;
+
+		KxFileFinder finder(fullPath);
+		finder.QueryShortNames(queryShortName);
+
+		KxFileItem item = finder.FindNext();
+		if (item.IsOK())
+		{
+			fileItem = std::move(item);
+			return true;
+		}
+		else
+		{
+			fileItem.MakeNull(true);
+			return false;
+		}
+	}
 }
 
 namespace KxVFS
 {
-	void KxFileItem::MakeNull(bool attribuesOnly)
+	void KxFileItemBase::ExtractSourceAndName(KxDynamicStringRefW fullPath, KxDynamicStringW& source, KxDynamicStringW& name)
+	{
+		source = KxDynamicStringW(fullPath).before_last(L'\\', &name);
+		source = TrimNamespace(source);
+	}
+	KxFileItemBase KxFileItemBase::FromPath(KxDynamicStringRefW fullPath)
+	{
+		KxFileItem item(fullPath);
+		return item;
+	}
+
+	KxDynamicStringRefW KxFileItemBase::TrimNamespace(KxDynamicStringRefW path) const
+	{
+		const size_t prefixLength = Utility::GetLongPathPrefix().size();
+		if (path.substr(0, prefixLength) == Utility::GetLongPathPrefix())
+		{
+			path.remove_prefix(prefixLength);
+		}
+		return path;
+	}
+
+	bool KxFileItemBase::IsCurrentOrParent() const
+	{
+		return m_Name == L".." || m_Name == L".";
+	}
+	void KxFileItemBase::MakeNull(bool attribuesOnly)
 	{
 		if (attribuesOnly)
 		{
@@ -36,62 +81,15 @@ namespace KxVFS
 		}
 		else
 		{
-			*this = KxFileItem();
+			*this = KxFileItemBase();
 		}
 	}
-	bool KxFileItem::DoUpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName)
+	bool KxFileItemBase::UpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName)
 	{
-		KxFileFinder finder(fullPath);
-		finder.QueryShortNames(queryShortName);
-
-		KxFileItem item = finder.FindNext();
-		if (item.IsOK())
-		{
-			*this = std::move(item);
-			return true;
-		}
-		else
-		{
-			MakeNull(true);
-			return false;
-		}
-	}
-	KxDynamicStringRefW KxFileItem::TrimNamespace(KxDynamicStringRefW path) const
-	{
-		const size_t prefixLength = Utility::GetLongPathPrefix().size();
-		if (path.substr(0, prefixLength) == Utility::GetLongPathPrefix())
-		{
-			path.remove_prefix(prefixLength);
-		}
-		return path;
+		return DoUpdateInfo(*this, fullPath, queryShortName);
 	}
 
-	KxFileItem::KxFileItem(KxDynamicStringRefW fullPath)
-	{
-		SetFullPath(fullPath);
-		DoUpdateInfo(fullPath);
-	}
-	KxFileItem::KxFileItem(KxDynamicStringRefW source, KxDynamicStringRefW fileName)
-		:m_Source(TrimNamespace(source)), m_Name(fileName)
-	{
-		UpdateInfo();
-	}
-	KxFileItem::KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& fileInfo)
-		:m_Source(TrimNamespace(finder.GetSource()))
-	{
-		FromWIN32_FIND_DATA(fileInfo);
-	}
-
-	bool KxFileItem::IsCurrentOrParent() const
-	{
-		return m_Name == L".." || m_Name == L".";
-	}
-	bool KxFileItem::IsDirectoryEmpty() const
-	{
-		return IsDirectory() && KxFileFinder::IsDirectoryEmpty(m_Source);
-	}
-
-	KxDynamicStringW KxFileItem::GetFileExtension() const
+	KxDynamicStringW KxFileItemBase::GetFileExtension() const
 	{
 		if (IsFile())
 		{
@@ -103,7 +101,7 @@ namespace KxVFS
 		}
 		return KxDynamicStringW();
 	}
-	void KxFileItem::SetFileExtension(KxDynamicStringRefW ext)
+	void KxFileItemBase::SetFileExtension(KxDynamicStringRefW ext)
 	{
 		if (IsFile())
 		{
@@ -125,7 +123,7 @@ namespace KxVFS
 		}
 	}
 
-	void KxFileItem::FromWIN32_FIND_DATA(const WIN32_FIND_DATAW& findInfo)
+	void KxFileItemBase::FromWIN32_FIND_DATA(const WIN32_FIND_DATAW& findInfo)
 	{
 		m_Attributes = FromInt<FileAttributes>(findInfo.dwFileAttributes);
 		if (IsReparsePoint())
@@ -145,7 +143,7 @@ namespace KxVFS
 		m_LastAccessTime = findInfo.ftLastAccessTime;
 		m_ModificationTime = findInfo.ftLastWriteTime;
 	}
-	void KxFileItem::ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const
+	void KxFileItemBase::ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const
 	{
 		// File name
 		static_assert(decltype(m_Name)::static_size == ARRAYSIZE(WIN32_FIND_DATAW::cFileName));
@@ -167,7 +165,7 @@ namespace KxVFS
 		Utility::Int64ToHighLow(IsFile() ? m_FileSize : 0, findData.nFileSizeHigh, findData.nFileSizeLow);
 	}
 
-	void KxFileItem::ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& fileInfo) const
+	void KxFileItemBase::ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& fileInfo) const
 	{
 		fileInfo.dwFileAttributes = ToInt(m_Attributes);
 		fileInfo.ftCreationTime = m_CreationTime;
@@ -184,7 +182,7 @@ namespace KxVFS
 			fileInfo.nFileSizeHigh = 0;
 		}
 	}
-	void KxFileItem::FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& fileInfo)
+	void KxFileItemBase::FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& fileInfo)
 	{
 		m_Attributes = FromInt<FileAttributes>(fileInfo.dwFileAttributes);
 		m_ReparsePointTags = ReparsePointTags::None;
@@ -201,12 +199,39 @@ namespace KxVFS
 			m_FileSize = 0;
 		}
 	}
-	void KxFileItem::FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& fileInfo)
+	void KxFileItemBase::FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& fileInfo)
 	{
 		m_Attributes = FromInt<FileAttributes>(fileInfo.FileAttributes);
 		m_ReparsePointTags = ReparsePointTags::None;
 		m_CreationTime = FileTimeFromLARGE_INTEGER(fileInfo.CreationTime);
 		m_LastAccessTime = FileTimeFromLARGE_INTEGER(fileInfo.LastAccessTime);
 		m_ModificationTime = FileTimeFromLARGE_INTEGER(fileInfo.LastWriteTime);
+	}
+}
+
+namespace KxVFS
+{
+	KxFileItem::KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& fileInfo)
+		:m_Source(TrimNamespace(finder.GetSource()))
+	{
+		FromWIN32_FIND_DATA(fileInfo);
+	}
+
+	void KxFileItem::MakeNull(bool attribuesOnly)
+	{
+		KxFileItemBase::MakeNull(attribuesOnly);
+		if (!attribuesOnly)
+		{
+			m_Source.clear();
+		}
+	}
+	bool KxFileItem::UpdateInfo(bool queryShortName)
+	{
+		KxDynamicStringW fullPath = GetFullPath();
+		return DoUpdateInfo(*this, fullPath, queryShortName);
+	}
+	bool KxFileItem::IsDirectoryEmpty() const
+	{
+		return IsDirectory() && KxFileFinder::IsDirectoryEmpty(m_Source);
 	}
 }
