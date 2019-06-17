@@ -15,6 +15,9 @@ class KxBasicDynamicStringStore
 		using TChar = typename t_Char;
 		using TStringView = typename std::basic_string_view<TChar, std::char_traits<TChar>>;
 
+	public:
+		static constexpr size_t static_size = t_StaticStorageLength;
+
 	private:
 		std::array<TChar, t_StaticStorageLength> m_Buffer;
 		size_t m_Size = 0;
@@ -177,7 +180,8 @@ class KxBasicDynamicString
 		using TStaticStorage = KxBasicDynamicStringStore<value_type, t_StaticStorageLength>;
 
 		// Constants
-		static const constexpr size_t npos = TString::npos;
+		static constexpr size_t npos = TString::npos;
+		static constexpr size_t static_size = t_StaticStorageLength;
 
 	private:
 		std::variant<TStaticStorage, TString> m_Storage;
@@ -337,7 +341,7 @@ class KxBasicDynamicString
 
 		constexpr size_t max_size_static() const noexcept
 		{
-			return t_StaticStorageLength;
+			return static_size;
 		}
 		constexpr size_t max_size_dynamic() const noexcept
 		{
