@@ -83,9 +83,14 @@ namespace KxVFS
 		{
 			*this = KxFileItemBase();
 		}
+		OnChange();
 	}
 	bool KxFileItemBase::UpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName)
 	{
+		KxCallAtScopeExit atExit([this]()
+		{
+			OnChange();
+		});
 		return DoUpdateInfo(*this, fullPath, queryShortName);
 	}
 
@@ -120,6 +125,7 @@ namespace KxVFS
 				m_Name += L'.';
 				m_Name += ext;
 			}
+			OnChange();
 		}
 	}
 
@@ -227,6 +233,11 @@ namespace KxVFS
 	}
 	bool KxFileItem::UpdateInfo(bool queryShortName)
 	{
+		KxCallAtScopeExit atExit([this]()
+		{
+			OnChange();
+		});
+
 		KxDynamicStringW fullPath = GetFullPath();
 		return DoUpdateInfo(*this, fullPath, queryShortName);
 	}

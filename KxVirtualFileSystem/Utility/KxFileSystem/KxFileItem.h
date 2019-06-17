@@ -42,6 +42,8 @@ namespace KxVFS
 			}
 			KxDynamicStringRefW TrimNamespace(KxDynamicStringRefW path) const;
 
+			virtual void OnChange() { }
+
 		public:
 			KxFileItemBase() = default;
 			KxFileItemBase(KxDynamicStringRefW fileName)
@@ -75,6 +77,7 @@ namespace KxVFS
 			KxFileItemBase& SetDirectory()
 			{
 				Utility::ModFlagRef(m_Attributes, FileAttributes::Directory, true);
+				OnChange();
 				return *this;
 			}
 
@@ -85,6 +88,7 @@ namespace KxVFS
 			KxFileItemBase& SetFile()
 			{
 				Utility::ModFlagRef(m_Attributes, FileAttributes::Directory, false);
+				OnChange();
 				return *this;
 			}
 
@@ -95,6 +99,7 @@ namespace KxVFS
 			KxFileItemBase& SetReadOnly(bool value = true)
 			{
 				Utility::ModFlagRef(m_Attributes, FileAttributes::ReadOnly, value);
+				OnChange();
 				return *this;
 			}
 
@@ -105,10 +110,12 @@ namespace KxVFS
 			void SetAttributes(FileAttributes attributes)
 			{
 				m_Attributes = attributes;
+				OnChange();
 			}
 			void SetNormalAttributes()
 			{
 				m_Attributes = FileAttributes::Normal;
+				OnChange();
 			}
 			
 			ReparsePointTags GetReparsePointTags() const
@@ -120,6 +127,7 @@ namespace KxVFS
 				if (IsReparsePoint())
 				{
 					m_ReparsePointTags = tags;
+					OnChange();
 				}
 			}
 
@@ -130,10 +138,12 @@ namespace KxVFS
 			void SetCreationTime(const FILETIME& value)
 			{
 				m_CreationTime = value;
+				OnChange();
 			}
 			void SetCreationTime(const LARGE_INTEGER& value)
 			{
 				m_CreationTime = FileTimeFromLARGE_INTEGER(value);
+				OnChange();
 			}
 			
 			FILETIME GetLastAccessTime() const
@@ -143,10 +153,12 @@ namespace KxVFS
 			void SetLastAccessTime(const FILETIME& value)
 			{
 				m_LastAccessTime = value;
+				OnChange();
 			}
 			void SetLastAccessTime(const LARGE_INTEGER& value)
 			{
 				m_LastAccessTime = FileTimeFromLARGE_INTEGER(value);
+				OnChange();
 			}
 
 			FILETIME GetModificationTime() const
@@ -156,10 +168,12 @@ namespace KxVFS
 			void SetModificationTime(const FILETIME& value)
 			{
 				m_ModificationTime = value;
+				OnChange();
 			}
 			void SetModificationTime(const LARGE_INTEGER& value)
 			{
 				m_ModificationTime = FileTimeFromLARGE_INTEGER(value);
+				OnChange();
 			}
 
 			int64_t GetFileSize() const
@@ -171,6 +185,7 @@ namespace KxVFS
 				if (IsFile())
 				{
 					m_FileSize = size;
+					OnChange();
 				}
 			}
 
@@ -181,6 +196,7 @@ namespace KxVFS
 			void SetName(KxDynamicStringRefW name)
 			{
 				m_Name = name;
+				OnChange();
 			}
 			
 			KxDynamicStringRefW GetShortName() const
@@ -190,6 +206,7 @@ namespace KxVFS
 			void SetShortName(KxDynamicStringRefW name)
 			{
 				m_ShortName = name;
+				OnChange();
 			}
 
 			KxDynamicStringW GetFileExtension() const;
@@ -271,6 +288,7 @@ namespace KxVFS
 			void SetSource(KxDynamicStringRefW source)
 			{
 				m_Source = TrimNamespace(source);
+				OnChange();
 			}
 
 			KxDynamicStringW GetFullPath() const
@@ -291,6 +309,7 @@ namespace KxVFS
 			void SetFullPath(KxDynamicStringRefW fullPath)
 			{
 				ExtractSourceAndName(fullPath, m_Source, m_Name);
+				OnChange();
 			}
 	};
 }
