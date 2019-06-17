@@ -44,7 +44,7 @@ namespace KxVFS
 			};
 
 			FileNode* finalNode = nullptr;
-			Utility::String::SplitBySeparator(relativePath, L"\\", [&ScanChildren, &StripQuotes, &finalNode, &rootNode](KxDynamicStringRefW folderName)
+			Utility::String::SplitBySeparator(relativePath, L'\\', [&ScanChildren, &StripQuotes, &finalNode, &rootNode](KxDynamicStringRefW folderName)
 			{
 				finalNode = ScanChildren(finalNode ? *finalNode : rootNode, StripQuotes(folderName));
 				return finalNode != nullptr;

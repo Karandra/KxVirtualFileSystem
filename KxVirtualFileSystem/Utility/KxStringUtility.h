@@ -25,6 +25,40 @@ namespace KxVFS::Utility::String
 		return Concat(std::forward<Args>(arg)...);
 	}
 
+	template<class TFunctor> void SplitBySeparator(KxDynamicStringRefW string, wchar_t sep, TFunctor&& func)
+	{
+		if (string.empty())
+		{
+			func(string);
+			return;
+		}
+
+		size_t separatorPos = string.find(sep);
+		if (separatorPos == KxDynamicStringRefW::npos)
+		{
+			func(string);
+			return;
+		}
+
+		size_t pos = 0;
+		while (pos < string.length() && separatorPos <= string.length())
+		{
+			const KxDynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
+			if (!stringPiece.empty() && !func(stringPiece))
+			{
+				return;
+			}
+
+			pos += stringPiece.length() + 1;
+			separatorPos = string.find(sep, pos);
+
+			// No separator found, but this is not the last element
+			if (separatorPos == KxDynamicStringRefW::npos && pos < string.length())
+			{
+				separatorPos = string.length();
+			}
+		}
+	}
 	template<class TFunctor> void SplitBySeparator(KxDynamicStringRefW string, KxDynamicStringRefW sep, TFunctor&& func)
 	{
 		if (string.empty() || sep.empty())
@@ -33,13 +67,14 @@ namespace KxVFS::Utility::String
 			return;
 		}
 
-		size_t pos = 0;
 		size_t separatorPos = string.find(sep);
 		if (separatorPos == KxDynamicStringRefW::npos)
 		{
-			separatorPos = string.length();
+			func(string);
+			return;
 		}
 
+		size_t pos = 0;
 		while (pos < string.length() && separatorPos <= string.length())
 		{
 			const KxDynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
