@@ -72,6 +72,21 @@ namespace KxVFS
 		return Utility::Comparator::StringHashNoCase()(name);
 	}
 
+	void FileNode::UpdatePaths()
+	{
+		if (!m_VirtualDirectory.empty())
+		{
+			m_Source = ConstructPath(PathParts::BaseDirectory|PathParts::RelativePath);
+			m_FullPath = ConstructPath(PathParts::BaseDirectory|PathParts::RelativePath|PathParts::Name);
+			m_RelativePath = ConstructPath(PathParts::RelativePath|PathParts::Name);
+		}
+		else
+		{
+			m_Source.clear();
+			m_FullPath.clear();
+			m_RelativePath.clear();
+		}
+	}
 	bool FileNode::RenameThisNode(KxDynamicStringRefW newName)
 	{
 		// Rename this node in parent's children
@@ -128,6 +143,7 @@ namespace KxVFS
 	void FileNode::UpdateFileTree(KxDynamicStringRefW searchPath, bool queryShortNames)
 	{
 		m_VirtualDirectory = searchPath;
+		UpdatePaths();
 		ClearChildren();
 
 		auto BuildTreeBranch = [this, queryShortNames](FileNode::RefVector& directories, KxDynamicStringRefW path, FileNode& treeNode, FileNode* parentNode)
@@ -169,12 +185,15 @@ namespace KxVFS
 		ClearChildren();
 		m_Item = {};
 		m_VirtualDirectory = {};
+		m_Source.clear();
+		m_FullPath.clear();
+		m_RelativePath.clear();
 		m_Parent = nullptr;
 	}
 
 	const FileNode* FileNode::WalkTree(const TreeWalker& func) const
 	{
-		std::function<const FileNode*(const FileNode::Map&)> Recurse;
+		std::function<const FileNode* (const FileNode::Map&)> Recurse;
 		Recurse = [&Recurse, &func](const FileNode::Map& children) -> const FileNode*
 		{
 			for (const auto& [name, node]: children)
@@ -207,7 +226,7 @@ namespace KxVFS
 	FileNode& FileNode::AddChild(std::unique_ptr<FileNode> node)
 	{
 		KxDynamicStringW name = node->GetName();
-		auto[it, inserted] = m_Children.insert_or_assign(std::move(name), std::move(node));
+		auto [it, inserted] = m_Children.insert_or_assign(std::move(name), std::move(node));
 		return *it->second;
 	}
 

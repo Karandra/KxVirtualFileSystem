@@ -91,7 +91,10 @@ namespace KxVFS
 
 		private:
 			Map m_Children;
-			KxFileItem m_Item;
+			KxFileItemBase m_Item;
+			KxDynamicStringW m_Source;
+			KxDynamicStringW m_FullPath;
+			KxDynamicStringW m_RelativePath;
 			KxDynamicStringRefW m_VirtualDirectory;
 			FileNode* m_Parent = nullptr;
 			SRWLock m_Lock;
@@ -103,11 +106,13 @@ namespace KxVFS
 				{
 					m_VirtualDirectory = m_Parent->m_VirtualDirectory;
 				}
+				UpdatePaths();
 			}
 			void SetParent(FileNode* parent)
 			{
 				m_Parent = parent;
 			}
+			void UpdatePaths();
 			bool RenameThisNode(KxDynamicStringRefW newName);
 
 			SRWLock& GetLock()
@@ -118,13 +123,18 @@ namespace KxVFS
 
 		public:
 			FileNode() = default;
-			FileNode(const KxFileItem& item, FileNode* parent = nullptr)
+			FileNode(const KxFileItemBase& item, FileNode* parent = nullptr)
 				:m_Item(item), m_Parent(parent)
 			{
 				Init(parent);
 			}
-			FileNode(KxFileItem&& item, FileNode* parent = nullptr)
+			FileNode(KxFileItemBase&& item, FileNode* parent = nullptr)
 				:m_Item(std::move(item)), m_Parent(parent)
+			{
+				Init(parent);
+			}
+			FileNode(KxDynamicStringRefW fullPath, FileNode* parent = nullptr)
+				:m_Item(KxFileItemBase::FromPath(fullPath)), m_Parent(parent)
 			{
 				Init(parent);
 			}
@@ -138,6 +148,7 @@ namespace KxVFS
 			void CopyBasicAttributes(const FileNode& other)
 			{
 				m_VirtualDirectory = other.m_VirtualDirectory;
+				UpdatePaths();
 			}
 			void UpdateFileTree(KxDynamicStringRefW searchPath, bool queryShortNames = false);
 			void MakeNull();
@@ -260,6 +271,7 @@ namespace KxVFS
 				if (!HasParent() || RenameThisNode(name))
 				{
 					m_Item.SetName(name);
+					UpdatePaths();
 					return true;
 				}
 				return false;
@@ -269,29 +281,33 @@ namespace KxVFS
 				return m_Item.GetFileExtension();
 			}
 
-			KxDynamicStringW GetSource() const
+			KxDynamicStringRefW GetSource() const
 			{
-				return ConstructPath(PathParts::BaseDirectory|PathParts::RelativePath);
+				return m_Source;
 			}
 			KxDynamicStringW GetSourceWithNS() const
 			{
-				return ConstructPath(PathParts::Namespace|PathParts::BaseDirectory|PathParts::RelativePath);
+				KxDynamicStringW path = Utility::GetLongPathPrefix();
+				path += m_Source;
+				return path;
 			}
 
-			KxDynamicStringW GetFullPath() const
+			KxDynamicStringRefW GetFullPath() const
 			{
-				return ConstructPath(PathParts::BaseDirectory|PathParts::RelativePath|PathParts::Name);
+				return m_FullPath;
 			}
 			KxDynamicStringW GetFullPathWithNS() const
 			{
-				return ConstructPath(PathParts::Namespace|PathParts::BaseDirectory|PathParts::RelativePath|PathParts::Name);
+				KxDynamicStringW path = Utility::GetLongPathPrefix();
+				path += m_FullPath;
+				return path;
 			}
 			
-			KxDynamicStringW GetRelativePath() const
+			KxDynamicStringRefW GetRelativePath() const
 			{
 				if (!m_VirtualDirectory.empty())
 				{
-					return ConstructPath(PathParts::RelativePath|PathParts::Name);
+					return m_RelativePath;
 				}
 				return {};
 			}
@@ -302,31 +318,31 @@ namespace KxVFS
 			void SetVirtualDirectory(KxDynamicStringRefW path)
 			{
 				m_VirtualDirectory = path;
+				UpdatePaths();
 			}
 
-			const KxFileItem& GetItem() const
+			const KxFileItemBase& GetItem() const
 			{
 				return m_Item;
 			}
-			const KxFileItem& CopyItem(const FileNode& other)
+			const KxFileItemBase& CopyItem(const FileNode& other)
 			{
 				m_Item = other.m_Item;
 				return m_Item;
 			}
-			const KxFileItem& TakeItem(FileNode&& other)
+			const KxFileItemBase& TakeItem(FileNode&& other)
 			{
 				m_Item = std::move(other.m_Item);
 				return m_Item;
 			}
-			const KxFileItem& UpdateItemInfo(bool queryShortName = false)
+			const KxFileItemBase& UpdateItemInfo(bool queryShortName = false)
 			{
-				m_Item.UpdateInfo(queryShortName);
+				m_Item.UpdateInfo(m_FullPath, queryShortName);
 				return m_Item;
 			}
-			const KxFileItem& UpdateItemInfo(KxDynamicStringRefW fullPath, bool queryShortName = false)
+			const KxFileItemBase& UpdateItemInfo(KxDynamicStringRefW fullPath, bool queryShortName = false)
 			{
-				m_Item.SetFullPath(fullPath);
-				m_Item.UpdateInfo(queryShortName);
+				m_Item.UpdateInfo(fullPath, queryShortName);
 				return m_Item;
 			}
 
