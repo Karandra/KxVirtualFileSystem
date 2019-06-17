@@ -51,7 +51,6 @@ namespace KxVFS
 			bool IsRequestingSACLInfo(const PSECURITY_INFORMATION securityInformation) const;
 			void ProcessSESecurityPrivilege(PSECURITY_INFORMATION securityInformation) const;
 
-			
 			bool CheckAttributesToOverwriteFile(FileAttributes fileAttributes, FileAttributes requestAttributes, CreationDisposition creationDisposition) const;
 			bool IsDirectory(ULONG kernelCreateOptions) const;
 

@@ -25,6 +25,7 @@
     <ClInclude Include="KxVirtualFileSystem\Common\CallerUserImpersonation.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\ExtendedSecurity.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\FileContextManager.h" />
+    <ClInclude Include="KxVirtualFileSystem\Common\FileItem.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\FileNode.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\FileContext.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\FileContextEventInfo.h" />

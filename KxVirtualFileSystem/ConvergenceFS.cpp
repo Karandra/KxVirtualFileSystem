@@ -797,8 +797,7 @@ namespace KxVFS
 				auto lock = fileNode->LockShared();
 				fileNode->WalkChildren([&eventInfo](const FileNode& node)
 				{
-					WIN32_FIND_DATAW findData = node.GetItem().ToWIN32_FIND_DATA();
-					return eventInfo.FillFindData(&eventInfo, &findData) == 0;
+					return OnFileFound(eventInfo, node.GetItem().AsWIN32_FIND_DATA());
 				});
 				return STATUS_SUCCESS;
 			}

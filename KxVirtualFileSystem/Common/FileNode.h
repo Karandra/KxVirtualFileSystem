@@ -8,6 +8,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 #include "KxVirtualFileSystem/Utility.h"
+#include "FileItem.h"
 #include "BranchLocker.h"
 
 namespace KxVFS
@@ -32,6 +33,7 @@ namespace KxVFS
 
 		public:
 			using Map = Utility::Comparator::MapNoCase<std::unique_ptr<FileNode>>;
+			using FileItem = FileItemWith_WIN32_FIND_DATA;
 			using RefVector = std::vector<FileNode*>;
 			using CRefVector = std::vector<const FileNode*>;
 
@@ -91,7 +93,7 @@ namespace KxVFS
 
 		private:
 			Map m_Children;
-			KxFileItemBase m_Item;
+			FileItem m_Item;
 			KxDynamicStringW m_Source;
 			KxDynamicStringW m_FullPath;
 			KxDynamicStringW m_RelativePath;
@@ -321,26 +323,26 @@ namespace KxVFS
 				UpdatePaths();
 			}
 
-			const KxFileItemBase& GetItem() const
+			const FileItem& GetItem() const
 			{
 				return m_Item;
 			}
-			const KxFileItemBase& CopyItem(const FileNode& other)
+			const FileItem& CopyItem(const FileNode& other)
 			{
 				m_Item = other.m_Item;
 				return m_Item;
 			}
-			const KxFileItemBase& TakeItem(FileNode&& other)
+			const FileItem& TakeItem(FileNode&& other)
 			{
 				m_Item = std::move(other.m_Item);
 				return m_Item;
 			}
-			const KxFileItemBase& UpdateItemInfo(bool queryShortName = false)
+			const FileItem& UpdateItemInfo(bool queryShortName = false)
 			{
 				m_Item.UpdateInfo(m_FullPath, queryShortName);
 				return m_Item;
 			}
-			const KxFileItemBase& UpdateItemInfo(KxDynamicStringRefW fullPath, bool queryShortName = false)
+			const FileItem& UpdateItemInfo(KxDynamicStringRefW fullPath, bool queryShortName = false)
 			{
 				m_Item.UpdateInfo(fullPath, queryShortName);
 				return m_Item;

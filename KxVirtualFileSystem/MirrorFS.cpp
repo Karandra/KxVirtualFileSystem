@@ -756,15 +756,16 @@ namespace KxVFS
 		const bool isRootFolder = (wcscmp(eventInfo.PathName, L"\\") == 0);
 
 		size_t count = 0;
+		bool continueSearch = true;
 		do
 		{
 			if (!isRootFolder || (wcscmp(findData.cFileName, L".") != 0 && wcscmp(findData.cFileName, L"..") != 0))
 			{
-				eventInfo.FillFindData(&eventInfo, &findData);
+				continueSearch = OnFileFound(eventInfo, findData);
 			}
 			count++;
 		}
-		while (::FindNextFileW(findHandle, &findData) != 0);
+		while (continueSearch && ::FindNextFileW(findHandle, &findData) != 0);
 
 		const DWORD errorCode = GetLastError();
 		if (errorCode != ERROR_NO_MORE_FILES)

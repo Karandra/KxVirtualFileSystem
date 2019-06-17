@@ -192,6 +192,9 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\Wow64RedirectionDisabler.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Common\FileItem.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
