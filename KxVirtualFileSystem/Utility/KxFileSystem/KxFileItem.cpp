@@ -8,6 +8,18 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxFileItem.h"
 #include "KxFileFinder.h"
+#undef MoveMemory
+#undef CopyMemory
+#undef FillMemory
+#undef ZeroMemory
+
+namespace
+{
+	template<class T> void CopyMemory(T* destination, const T* source, size_t length)
+	{
+		memcpy(destination, source, length * sizeof(T));
+	}
+}
 
 namespace KxVFS
 {
@@ -136,8 +148,11 @@ namespace KxVFS
 	void KxFileItem::ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const
 	{
 		// File name
-		wcsncpy_s(findData.cFileName, m_Name, m_Name.size());
-		wcsncpy_s(findData.cAlternateFileName, m_ShortName, m_ShortName.size());
+		static_assert(decltype(m_Name)::static_size == ARRAYSIZE(WIN32_FIND_DATAW::cFileName));
+		CopyMemory(findData.cFileName, m_Name.data(), m_Name.size());
+
+		static_assert(decltype(m_ShortName)::static_size == ARRAYSIZE(WIN32_FIND_DATAW::cAlternateFileName));
+		CopyMemory(findData.cAlternateFileName, m_ShortName.data(), m_ShortName.size());
 
 		// Attributes
 		findData.dwFileAttributes = ToInt(m_Attributes);
