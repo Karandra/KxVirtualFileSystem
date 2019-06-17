@@ -22,6 +22,12 @@ namespace KxVFS
 {
 	class KxVFS_API BasicFileSystem: public IFileSystem
 	{
+		protected:
+			static bool OnFileFound(EvtFindFiles& eventInfo, const WIN32_FIND_DATAW& findData)
+			{
+				return eventInfo.FillFindData(&eventInfo, const_cast<WIN32_FIND_DATAW*>(&findData)) == 0;
+			}
+
 		private:
 			FileSystemService& m_Service;
 			Dokany2::DOKAN_OPTIONS m_Options = {0};
