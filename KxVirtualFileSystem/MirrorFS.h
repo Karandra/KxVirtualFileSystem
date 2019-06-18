@@ -66,7 +66,9 @@ namespace KxVFS
 			NTSTATUS OnGetFileInfo(EvtGetFileInfo& eventInfo) override;
 			NTSTATUS OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo) override;
 
+			NTSTATUS OnFindFiles(KxDynamicStringRefW path, KxDynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2);
 			NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
+			NTSTATUS OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) override;
 			NTSTATUS OnFindStreams(EvtFindStreams& eventInfo) override;
 	};
 }

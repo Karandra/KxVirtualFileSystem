@@ -57,5 +57,6 @@ namespace KxVFS
 	using EvtSetBasicFileInfo = Dokany2::DOKAN_SET_FILE_BASIC_INFO_EVENT;
 
 	using EvtFindFiles = Dokany2::DOKAN_FIND_FILES_EVENT;
+	using EvtFindFilesWithPattern = Dokany2::DOKAN_FIND_FILES_PATTERN_EVENT;
 	using EvtFindStreams = Dokany2::DOKAN_FIND_STREAMS_EVENT;
 }

@@ -109,7 +109,7 @@ namespace KxVFS
 		m_Operations.SetFileBasicInformation = Dokan_SetBasicFileInfo;
 
 		m_Operations.FindFiles = Dokan_FindFiles;
-		m_Operations.FindFilesWithPattern = nullptr; // Overriding 'FindFiles' is enough
+		m_Operations.FindFilesWithPattern = Dokan_FindFilesWithPattern;
 		m_Operations.FindStreams = Dokan_FindStreams;
 	}
 	BasicFileSystem::~BasicFileSystem()
@@ -314,6 +314,11 @@ namespace KxVFS
 	{
 		KxVFS_DebugPrint(TEXT("%s: \"%s\\*\""), TEXT(__FUNCTION__), eventInfo->PathName);
 		return GetFromContext(eventInfo)->OnFindFiles(*eventInfo);
+	}
+	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FindFilesWithPattern(EvtFindFilesWithPattern* eventInfo)
+	{
+		KxVFS_DebugPrint(TEXT("%s: \"%s\\%s\""), TEXT(__FUNCTION__), eventInfo->PathName, eventInfo->SearchPattern);
+		return GetFromContext(eventInfo)->OnFindFilesWithPattern(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FindStreams(EvtFindStreams* eventInfo)
 	{

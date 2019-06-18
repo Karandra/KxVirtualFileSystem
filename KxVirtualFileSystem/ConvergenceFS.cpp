@@ -787,11 +787,12 @@ namespace KxVFS
 		}
 		return STATUS_FILE_CLOSED;
 	}
+	
 	NTSTATUS ConvergenceFS::OnFindFiles(EvtFindFiles& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			KxVFS_DebugPrint(L"Enumerating files in directory: %s ", eventInfo.PathName);
+			KxVFS_DebugPrint(L"Enumerating files in directory: '%s'", eventInfo.PathName);
 			if (FileNode* fileNode = fileContext->GetFileNode())
 			{
 				auto lock = fileNode->LockShared();
@@ -799,17 +800,47 @@ namespace KxVFS
 				{
 					return OnFileFound(eventInfo, node.GetItem().AsWIN32_FIND_DATA());
 				});
+				KxVFS_DebugPrint(L"Found %zu files", fileNode->GetChildrenCount());
+
 				return STATUS_SUCCESS;
 			}
 			return STATUS_FILE_INVALID;
 		}
 		return STATUS_FILE_CLOSED;
 	}
-	NTSTATUS ConvergenceFS::OnFindStreams(EvtFindStreams & eventInfo)
+	NTSTATUS ConvergenceFS::OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			KxVFS_DebugPrint(L"Enumerating streams for: %s ", eventInfo.FileName);
+			KxVFS_DebugPrint(L"Enumerating files in directory: '%s' with filtering by: '%s'", eventInfo.PathName, eventInfo.SearchPattern);
+			if (FileNode* fileNode = fileContext->GetFileNode())
+			{
+				auto lock = fileNode->LockShared();
+
+				size_t foundCount = 0;
+				fileNode->WalkChildren([&eventInfo, &foundCount](const FileNode& node)
+				{
+					const KxDynamicStringRefW name = node.GetName();
+					if (Dokany2::DokanIsNameInExpression(eventInfo.SearchPattern, name.data(), TRUE))
+					{
+						OnFileFound(eventInfo, node.GetItem().AsWIN32_FIND_DATA());
+						foundCount++;
+					}
+					return true;
+				});
+				KxVFS_DebugPrint(L"Found %zu files", foundCount);
+
+				return STATUS_SUCCESS;
+			}
+			return STATUS_FILE_INVALID;
+		}
+		return STATUS_FILE_CLOSED;
+	}
+	NTSTATUS ConvergenceFS::OnFindStreams(EvtFindStreams& eventInfo)
+	{
+		if (FileContext* fileContext = GetFileContext(eventInfo))
+		{
+			KxVFS_DebugPrint(L"Enumerating streams for: '%s'", eventInfo.FileName);
 			if (FileNode* fileNode = fileContext->GetFileNode())
 			{
 				auto lock = fileNode->LockShared();
@@ -831,6 +862,7 @@ namespace KxVFS
 					}
 					const DWORD errorCode = ::GetLastError();
 
+					KxVFS_DebugPrint(L"Found %zu streams", foundStreamsCount);
 					if (findResult == Dokany2::DOKAN_STREAM_BUFFER_FULL)
 					{
 						// FindStreams returned 'foundStreamsCount' entries in 'node' with STATUS_BUFFER_OVERFLOW

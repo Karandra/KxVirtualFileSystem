@@ -23,7 +23,7 @@ namespace KxVFS
 	class KxVFS_API BasicFileSystem: public IFileSystem
 	{
 		protected:
-			static bool OnFileFound(EvtFindFiles& eventInfo, const WIN32_FIND_DATAW& findData)
+			template<class TEvent> static bool OnFileFound(TEvent& eventInfo, const WIN32_FIND_DATAW& findData)
 			{
 				return eventInfo.FillFindData(&eventInfo, const_cast<WIN32_FIND_DATAW*>(&findData)) == 0;
 			}
@@ -136,6 +136,7 @@ namespace KxVFS
 			static NTSTATUS DOKAN_CALLBACK Dokan_SetBasicFileInfo(EvtSetBasicFileInfo* eventInfo);
 
 			static NTSTATUS DOKAN_CALLBACK Dokan_FindFiles(EvtFindFiles* eventInfo);
+			static NTSTATUS DOKAN_CALLBACK Dokan_FindFilesWithPattern(EvtFindFilesWithPattern* eventInfo);
 			static NTSTATUS DOKAN_CALLBACK Dokan_FindStreams(EvtFindStreams* eventInfo);
 	};
 }

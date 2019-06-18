@@ -119,6 +119,7 @@ namespace KxVFS
 			virtual NTSTATUS OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo) = 0;
 
 			virtual NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) = 0;
+			virtual NTSTATUS OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) = 0;
 			virtual NTSTATUS OnFindStreams(EvtFindStreams& eventInfo) = 0;
 
 		protected:

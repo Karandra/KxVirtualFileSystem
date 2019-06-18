@@ -76,7 +76,9 @@ namespace KxVFS
 
 			NTSTATUS OnMoveFile(EvtMoveFile& eventInfo) override;
 			NTSTATUS OnGetFileInfo(EvtGetFileInfo& eventInfo) override;
+
 			NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
+			NTSTATUS OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) override;
 			NTSTATUS OnFindStreams(EvtFindStreams& eventInfo) override;
 
 		protected:

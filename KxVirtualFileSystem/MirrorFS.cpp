@@ -727,20 +727,20 @@ namespace KxVFS
 		return STATUS_FILE_CLOSED;
 	}
 
-	NTSTATUS MirrorFS::OnFindFiles(EvtFindFiles& eventInfo)
+	NTSTATUS MirrorFS::OnFindFiles(KxDynamicStringRefW path, KxDynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2)
 	{
-		KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.PathName);
+		KxDynamicStringW targetPath = DispatchLocationRequest(path);
 		size_t targetPathLength = targetPath.length();
 
-		auto AppendAsterix = [](KxDynamicStringW& path)
+		auto AppendAsterix = [pattern](KxDynamicStringW& path)
 		{
 			if (!path.empty())
 			{
-				if (path.back() != TEXT('\\'))
+				if (path.back() != '\\')
 				{
-					path += TEXT('\\');
+					path += L'\\';
 				}
-				path += TEXT('*');
+				path += pattern;
 			}
 		};
 		AppendAsterix(targetPath);
@@ -753,19 +753,25 @@ namespace KxVFS
 		}
 
 		// Root folder does not have . and .. folder - we remove them
-		const bool isRootFolder = (wcscmp(eventInfo.PathName, L"\\") == 0);
+		const bool isRootFolder = path == L"\\";
 
 		size_t count = 0;
-		bool continueSearch = true;
 		do
 		{
 			if (!isRootFolder || (wcscmp(findData.cFileName, L".") != 0 && wcscmp(findData.cFileName, L"..") != 0))
 			{
-				continueSearch = OnFileFound(eventInfo, findData);
+				if (event1)
+				{
+					OnFileFound(*event1, findData);
+				}
+				else
+				{
+					OnFileFound(*event2, findData);
+				}
 			}
 			count++;
 		}
-		while (continueSearch && ::FindNextFileW(findHandle, &findData) != 0);
+		while (::FindNextFileW(findHandle, &findData) != 0);
 
 		const DWORD errorCode = GetLastError();
 		if (errorCode != ERROR_NO_MORE_FILES)
@@ -773,6 +779,14 @@ namespace KxVFS
 			return GetNtStatusByWin32LastErrorCode();
 		}
 		return STATUS_SUCCESS;
+	}
+	NTSTATUS MirrorFS::OnFindFiles(EvtFindFiles& eventInfo)
+	{
+		return OnFindFiles(eventInfo.PathName, L"*", &eventInfo, nullptr);
+	}
+	NTSTATUS MirrorFS::OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo)
+	{
+		return OnFindFiles(eventInfo.PathName, eventInfo.SearchPattern, nullptr, &eventInfo);
 	}
 	NTSTATUS MirrorFS::OnFindStreams(EvtFindStreams& eventInfo)
 	{
