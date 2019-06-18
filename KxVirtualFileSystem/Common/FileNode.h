@@ -8,7 +8,6 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 #include "KxVirtualFileSystem/Utility.h"
-#include "FileItem.h"
 #include "BranchLocker.h"
 
 namespace KxVFS
@@ -33,7 +32,6 @@ namespace KxVFS
 
 		public:
 			using Map = Utility::Comparator::MapNoCase<std::unique_ptr<FileNode>>;
-			using FileItem = FileItemWith_WIN32_FIND_DATA;
 			using RefVector = std::vector<FileNode*>;
 			using CRefVector = std::vector<const FileNode*>;
 
@@ -93,8 +91,7 @@ namespace KxVFS
 
 		private:
 			Map m_Children;
-			FileItem m_Item;
-			KxDynamicStringW m_Source;
+			KxFileItem m_Item;
 			KxDynamicStringW m_FullPath;
 			KxDynamicStringW m_RelativePath;
 			KxDynamicStringRefW m_VirtualDirectory;
@@ -125,18 +122,18 @@ namespace KxVFS
 
 		public:
 			FileNode() = default;
-			FileNode(const KxFileItemBase& item, FileNode* parent = nullptr)
+			FileNode(const KxFileItem& item, FileNode* parent = nullptr)
 				:m_Item(item), m_Parent(parent)
 			{
 				Init(parent);
 			}
-			FileNode(KxFileItemBase&& item, FileNode* parent = nullptr)
+			FileNode(KxFileItem&& item, FileNode* parent = nullptr)
 				:m_Item(std::move(item)), m_Parent(parent)
 			{
 				Init(parent);
 			}
 			FileNode(KxDynamicStringRefW fullPath, FileNode* parent = nullptr)
-				:m_Item(KxFileItemBase::FromPath(fullPath)), m_Parent(parent)
+				:m_Item(fullPath), m_Parent(parent)
 			{
 				Init(parent);
 			}
@@ -285,12 +282,12 @@ namespace KxVFS
 
 			KxDynamicStringRefW GetSource() const
 			{
-				return m_Source;
+				return m_Item.GetSource();
 			}
 			KxDynamicStringW GetSourceWithNS() const
 			{
 				KxDynamicStringW path = Utility::GetLongPathPrefix();
-				path += m_Source;
+				path += m_Item.GetSource();
 				return path;
 			}
 
@@ -323,26 +320,26 @@ namespace KxVFS
 				UpdatePaths();
 			}
 
-			const FileItem& GetItem() const
+			const KxFileItem& GetItem() const
 			{
 				return m_Item;
 			}
-			const FileItem& CopyItem(const FileNode& other)
+			const KxFileItem& CopyItem(const FileNode& other)
 			{
 				m_Item = other.m_Item;
 				return m_Item;
 			}
-			const FileItem& TakeItem(FileNode&& other)
+			const KxFileItem& TakeItem(FileNode&& other)
 			{
 				m_Item = std::move(other.m_Item);
 				return m_Item;
 			}
-			const FileItem& UpdateItemInfo(bool queryShortName = false)
+			const KxFileItem& UpdateItemInfo(bool queryShortName = false)
 			{
 				m_Item.UpdateInfo(m_FullPath, queryShortName);
 				return m_Item;
 			}
-			const FileItem& UpdateItemInfo(KxDynamicStringRefW fullPath, bool queryShortName = false)
+			const KxFileItem& UpdateItemInfo(KxDynamicStringRefW fullPath, bool queryShortName = false)
 			{
 				m_Item.UpdateInfo(fullPath, queryShortName);
 				return m_Item;

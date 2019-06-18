@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="KxVFS::KxFileItem">
+		<DisplayString>{m_Data.m_Name,su}, {m_Data.m_Attributes,en}</DisplayString>
+
+		<Expand>
+			<Item Name="[name]">m_Data.m_Name,su</Item>
+			<Item Name="[short name]">m_Data.m_ShortName,su</Item>
+			<Item Name="[source path]">m_Source</Item>
+
+			<Synthetic Name="[size]">
+				<DisplayString><![CDATA[{(int64_t(m_Data.m_FileSizeHigh & 0xffffffff) << 32 )|int64_t(m_Data.m_FileSizeLow & 0xffffffff)} bytes]]></DisplayString>
+				<Expand>
+					<Item Name="[low]">m_Data.m_FileSizeLow</Item>
+					<Item Name="[high]">m_Data.m_FileSizeHigh</Item>
+				</Expand>
+			</Synthetic>
+
+			<Synthetic Name="[attributes]">
+				<DisplayString>{m_Data.m_Attributes,en}</DisplayString>
+				<Expand>
+					<Item Name="[value]">m_Data.m_Attributes,d</Item>
+				</Expand>
+			</Synthetic>
+
+			<Synthetic Name="[reparse point tags]">
+				<DisplayString>{m_Data.m_ReparsePointTags,en}</DisplayString>
+				<Expand>
+					<Item Name="[value]">m_Data.m_ReparsePointTags,d</Item>
+				</Expand>
+			</Synthetic>
+
+			<Synthetic Name="[time]">
+				<DisplayString><![CDATA[{{C: {*(int64_t*)(&m_Data.m_CreationTime)}, 
+				M: {*(int64_t*)(&m_Data.m_ModificationTime)}, 
+				A: {*(int64_t*)(&m_Data.m_LastAccessTime)}}}]]>
+				</DisplayString>
+				<Expand>
+					<Item Name="[creation]">m_Data.m_CreationTime</Item>
+					<Item Name="[modification]">m_Data.m_ModificationTime</Item>
+					<Item Name="[last access]">m_Data.m_LastAccessTime</Item>
+				</Expand>
+			</Synthetic>
+		</Expand>
+	</Type>
+</AutoVisualizer>

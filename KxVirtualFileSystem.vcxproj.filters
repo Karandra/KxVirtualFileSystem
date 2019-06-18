@@ -43,6 +43,9 @@
     <Filter Include="Source Files\Common">
       <UniqueIdentifier>{12c08b91-a684-4599-a95b-12b4ffd6a11d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\KxFileSystem">
+      <UniqueIdentifier>{7b433845-401a-48bd-b3e7-758622c662a6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h">
@@ -192,9 +195,6 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\Wow64RedirectionDisabler.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\FileItem.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
@@ -275,6 +275,9 @@
   <ItemGroup>
     <Natvis Include="KxVirtualFileSystem\Utility\KxDynamicString\KxBasicDynamicString.natvis">
       <Filter>Resource Files\KxDynamicString</Filter>
+    </Natvis>
+    <Natvis Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.natvis">
+      <Filter>Resource Files\KxFileSystem</Filter>
     </Natvis>
   </ItemGroup>
   <ItemGroup>

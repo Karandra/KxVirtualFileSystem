@@ -8,53 +8,15 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxFileItem.h"
 #include "KxFileFinder.h"
-#undef MoveMemory
-#undef CopyMemory
-#undef FillMemory
-#undef ZeroMemory
-
-namespace
-{
-	template<class T> void CopyMemory(T* destination, const T* source, size_t length)
-	{
-		memcpy(destination, source, length * sizeof(T));
-	}
-
-	template<class TItem> bool DoUpdateInfo(TItem& fileItem, KxVFS::KxDynamicStringRefW fullPath, bool queryShortName)
-	{
-		using namespace KxVFS;
-
-		KxFileFinder finder(fullPath);
-		finder.QueryShortNames(queryShortName);
-
-		KxFileItem item = finder.FindNext();
-		if (item.IsOK())
-		{
-			fileItem = std::move(item);
-			return true;
-		}
-		else
-		{
-			fileItem.MakeNull(true);
-			return false;
-		}
-	}
-}
 
 namespace KxVFS
 {
-	void KxFileItemBase::ExtractSourceAndName(KxDynamicStringRefW fullPath, KxDynamicStringW& source, KxDynamicStringW& name)
+	void KxFileItem::ExtractSourceAndName(KxDynamicStringRefW fullPath, KxDynamicStringW& source, KxDynamicStringW& name)
 	{
 		source = KxDynamicStringW(fullPath).before_last(L'\\', &name);
 		source = TrimNamespace(source);
 	}
-	KxFileItemBase KxFileItemBase::FromPath(KxDynamicStringRefW fullPath)
-	{
-		KxFileItem item(fullPath);
-		return item;
-	}
-
-	KxDynamicStringRefW KxFileItemBase::TrimNamespace(KxDynamicStringRefW path) const
+	KxDynamicStringRefW KxFileItem::TrimNamespace(KxDynamicStringRefW path) noexcept
 	{
 		const size_t prefixLength = Utility::GetLongPathPrefix().size();
 		if (path.substr(0, prefixLength) == Utility::GetLongPathPrefix())
@@ -64,185 +26,141 @@ namespace KxVFS
 		return path;
 	}
 
-	bool KxFileItemBase::IsCurrentOrParent() const
+	KxFileItem::KxFileItem(const KxFileFinder& finder, const Win32FindData& findData)
+		:m_Data(findData), m_Source(TrimNamespace(finder.GetSource()))
 	{
-		return m_Name == L".." || m_Name == L".";
 	}
-	void KxFileItemBase::MakeNull(bool attribuesOnly)
+	KxFileItem::KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& findData)
+		:m_NativeData(findData), m_Source(TrimNamespace(finder.GetSource()))
+	{
+	}
+
+	void KxFileItem::MakeNull(bool attribuesOnly) noexcept
 	{
 		if (attribuesOnly)
 		{
-			m_Attributes = FileAttributes::Invalid;
-			m_ReparsePointTags = ReparsePointTags::None;
-			m_CreationTime = {0};
-			m_LastAccessTime = {0};
-			m_ModificationTime = {0};
-			m_FileSize = -1;
+			m_Data.m_Attributes = FileAttributes::Invalid;
+			m_Data.m_ReparsePointTags = ReparsePointTags::None;
+			m_Data.m_CreationTime = {0};
+			m_Data.m_LastAccessTime = {0};
+			m_Data.m_ModificationTime = {0};
+			m_Data.SetFileSize(0);
 		}
 		else
 		{
-			*this = KxFileItemBase();
+			m_Data = {};
+			m_Source.clear();
 		}
 		OnChange();
 	}
-	bool KxFileItemBase::UpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName)
+	bool KxFileItem::UpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName)
 	{
 		KxCallAtScopeExit atExit([this]()
 		{
 			OnChange();
 		});
-		return DoUpdateInfo(*this, fullPath, queryShortName);
-	}
+		
+		KxFileFinder finder(fullPath);
+		finder.QueryShortNames(queryShortName);
 
-	KxDynamicStringW KxFileItemBase::GetFileExtension() const
-	{
-		if (IsFile())
+		KxFileItem item = finder.FindNext();
+		if (item.IsOK())
 		{
-			const size_t pos = m_Name.rfind(L'.');
-			if (pos != KxDynamicStringW::npos)
-			{
-				return m_Name.substr(pos + 1);
-			}
-		}
-		return KxDynamicStringW();
-	}
-	void KxFileItemBase::SetFileExtension(KxDynamicStringRefW ext)
-	{
-		if (IsFile())
-		{
-			const size_t pos = m_Name.rfind(L'.');
-			if (pos != KxDynamicStringRefW::npos)
-			{
-				// KxDynamicString don't have 'replace' function
-				m_Name.resize(std::max(pos + ext.length() + 1, m_Name.length()));
-				for (size_t i = 0; i < ext.length(); i++)
-				{
-					m_Name[pos + 1 + i] = ext[i];
-				}
-			}
-			else
-			{
-				m_Name += L'.';
-				m_Name += ext;
-			}
-			OnChange();
-		}
-	}
-
-	void KxFileItemBase::FromWIN32_FIND_DATA(const WIN32_FIND_DATAW& findInfo)
-	{
-		m_Attributes = FromInt<FileAttributes>(findInfo.dwFileAttributes);
-		if (IsReparsePoint())
-		{
-			m_ReparsePointTags = FromInt<ReparsePointTags>(findInfo.dwReserved0);
-		}
-
-		m_FileSize = -1;
-		if (IsFile())
-		{
-			Utility::HighLowToInt64(m_FileSize, findInfo.nFileSizeHigh, findInfo.nFileSizeLow);
-		}
-
-		m_Name = findInfo.cFileName;
-		m_ShortName = findInfo.cAlternateFileName;
-		m_CreationTime = findInfo.ftCreationTime;
-		m_LastAccessTime = findInfo.ftLastAccessTime;
-		m_ModificationTime = findInfo.ftLastWriteTime;
-	}
-	void KxFileItemBase::ToWIN32_FIND_DATA(WIN32_FIND_DATAW& findData) const
-	{
-		// File name
-		static_assert(decltype(m_Name)::static_size == ARRAYSIZE(WIN32_FIND_DATAW::cFileName));
-		CopyMemory(findData.cFileName, m_Name.data(), m_Name.size());
-
-		static_assert(decltype(m_ShortName)::static_size == ARRAYSIZE(WIN32_FIND_DATAW::cAlternateFileName));
-		CopyMemory(findData.cAlternateFileName, m_ShortName.data(), m_ShortName.size());
-
-		// Attributes
-		findData.dwFileAttributes = ToInt(m_Attributes);
-		findData.dwReserved0 = IsReparsePoint() ? ToInt(m_ReparsePointTags) : 0;
-
-		// Time
-		findData.ftCreationTime = m_CreationTime;
-		findData.ftLastAccessTime = m_LastAccessTime;
-		findData.ftLastWriteTime = m_ModificationTime;
-
-		// File size
-		Utility::Int64ToHighLow(IsFile() ? m_FileSize : 0, findData.nFileSizeHigh, findData.nFileSizeLow);
-	}
-
-	void KxFileItemBase::ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& fileInfo) const
-	{
-		fileInfo.dwFileAttributes = ToInt(m_Attributes);
-		fileInfo.ftCreationTime = m_CreationTime;
-		fileInfo.ftLastAccessTime = m_LastAccessTime;
-		fileInfo.ftLastWriteTime = m_ModificationTime;
-
-		if (IsFile())
-		{
-			Utility::Int64ToHighLow(m_FileSize, fileInfo.nFileSizeHigh, fileInfo.nFileSizeLow);
+			*this = std::move(item);
+			return true;
 		}
 		else
 		{
-			fileInfo.nFileIndexLow = 0;
-			fileInfo.nFileSizeHigh = 0;
+			MakeNull(true);
+			return false;
 		}
-	}
-	void KxFileItemBase::FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& fileInfo)
-	{
-		m_Attributes = FromInt<FileAttributes>(fileInfo.dwFileAttributes);
-		m_ReparsePointTags = ReparsePointTags::None;
-		m_CreationTime = fileInfo.ftCreationTime;
-		m_LastAccessTime = fileInfo.ftLastAccessTime;
-		m_ModificationTime = fileInfo.ftLastWriteTime;
-
-		if (IsFile())
-		{
-			Utility::HighLowToInt64(m_FileSize, fileInfo.nFileSizeHigh, fileInfo.nFileSizeLow);
-		}
-		else
-		{
-			m_FileSize = 0;
-		}
-	}
-	void KxFileItemBase::FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& fileInfo)
-	{
-		m_Attributes = FromInt<FileAttributes>(fileInfo.FileAttributes);
-		m_ReparsePointTags = ReparsePointTags::None;
-		m_CreationTime = FileTimeFromLARGE_INTEGER(fileInfo.CreationTime);
-		m_LastAccessTime = FileTimeFromLARGE_INTEGER(fileInfo.LastAccessTime);
-		m_ModificationTime = FileTimeFromLARGE_INTEGER(fileInfo.LastWriteTime);
-	}
-}
-
-namespace KxVFS
-{
-	KxFileItem::KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& fileInfo)
-		:m_Source(TrimNamespace(finder.GetSource()))
-	{
-		FromWIN32_FIND_DATA(fileInfo);
-	}
-
-	void KxFileItem::MakeNull(bool attribuesOnly)
-	{
-		KxFileItemBase::MakeNull(attribuesOnly);
-		if (!attribuesOnly)
-		{
-			m_Source.clear();
-		}
-	}
-	bool KxFileItem::UpdateInfo(bool queryShortName)
-	{
-		KxCallAtScopeExit atExit([this]()
-		{
-			OnChange();
-		});
-
-		KxDynamicStringW fullPath = GetFullPath();
-		return DoUpdateInfo(*this, fullPath, queryShortName);
 	}
 	bool KxFileItem::IsDirectoryEmpty() const
 	{
 		return IsDirectory() && KxFileFinder::IsDirectoryEmpty(m_Source);
+	}
+
+	KxDynamicStringW KxFileItem::GetFileExtension() const noexcept
+	{
+		if (IsFile())
+		{
+			const KxDynamicStringRefW name = GetName();
+			const size_t pos = name.rfind(L'.');
+			if (pos != KxDynamicStringW::npos)
+			{
+				return name.substr(pos + 1);
+			}
+		}
+		return {};
+	}
+	void KxFileItem::SetFileExtension(KxDynamicStringRefW ext)
+	{
+		if (IsFile())
+		{
+			KxDynamicStringW name = GetName();
+			const size_t pos = name.rfind(L'.');
+			if (pos != KxDynamicStringRefW::npos)
+			{
+				// KxDynamicString don't have 'replace' function
+				name.resize(std::max(pos + ext.length() + 1, name.length()));
+				for (size_t i = 0; i < ext.length(); i++)
+				{
+					name[pos + 1 + i] = ext[i];
+				}
+			}
+			else
+			{
+				name += L'.';
+				name += ext;
+			}
+
+			SetName(name);
+			OnChange();
+		}
+	}
+
+	void KxFileItem::ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& fileInfo) const noexcept
+	{
+		fileInfo.dwFileAttributes = ToInt(m_Data.m_Attributes);
+		fileInfo.ftCreationTime = m_Data.m_CreationTime;
+		fileInfo.ftLastAccessTime = m_Data.m_LastAccessTime;
+		fileInfo.ftLastWriteTime = m_Data.m_ModificationTime;
+
+		if (IsFile())
+		{
+			fileInfo.nFileSizeLow = m_NativeData.nFileSizeLow;
+			fileInfo.nFileSizeHigh = m_NativeData.nFileSizeHigh;
+		}
+		else
+		{
+			fileInfo.nFileSizeLow = 0;
+			fileInfo.nFileSizeHigh = 0;
+		}
+	}
+	void KxFileItem::FromBY_HANDLE_FILE_INFORMATION(const BY_HANDLE_FILE_INFORMATION& fileInfo) noexcept
+	{
+		m_Data.m_Attributes = FromInt<FileAttributes>(fileInfo.dwFileAttributes);
+		m_Data.m_ReparsePointTags = ReparsePointTags::None;
+		m_Data.m_CreationTime = fileInfo.ftCreationTime;
+		m_Data.m_LastAccessTime = fileInfo.ftLastAccessTime;
+		m_Data.m_ModificationTime = fileInfo.ftLastWriteTime;
+
+		if (IsFile())
+		{
+			m_NativeData.nFileSizeLow = fileInfo.nFileSizeLow;
+			m_NativeData.nFileSizeHigh = fileInfo.nFileSizeHigh;
+		}
+		else
+		{
+			m_Data.SetFileSize(0);
+		}
+	}
+	void KxFileItem::FromFILE_BASIC_INFORMATION(const Dokany2::FILE_BASIC_INFORMATION& fileInfo) noexcept
+	{
+		m_Data.m_Attributes = FromInt<FileAttributes>(fileInfo.FileAttributes);
+		m_Data.m_ReparsePointTags = ReparsePointTags::None;
+		m_Data.m_CreationTime = FileTimeFromLARGE_INTEGER(fileInfo.CreationTime);
+		m_Data.m_LastAccessTime = FileTimeFromLARGE_INTEGER(fileInfo.LastAccessTime);
+		m_Data.m_ModificationTime = FileTimeFromLARGE_INTEGER(fileInfo.LastWriteTime);
 	}
 }

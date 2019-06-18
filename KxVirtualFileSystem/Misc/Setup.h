@@ -8,5 +8,5 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 // Change this to 1 to enable debug info printing to console and debugger output window
 #define KxVFS_DEBUG_ENABLE_LOG _DEBUG
 
-// Change this to 1 to disable all lock (critical sections and SRW locks)
+// Change this to 1 to disable all locks (critical sections and SRW locks)
 #define KxVFS_DEBUG_DISABLE_LOCKS 0

@@ -13,3 +13,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #undef FormatMessage
 #undef GetMessage
 #undef ExpandEnvironmentStrings
+#undef MoveMemory
+#undef CopyMemory
+#undef FillMemory
+#undef ZeroMemory

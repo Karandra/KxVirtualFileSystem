@@ -76,13 +76,13 @@ namespace KxVFS
 	{
 		if (!m_VirtualDirectory.empty())
 		{
-			m_Source = ConstructPath(PathParts::BaseDirectory|PathParts::RelativePath);
+			m_Item.SetSource(ConstructPath(PathParts::BaseDirectory|PathParts::RelativePath));
 			m_FullPath = ConstructPath(PathParts::BaseDirectory|PathParts::RelativePath|PathParts::Name);
 			m_RelativePath = ConstructPath(PathParts::RelativePath|PathParts::Name);
 		}
 		else
 		{
-			m_Source.clear();
+			m_Item.SetSource({});
 			m_FullPath.clear();
 			m_RelativePath.clear();
 		}
@@ -185,7 +185,6 @@ namespace KxVFS
 		ClearChildren();
 		m_Item = {};
 		m_VirtualDirectory = {};
-		m_Source.clear();
 		m_FullPath.clear();
 		m_RelativePath.clear();
 		m_Parent = nullptr;

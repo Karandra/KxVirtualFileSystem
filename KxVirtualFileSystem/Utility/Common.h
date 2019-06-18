@@ -108,16 +108,14 @@ namespace KxVFS::Utility
 		left = right;
 		right = resetTo;
 	}
+	template<class T> void CopyMemory(T* destination, const T* source, size_t length)
+	{
+		memcpy(destination, source, length * sizeof(T));
+	}
 }
 
 namespace KxVFS::Utility
 {
-	template<class TInt64 = int64_t> TInt64 HighLowToInt64(int32_t high, uint32_t low)
-	{
-		TInt64 value = 0;
-		HighLowToInt64(value, high, low);
-		return value;
-	}
 	template<class TInt64> void HighLowToInt64(TInt64& value, int32_t high, uint32_t low)
 	{
 		static_assert(sizeof(TInt64) == sizeof(uint64_t), "Value must be 64-bit integer");
@@ -126,6 +124,12 @@ namespace KxVFS::Utility
 		largeInt.HighPart = high;
 		largeInt.LowPart = low;
 		value = largeInt.QuadPart;
+	}
+	inline int64_t HighLowToInt64(int32_t high, uint32_t low)
+	{
+		int64_t value = 0;
+		HighLowToInt64(value, high, low);
+		return value;
 	}
 
 	template<class TInt64, class TInt32H = int32_t, class TInt32L = uint32_t>
