@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+	<Type Name="KxVFS::FileNode">
+		<DisplayString>{m_RelativePath}, [Attributes: {m_Item.m_Data.m_Attributes,en}]</DisplayString>
+
+		<Expand>
+			<Synthetic Name="[name]">
+				<DisplayString>{m_Item.m_Data.m_Name,su}</DisplayString>
+				<Expand>
+					<Item Name="[lower-cased]">m_NameLC</Item>
+				</Expand>
+			</Synthetic>
+
+			<Item Name="[relative path]">m_RelativePath</Item>
+			<Item Name="[source path]">m_Item.m_Source</Item>
+			<Item Name="[virtual directory]">m_VirtualDirectory._Mydata,su</Item>
+			<Item Name="[full path]">m_FullPath</Item>
+
+			<Synthetic Name="[attributes]">
+				<DisplayString>{m_Item.m_Data.m_Attributes,en}</DisplayString>
+				<Expand>
+					<Item Name="[value]">m_Item.m_Data.m_Attributes,d</Item>
+				</Expand>
+			</Synthetic>
+
+			<Item Name="[parent]">*m_Parent</Item>
+			<Item Name="[children]">m_Children</Item>
+			<Item Name="[lock]">m_Lock.m_Lock.Ptr</Item>
+		</Expand>
+	</Type>
+</AutoVisualizer>

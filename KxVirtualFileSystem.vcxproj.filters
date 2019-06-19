@@ -46,6 +46,9 @@
     <Filter Include="Resource Files\KxFileSystem">
       <UniqueIdentifier>{7b433845-401a-48bd-b3e7-758622c662a6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\Common">
+      <UniqueIdentifier>{70ddaa96-e511-4b80-879b-a785152eba04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h">
@@ -278,6 +281,9 @@
     </Natvis>
     <Natvis Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.natvis">
       <Filter>Resource Files\KxFileSystem</Filter>
+    </Natvis>
+    <Natvis Include="KxVirtualFileSystem\Common\FileNode.natvis">
+      <Filter>Resource Files\Common</Filter>
     </Natvis>
   </ItemGroup>
   <ItemGroup>

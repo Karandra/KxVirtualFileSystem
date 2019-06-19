@@ -116,6 +116,7 @@
     <ResourceCompile Include="KxVirtualFileSystem.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Natvis Include="KxVirtualFileSystem\Common\FileNode.natvis" />
     <Natvis Include="KxVirtualFileSystem\Utility\KxDynamicString\KxBasicDynamicString.natvis" />
     <Natvis Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.natvis" />
   </ItemGroup>
