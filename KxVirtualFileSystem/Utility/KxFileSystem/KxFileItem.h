@@ -47,6 +47,7 @@ namespace KxVFS
 				static_assert(std::is_standard_layout_v<Win32FindData> && std::is_trivially_copyable_v<Win32FindData>);
 
 				AssignName(m_Name, fileName);
+				m_ShortName[0] = L'\0';
 			}
 
 		public:
