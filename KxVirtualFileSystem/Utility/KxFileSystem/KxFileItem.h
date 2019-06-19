@@ -23,7 +23,7 @@ namespace KxVFS
 			{
 				const size_t length = std::min(std::size(name), fileName.length());
 				Utility::CopyMemory(name, fileName.data(), length);
-				name[length - 1] = L'\0';
+				name[length] = L'\0';
 			}
 
 		public:
