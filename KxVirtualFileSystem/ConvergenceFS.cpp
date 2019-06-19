@@ -818,10 +818,11 @@ namespace KxVFS
 				auto lock = fileNode->LockShared();
 
 				size_t foundCount = 0;
-				fileNode->WalkChildren([&eventInfo, &foundCount](const FileNode& node)
+				KxDynamicStringW pattern = Utility::StringToLower(eventInfo.SearchPattern);
+				fileNode->WalkChildren([&eventInfo, &pattern, &foundCount](const FileNode& node)
 				{
-					const KxDynamicStringRefW name = node.GetName();
-					if (Dokany2::DokanIsNameInExpression(eventInfo.SearchPattern, name.data(), TRUE))
+					const KxDynamicStringRefW name = node.GetNameLC();
+					if (Dokany2::DokanIsNameInExpression(pattern.data(), name.data(), FALSE))
 					{
 						OnFileFound(eventInfo, node.GetItem().AsWIN32_FIND_DATA());
 						foundCount++;

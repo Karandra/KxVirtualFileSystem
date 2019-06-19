@@ -92,6 +92,7 @@ namespace KxVFS
 		private:
 			Map m_Children;
 			KxFileItem m_Item;
+			KxDynamicStringW m_NameLC;
 			KxDynamicStringW m_FullPath;
 			KxDynamicStringW m_RelativePath;
 			KxDynamicStringRefW m_VirtualDirectory;
@@ -261,6 +262,10 @@ namespace KxVFS
 				return FindRootNode(this);
 			}
 
+			KxDynamicStringRefW GetNameLC() const
+			{
+				return m_NameLC;
+			}
 			KxDynamicStringRefW GetName() const
 			{
 				return m_Item.GetName();
