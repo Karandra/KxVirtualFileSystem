@@ -44,7 +44,8 @@ namespace KxVFS
 			};
 
 			FileNode* finalNode = nullptr;
-			Utility::String::SplitBySeparator(relativePath, L'\\', [&ScanChildren, &StripQuotes, &finalNode, &rootNode](KxDynamicStringRefW folderName)
+			KxDynamicStringW relativePathLC = Utility::StringToLower(relativePath);
+			Utility::String::SplitBySeparator(relativePathLC, L'\\', [&ScanChildren, &StripQuotes, &finalNode, &rootNode](KxDynamicStringRefW folderName)
 			{
 				finalNode = ScanChildren(finalNode ? *finalNode : rootNode, StripQuotes(folderName));
 				return finalNode != nullptr;
@@ -77,30 +78,29 @@ namespace KxVFS
 		if (!m_VirtualDirectory.empty())
 		{
 			m_Item.SetSource(ConstructPath(PathParts::BaseDirectory|PathParts::RelativePath));
-			m_NameLC = Utility::StringToLower(m_Item.GetName());
 			m_FullPath = ConstructPath(PathParts::BaseDirectory|PathParts::RelativePath|PathParts::Name);
 			m_RelativePath = ConstructPath(PathParts::RelativePath|PathParts::Name);
 		}
 		else
 		{
 			m_Item.SetSource({});
-			m_NameLC.clear();
 			m_FullPath.clear();
 			m_RelativePath.clear();
 		}
+		m_NameLC = Utility::StringToLower(m_Item.GetName());
 	}
 	bool FileNode::RenameThisNode(KxDynamicStringRefW newName)
 	{
 		// Rename this node in parent's children
 		Map& parentItems = m_Parent->m_Children;
 
-		// Node name in 'm_Item' must still be old name when this function is called
-		if (auto nodeHandle = parentItems.extract(m_Item.GetName()))
+		// Node name must still be old name when this function is called
+		if (auto nodeHandle = parentItems.extract(m_NameLC))
 		{
-			nodeHandle.key() = newName;
+			nodeHandle.key() = Utility::StringToLower(newName);
 			parentItems.insert(std::move(nodeHandle));
 
-			// If we succeed, the caller must change the name in 'm_Item'
+			// If we succeed, the caller must change the name in 'm_Item' and call 'UpdatePaths'
 			return true;
 		}
 		return false;
@@ -217,7 +217,7 @@ namespace KxVFS
 
 	bool FileNode::RemoveChild(FileNode& node)
 	{
-		auto it = m_Children.find(node.GetName());
+		auto it = m_Children.find(node.GetNameLC());
 		if (it != m_Children.end())
 		{
 			m_Children.erase(it);
@@ -227,7 +227,7 @@ namespace KxVFS
 	}
 	FileNode& FileNode::AddChild(std::unique_ptr<FileNode> node)
 	{
-		KxDynamicStringW name = node->GetName();
+		KxDynamicStringW name = node->GetNameLC();
 		auto [it, inserted] = m_Children.insert_or_assign(std::move(name), std::move(node));
 		return *it->second;
 	}

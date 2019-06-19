@@ -31,7 +31,7 @@ namespace KxVFS
 		friend class BranchExclusiveLocker;
 
 		public:
-			using Map = Utility::Comparator::MapNoCase<std::unique_ptr<FileNode>>;
+			using Map = std::map<KxDynamicStringW, std::unique_ptr<FileNode>>;
 			using RefVector = std::vector<FileNode*>;
 			using CRefVector = std::vector<const FileNode*>;
 
