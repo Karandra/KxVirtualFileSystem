@@ -114,10 +114,12 @@ namespace KxVFS
 				:KxFileItem()
 			{
 				SetFullPath(fullPath);
+				UpdateInfo(fullPath);
 			}
 			KxFileItem(KxDynamicStringRefW path, KxDynamicStringRefW fileName) noexcept
 				:m_Data(fileName), m_Source(path)
 			{
+				UpdateInfo();
 			}
 
 		private:
