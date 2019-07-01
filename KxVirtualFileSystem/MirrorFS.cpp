@@ -580,7 +580,7 @@ namespace KxVFS
 				FileHandle tempHandle(targetPath, AccessRights::GenericWrite, FileShare::All, CreationDisposition::OpenExisting);
 				if (tempHandle.IsValid())
 				{
-					// Need to check if its really needs to be handle of 'fileContext' and not 'tempFileHandle'.
+					// Need to check if its really needs to be handle of 'fileContext' and not 'tempHandle'.
 					return ioManager.WriteFileSync(fileContext->GetHandle(), eventInfo, fileContext);
 				}
 				return GetNtStatusByWin32LastErrorCode();
