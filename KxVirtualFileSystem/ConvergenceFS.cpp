@@ -538,7 +538,7 @@ namespace KxVFS
 		{
 			if (FileNode* fileNode = fileContext->GetFileNode())
 			{
-				if (auto contextLock = fileContext->Lock(); true)
+				if (auto contextLock = fileContext->LockExclusive(); true)
 				{
 					fileContext->MarkClosed();
 					if (fileContext->GetHandle().IsValidNonNull())
@@ -569,7 +569,7 @@ namespace KxVFS
 		{
 			if (FileNode* fileNode = fileContext->GetFileNode())
 			{
-				if (auto contextLock = fileContext->Lock(); true)
+				if (auto contextLock = fileContext->LockExclusive(); true)
 				{
 					fileContext->CloseHandle();
 					fileContext->MarkCleanedUp();
@@ -592,10 +592,12 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			auto[isClosed, isCleanedUp] = fileContext->InterlockedGetState();
+			bool isClosed = false;
+			bool isCleanedUp = false;
+			fileContext->InterlockedGetState(isClosed, isCleanedUp);
+
 			if (!isClosed)
 			{
-				IOManager& ioManager = GetIOManager();
 				if (isCleanedUp)
 				{
 					if (FileNode* fileNode = fileContext->GetFileNode())
@@ -605,7 +607,7 @@ namespace KxVFS
 						FileHandle tempHandle(fileNode->GetFullPathWithNS(), AccessRights::GenericRead, FileShare::All, CreationDisposition::OpenExisting);
 						if (tempHandle.IsValid())
 						{
-							return ioManager.ReadFileSync(tempHandle, eventInfo, fileContext);
+							return GetIOManager().ReadFileSync(tempHandle, eventInfo, fileContext);
 						}
 						return GetNtStatusByWin32LastErrorCode();
 					}
@@ -613,6 +615,7 @@ namespace KxVFS
 				}
 				else
 				{
+					IOManager& ioManager = GetIOManager();
 					if (ioManager.IsAsyncIOEnabled())
 					{
 						return ioManager.ReadFileAsync(*fileContext, eventInfo);
@@ -630,10 +633,12 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			auto[isClosed, isCleanedUp] = fileContext->InterlockedGetState();
+			bool isClosed = false;
+			bool isCleanedUp = false;
+			fileContext->InterlockedGetState(isClosed, isCleanedUp);
+
 			if (!isClosed)
 			{
-				IOManager& ioManager = GetIOManager();
 				if (isCleanedUp)
 				{
 					if (FileNode* fileNode = fileContext->GetFileNode())
@@ -644,7 +649,7 @@ namespace KxVFS
 						if (tempHandle.IsValid())
 						{
 							// Need to check if its really needs to be a handle of 'fileContext' and not 'tempHandle'.
-							return ioManager.WriteFileSync(fileContext->GetHandle(), eventInfo, fileContext);
+							return GetIOManager().WriteFileSync(fileContext->GetHandle(), eventInfo, fileContext);
 						}
 						return GetNtStatusByWin32LastErrorCode();
 					}
@@ -652,6 +657,7 @@ namespace KxVFS
 				}
 				else
 				{
+					IOManager& ioManager = GetIOManager();
 					if (ioManager.IsAsyncIOEnabled())
 					{
 						return ioManager.WriteFileAsync(*fileContext, eventInfo);

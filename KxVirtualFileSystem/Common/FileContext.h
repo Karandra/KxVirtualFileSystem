@@ -25,7 +25,7 @@ namespace KxVFS
 			FileNode* m_FileNode = nullptr;
 			FileHandle m_Handle;
 			FileContextEventInfo m_EventInfo;
-			mutable CriticalSection m_Lock;
+			mutable SRWLock m_Lock;
 
 			PTP_IO m_CompletionPort = nullptr;
 			bool m_AsyncIOActive = false;
@@ -45,11 +45,11 @@ namespace KxVFS
 			}
 
 		public:
-			[[nodiscard]] MoveableCriticalSectionLocker Lock()
+			[[nodiscard]] MoveableSharedSRWLocker LockShared()
 			{
 				return m_Lock;
 			}
-			[[nodiscard]] MoveableCriticalSectionTryLocker TryLock()
+			[[nodiscard]] MoveableExclusiveSRWLocker LockExclusive()
 			{
 				return m_Lock;
 			}
@@ -82,18 +82,11 @@ namespace KxVFS
 
 			void InterlockedGetState(bool& isClosed, bool& isCleanedUp) const
 			{
-				if (CriticalSectionLocker lock(m_Lock); true)
+				if (SharedSRWLocker lock(m_Lock); true)
 				{
 					isClosed = m_IsClosed;
 					isCleanedUp = m_IsCleanedUp;
 				}
-			}
-			std::tuple<bool, bool> InterlockedGetState() const
-			{
-				bool isCleanedUp = false;
-				bool isClosed = false;
-				InterlockedGetState(isClosed, isCleanedUp);
-				return {isClosed, isCleanedUp};
 			}
 
 			IFileSystem& GetFileSystem() const

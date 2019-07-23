@@ -349,7 +349,7 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			if (auto lock = fileContext->Lock(); true)
+			if (auto lock = fileContext->LockExclusive(); true)
 			{
 				fileContext->MarkClosed();
 				if (fileContext->GetHandle().IsValidNonNull())
@@ -389,7 +389,7 @@ namespace KxVFS
 		*/
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			if (auto lock = fileContext->Lock(); true)
+			if (auto lock = fileContext->LockExclusive(); true)
 			{
 				fileContext->CloseHandle();
 				fileContext->MarkCleanedUp();
@@ -532,8 +532,9 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			IOManager& ioManager = GetIOManager();
-			auto[isClosed, isCleanedUp] = fileContext->InterlockedGetState();
+			bool isClosed = false;
+			bool isCleanedUp = false;
+			fileContext->InterlockedGetState(isClosed, isCleanedUp);
 
 			if (isClosed)
 			{
@@ -546,11 +547,12 @@ namespace KxVFS
 				FileHandle tempHandle(targetPath, AccessRights::GenericRead, FileShare::All, CreationDisposition::OpenExisting);
 				if (tempHandle.IsValid())
 				{
-					return ioManager.ReadFileSync(tempHandle, eventInfo, fileContext);
+					return GetIOManager().ReadFileSync(tempHandle, eventInfo, fileContext);
 				}
 				return GetNtStatusByWin32LastErrorCode();
 			}
 
+			IOManager& ioManager = GetIOManager();
 			if (ioManager.IsAsyncIOEnabled())
 			{
 				return ioManager.ReadFileAsync(*fileContext, eventInfo);
@@ -566,13 +568,14 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			IOManager& ioManager = GetIOManager();
-			auto[isClosed, isCleanedUp] = fileContext->InterlockedGetState();
+			bool isClosed = false;
+			bool isCleanedUp = false;
+			fileContext->InterlockedGetState(isClosed, isCleanedUp);
+
 			if (isClosed)
 			{
 				return STATUS_FILE_CLOSED;
 			}
-
 			if (isCleanedUp)
 			{
 				KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
@@ -581,11 +584,12 @@ namespace KxVFS
 				if (tempHandle.IsValid())
 				{
 					// Need to check if its really needs to be handle of 'fileContext' and not 'tempHandle'.
-					return ioManager.WriteFileSync(fileContext->GetHandle(), eventInfo, fileContext);
+					return GetIOManager().WriteFileSync(fileContext->GetHandle(), eventInfo, fileContext);
 				}
 				return GetNtStatusByWin32LastErrorCode();
 			}
 
+			IOManager& ioManager = GetIOManager();
 			if (ioManager.IsAsyncIOEnabled())
 			{
 				return ioManager.WriteFileAsync(*fileContext, eventInfo);
@@ -700,7 +704,7 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			if (auto lock = fileContext->Lock(); true)
+			if (auto lock = fileContext->LockExclusive(); true)
 			{
 				const bool sucess = fileContext->GetHandle().SetInfo(FileBasicInfo, *eventInfo.Info);
 				const DWORD errorCode = ::GetLastError();
