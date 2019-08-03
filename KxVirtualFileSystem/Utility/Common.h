@@ -117,45 +117,43 @@ namespace KxVFS::Utility
 
 namespace KxVFS::Utility
 {
-	template<class TInt64> void HighLowToInt64(TInt64& value, int32_t high, uint32_t low)
+	template<class TInt64> void LowHighToInt64(TInt64& value, uint32_t low, int32_t high)
 	{
 		static_assert(sizeof(TInt64) == sizeof(uint64_t), "Value must be 64-bit integer");
 
 		LARGE_INTEGER largeInt = {};
-		largeInt.HighPart = high;
 		largeInt.LowPart = low;
+		largeInt.HighPart = high;
 		value = largeInt.QuadPart;
 	}
-	inline int64_t HighLowToInt64(int32_t high, uint32_t low)
+	inline int64_t LowHighToInt64(uint32_t low, int32_t high)
 	{
 		int64_t value = 0;
-		HighLowToInt64(value, high, low);
+		LowHighToInt64(value, low, high);
 		return value;
 	}
-
-	template<class TInt64, class TInt32H = int32_t, class TInt32L = uint32_t>
-	void Int64ToHighLow(TInt64 value, TInt32H& high, TInt32L& low)
+	template<class L, class H> void Int64ToLowHigh(int64_t value, L& low, H& high)
 	{
-		static_assert(sizeof(TInt64) == sizeof(uint64_t), "Value must be 64-bit integer");
+		static_assert(sizeof(L) == sizeof(int32_t) && sizeof(H) == sizeof(int32_t), "Components must be 32-bit integers");
 
 		LARGE_INTEGER largeInt = {0};
 		largeInt.QuadPart = value;
 
-		high = largeInt.HighPart;
 		low = largeInt.LowPart;
+		high = largeInt.HighPart;
 	}
 
-	template<class TInt64 = int64_t> TInt64 OverlappedOffsetToInt64(const OVERLAPPED& overlapped)
+	inline int64_t OverlappedOffsetToInt64(const OVERLAPPED& overlapped)
 	{
-		return HighLowToInt64<TInt64>(overlapped.OffsetHigh, overlapped.Offset);
+		return LowHighToInt64(overlapped.Offset, overlapped.OffsetHigh);
 	}
-	template<class TInt64> void OverlappedOffsetToInt64(TInt64& offset, const OVERLAPPED& overlapped)
+	template<class TInt64> void OverlappedOffsetToInt64(const OVERLAPPED& overlapped, TInt64& offset)
 	{
-		HighLowToInt64(offset, overlapped.OffsetHigh, overlapped.Offset);
+		LowHighToInt64(offset, overlapped.Offset, overlapped.OffsetHigh);
 	}
-	template<class TInt64> void Int64ToOverlappedOffset(const TInt64 offset, OVERLAPPED& overlapped)
+	inline void Int64ToOverlappedOffset(int64_t offset, OVERLAPPED& overlapped)
 	{
-		Int64ToHighLow(offset, overlapped.OffsetHigh, overlapped.Offset);
+		Int64ToLowHigh(offset, overlapped.Offset, overlapped.OffsetHigh);
 	}
 }
 

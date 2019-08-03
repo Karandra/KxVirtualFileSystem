@@ -62,11 +62,11 @@ namespace KxVFS
 			
 			int64_t GetFileSize() const noexcept
 			{
-				return Utility::HighLowToInt64(m_FileSizeHigh, m_FileSizeLow);
+				return Utility::LowHighToInt64(m_FileSizeLow, m_FileSizeHigh);
 			}
 			void SetFileSize(int64_t size) noexcept
 			{
-				Utility::Int64ToHighLow(size, m_FileSizeHigh, m_FileSizeLow);
+				Utility::Int64ToLowHigh(size, m_FileSizeLow, m_FileSizeHigh);
 			}
 	};
 }
