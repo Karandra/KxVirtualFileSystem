@@ -17,7 +17,7 @@ namespace KxVFS
 	{
 		if (fileInfo->DeleteOnClose)
 		{
-			KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), TEXT(__FUNCTION__), filePath.data());
+			KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, filePath.data());
 
 			// Should already be deleted by CloseHandle if open with 'FILE_FLAG_DELETE_ON_CLOSE'.
 			if (fileInfo->IsDirectory)
