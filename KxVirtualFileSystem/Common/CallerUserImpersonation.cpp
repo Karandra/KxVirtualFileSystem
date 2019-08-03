@@ -38,7 +38,7 @@ namespace KxVFS
 			}
 			else
 			{
-				KxVFS_Log(LogLevel::Info, L"ImpersonateLoggedOnUser: failed with %u error", ::GetLastError());
+				KxVFS_Log(LogLevel::Info, L"ImpersonateLoggedOnUser: failed with %1 error", ::GetLastError());
 				return false;
 			}
 		}
@@ -62,7 +62,7 @@ namespace KxVFS
 			}
 
 			const bool success = ::RevertToSelf();
-			KxVFS_Log(LogLevel::Info, L"ImpersonateLoggedOnUser: called 'RevertToSelf' with %u error code", ::GetLastError());
+			KxVFS_Log(LogLevel::Info, L"ImpersonateLoggedOnUser: called 'RevertToSelf' with %1 error code", ::GetLastError());
 			::SetLastError(lastError);
 			return success;
 		}

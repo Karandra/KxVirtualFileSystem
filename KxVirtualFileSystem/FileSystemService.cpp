@@ -190,12 +190,14 @@ namespace KxVFS
 		m_ServiceManager(ServiceAccess::Start|ServiceAccess::Stop|ServiceAccess::QueryStatus|ServiceAccess::ChangeConfig),
 		m_HasSeSecurityNamePrivilege(AddSeSecurityNamePrivilege())
 	{
+		// Init instance pointer
 		if (g_FileSystemServiceInstance)
 		{
 			throw std::logic_error("KxVFS: an instance of 'FileSystemService' already created");
 		}
 		g_FileSystemServiceInstance = this;
 
+		// Init default logger
 		m_ChainLogger.AddLogger(m_StdOutLogger);
 		m_ChainLogger.AddLogger(m_DebugLogger);
 

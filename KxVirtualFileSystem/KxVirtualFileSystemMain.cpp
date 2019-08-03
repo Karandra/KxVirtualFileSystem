@@ -58,7 +58,7 @@ int _tmain()
 		CloseHandle(processInfo.hThread);
 		CloseHandle(processInfo.hProcess);
 
-		fprintf(stdout, "CreateProcessW: %s with error code %u\r\n", isOK ? "true" : "false", error);
+		KxVFS_Log(LogLevel::Info, L"CreateProcessW: %1 with error code %2\r\n", isOK ? L"true" : L"false", error);
 	};
 	auto OpenFileDialog = [&]()
 	{
@@ -87,7 +87,7 @@ int _tmain()
 			case 'm':
 			{
 				FSError error = mainVFS->Mount();
-				KxVFS_Log(LogLevel::Info, L"%d: %s\r\n", error.GetCode(), error.GetMessage().data());
+				KxVFS_Log(LogLevel::Info, L"%1: %2\r\n", error.GetCode(), error.GetMessage().data());
 				break;
 			}
 			case 'r':
@@ -149,7 +149,7 @@ int _tmain()
 				Utility::CreateDirectory(L"C:\\Users\\Kerber\\Desktop\\Test\\123");
 				Utility::CreateDirectory(L"C:\\Users\\Kerber\\Desktop\\Test\\123\\456");
 				::CopyFileW(source, target, FALSE);
-				KxVFS_Log(LogLevel::Info, L"Done: %u", ::GetLastError());
+				KxVFS_Log(LogLevel::Info, L"Done: %1", ::GetLastError());
 
 				break;
 			}
@@ -157,20 +157,20 @@ int _tmain()
 			{
 				constexpr auto path = L"C:\\Users\\Kerber\\Desktop\\Test\\Data\\Scripts\\TestFile.json";
 				FileHandle handle(path, AccessRights::GenericWrite, FileShare::All, CreationDisposition::CreateAlways);
-				KxVFS_Log(LogLevel::Info, L"Done: %u", ::GetLastError());
+				KxVFS_Log(LogLevel::Info, L"Done: %1", ::GetLastError());
 				break;
 			}
 			case 'b':
 			{
 				constexpr auto path = L"C:\\Users\\Kerber\\Desktop\\Test\\Data\\Scripts\\TestFolder";
 				Utility::CreateDirectory(path, nullptr);
-				KxVFS_Log(LogLevel::Info, L"Done: %u", ::GetLastError());
+				KxVFS_Log(LogLevel::Info, L"Done: %1", ::GetLastError());
 				break;
 			}
 
 			case 'u':
 			{
-				KxVFS_Log(LogLevel::Info, L"%s\r\n", mainVFS->UnMount() ? "true" : "false");
+				KxVFS_Log(LogLevel::Info, L"%1\r\n", mainVFS->UnMount() ? L"true" : L"false");
 				break;
 			}
 			case 'x':

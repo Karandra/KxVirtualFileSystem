@@ -207,6 +207,8 @@ namespace KxVFS
 {
 	NTSTATUS ConvergenceFS::OnCreateFile(EvtCreateFile& eventInfo)
 	{
+		KxVFS_Log(LogLevel::Info, L"Trying to create/open file or directory: %1", eventInfo.FileName);
+
 		// Paths and nodes
 		FileNode* parentNode = nullptr;
 		FileNode* targetNode = nullptr;
@@ -221,6 +223,8 @@ namespace KxVFS
 		// Correct flags
 		if (targetNode)
 		{
+			KxVFS_Log(LogLevel::Info, L"Target location: %1", targetNode->GetFullPath());
+
 			// When the item is a directory, we need to change the flag so that the file can be opened
 			if (targetNode->IsDirectory())
 			{
@@ -266,7 +270,7 @@ namespace KxVFS
 	}
 	NTSTATUS ConvergenceFS::OnCreateFile(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode)
 	{
-		KxVFS_Log(LogLevel::Info, L"Trying to create/open file: %s", eventInfo.FileName);
+		KxVFS_Log(LogLevel::Info, L"Trying to create/open file: %1", eventInfo.FileName);
 
 		// Flags and attributes
 		const FileAttributes fileAttributes = targetNode ? targetNode->GetAttributes() : FileAttributes::Invalid;
@@ -319,11 +323,11 @@ namespace KxVFS
 		{
 			// That probably means that we're trying to create a file in write target, but there's
 			// no corresponding directory tree there. So create the directory three and try again.
-			KxVFS_Log(LogLevel::Info, L"Attempt to create a file in non-existent directory tree in write target: %s", eventInfo.FileName);
+			KxVFS_Log(LogLevel::Info, L"Attempt to create a file in non-existent directory tree in write target: %1", eventInfo.FileName);
 
 			::SetLastError(ERROR_SUCCESS);
 			KxDynamicStringW folderPath = KxDynamicStringW(eventInfo.FileName).before_last(L'\\');
-			KxVFS_Log(LogLevel::Info, L"Creating directory tree in write target: %s", folderPath.data());
+			KxVFS_Log(LogLevel::Info, L"Creating directory tree in write target: %1", folderPath);
 
 			Utility::CreateDirectoryTreeEx(virtualDirectory, folderPath);
 			fileHandle = OpenOrCreateFile();
@@ -387,13 +391,13 @@ namespace KxVFS
 		}
 		else
 		{
-			KxVFS_Log(LogLevel::Info, L"Failed to create/open file: %s", targetPath.data());
+			KxVFS_Log(LogLevel::Info, L"Failed to create/open file: %s", targetPath);
 			return GetNtStatusByWin32ErrorCode(errorCode);
 		}
 	}
 	NTSTATUS ConvergenceFS::OnCreateDirectory(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode)
 	{
-		KxVFS_Log(LogLevel::Info, L"Trying to create/open directory: %s", eventInfo.FileName);
+		KxVFS_Log(LogLevel::Info, L"Trying to create/open directory: %1", eventInfo.FileName);
 
 		// Flags and attributes
 		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
@@ -457,7 +461,7 @@ namespace KxVFS
 		// Check first if we're trying to open a file as a directory.
 		if (targetNode && !targetNode->IsDirectory() && (eventInfo.CreateOptions & FILE_DIRECTORY_FILE))
 		{
-			KxVFS_Log(LogLevel::Info, L"Attempt to open a file as a directory: %s", targetPath.data());
+			KxVFS_Log(LogLevel::Info, L"Attempt to open a file as a directory: %1", targetPath);
 			return STATUS_NOT_A_DIRECTORY;
 		}
 
@@ -505,7 +509,7 @@ namespace KxVFS
 		}
 		else
 		{
-			KxVFS_Log(LogLevel::Info, L"Failed to create/open directory: %s", targetPath.data());
+			KxVFS_Log(LogLevel::Info, L"Failed to create/open directory: %1", targetPath);
 			return GetNtStatusByWin32ErrorCode(errorCode);
 		}
 	}
@@ -776,7 +780,7 @@ namespace KxVFS
 			// Maybe it's better to cache BY_HANDLE_FILE_INFORMATION in virtual tree and just copy it here?
 			if (fileContext->GetHandle().GetInfo(eventInfo.FileHandleInfo))
 			{
-				KxVFS_Log(LogLevel::Info, L"Successfully retrieved file info by handle for: %s", eventInfo.FileName);
+				KxVFS_Log(LogLevel::Info, L"Successfully retrieved file info by handle for: %1", eventInfo.FileName);
 				return STATUS_SUCCESS;
 			}
 			else if (FileNode* fileNode = fileContext->GetFileNode())
@@ -784,11 +788,11 @@ namespace KxVFS
 				auto lock = fileNode->LockShared();
 				fileNode->GetItem().ToBY_HANDLE_FILE_INFORMATION(eventInfo.FileHandleInfo);
 
-				KxVFS_Log(LogLevel::Info, L"Successfully retrieved file info by node for: %s", eventInfo.FileName);
+				KxVFS_Log(LogLevel::Info, L"Successfully retrieved file info by node for: %1", eventInfo.FileName);
 				return STATUS_SUCCESS;
 			}
 
-			KxVFS_Log(LogLevel::Info, L"Couldn't find file node for: %s", eventInfo.FileName);
+			KxVFS_Log(LogLevel::Info, L"Couldn't find file node for: %1", eventInfo.FileName);
 			return STATUS_FILE_INVALID;
 		}
 		return STATUS_FILE_CLOSED;
@@ -798,7 +802,7 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			KxVFS_Log(LogLevel::Info, L"Enumerating files in directory: '%s'", eventInfo.PathName);
+			KxVFS_Log(LogLevel::Info, L"Enumerating files in directory: '%1'", eventInfo.PathName);
 			if (FileNode* fileNode = fileContext->GetFileNode())
 			{
 				auto lock = fileNode->LockShared();
@@ -806,7 +810,7 @@ namespace KxVFS
 				{
 					return OnFileFound(eventInfo, node.GetItem().AsWIN32_FIND_DATA());
 				});
-				KxVFS_Log(LogLevel::Info, L"Found %zu files", fileNode->GetChildrenCount());
+				KxVFS_Log(LogLevel::Info, L"Found %1 files", fileNode->GetChildrenCount());
 
 				return STATUS_SUCCESS;
 			}
@@ -818,7 +822,7 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			KxVFS_Log(LogLevel::Info, L"Enumerating files in directory: '%s' with filtering by: '%s'", eventInfo.PathName, eventInfo.SearchPattern);
+			KxVFS_Log(LogLevel::Info, L"Enumerating files in directory: '%1' with filtering by: '%2'", eventInfo.PathName, eventInfo.SearchPattern);
 			if (FileNode* fileNode = fileContext->GetFileNode())
 			{
 				auto lock = fileNode->LockShared();
@@ -835,7 +839,7 @@ namespace KxVFS
 					}
 					return true;
 				});
-				KxVFS_Log(LogLevel::Info, L"Found %zu files", foundCount);
+				KxVFS_Log(LogLevel::Info, L"Found %1 files", foundCount);
 
 				return STATUS_SUCCESS;
 			}
@@ -847,7 +851,7 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			KxVFS_Log(LogLevel::Info, L"Enumerating streams for: '%s'", eventInfo.FileName);
+			KxVFS_Log(LogLevel::Info, L"Enumerating streams for: '%1'", eventInfo.FileName);
 			if (FileNode* fileNode = fileContext->GetFileNode())
 			{
 				auto lock = fileNode->LockShared();
@@ -869,7 +873,7 @@ namespace KxVFS
 					}
 					const DWORD errorCode = ::GetLastError();
 
-					KxVFS_Log(LogLevel::Info, L"Found %zu streams", foundStreamsCount);
+					KxVFS_Log(LogLevel::Info, L"Found %1 streams", foundStreamsCount);
 					if (findResult == Dokany2::DOKAN_STREAM_BUFFER_FULL)
 					{
 						// FindStreams returned 'foundStreamsCount' entries in 'node' with STATUS_BUFFER_OVERFLOW
@@ -899,7 +903,7 @@ namespace KxVFS
 		{
 			auto lock = fileNode->LockExclusive();
 
-			KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTIONW__, fileNode->GetFullPath().data());
+			KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileNode->GetFullPath());
 			fileNode->FromBY_HANDLE_FILE_INFORMATION(fileInfo);
 			return true;
 		}

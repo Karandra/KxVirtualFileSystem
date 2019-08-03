@@ -115,7 +115,7 @@ namespace KxVFS
 			}
 			default:
 			{
-				KxVFS_Log(LogLevel::Info, L"Unknown operation type in async IO callback: %d", (int)asyncContext.GetOperationType());
+				KxVFS_Log(LogLevel::Info, L"Unknown operation type in async IO callback: %1", (int)asyncContext.GetOperationType());
 				break;
 			}
 		};
@@ -212,7 +212,7 @@ namespace KxVFS
 			asyncContext = new(std::nothrow) AsyncIOContext(fileContext);
 			if (!asyncContext)
 			{
-				KxVFS_Log(LogLevel::Fatal, L"%s: Unable allocate memory for 'AsyncIOContext'", __FUNCTIONW__);
+				KxVFS_Log(LogLevel::Fatal, L"%1: Unable allocate memory for 'AsyncIOContext'", __FUNCTIONW__);
 			}
 		}
 		else
@@ -224,7 +224,7 @@ namespace KxVFS
 
 	NTSTATUS IOManager::ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext) const
 	{
-		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTIONW__, fileHandle.GetPath().data());
+		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileHandle.GetPath());
 
 		if (!fileHandle.Seek(eventInfo.Offset, FileSeekMode::Start))
 		{
@@ -242,7 +242,7 @@ namespace KxVFS
 	}
 	NTSTATUS IOManager::WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext) const
 	{
-		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTIONW__, fileHandle.GetPath().data());
+		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileHandle.GetPath());
 
 		if (eventInfo.DokanFileInfo->WriteToEndOfFile)
 		{
@@ -312,7 +312,7 @@ namespace KxVFS
 
 	NTSTATUS IOManager::ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTIONW__, fileContext.GetHandle().GetPath().data());
+		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileContext.GetHandle().GetPath());
 
 		AsyncIOContext* asyncContext = PopContext(fileContext);
 		if (!asyncContext)
@@ -335,10 +335,12 @@ namespace KxVFS
 	}
 	NTSTATUS IOManager::WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTIONW__, fileContext.GetHandle().GetPath().data());
+		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileContext.GetHandle().GetPath());
+
+		FileHandle& fileHandle = fileContext.GetHandle();
 
 		int64_t fileSize = 0;
-		if (!fileContext.GetHandle().GetFileSize(fileSize))
+		if (!fileHandle.GetFileSize(fileSize))
 		{
 			return IFileSystem::GetNtStatusByWin32LastErrorCode();
 		}
@@ -374,7 +376,7 @@ namespace KxVFS
 		asyncContext->SetOperationContext(eventInfo, eventInfo.Offset, AsyncIOContext::OperationType::Write);
 
 		fileContext.StartThreadpoolIO();
-		if (!fileContext.GetHandle().Write(eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, eventInfo.NumberOfBytesWritten, &asyncContext->GetOverlapped()))
+		if (!fileHandle.Write(eventInfo.Buffer, eventInfo.NumberOfBytesToWrite, eventInfo.NumberOfBytesWritten, &asyncContext->GetOverlapped()))
 		{
 			const DWORD errorCode = ::GetLastError();
 			if (errorCode != ERROR_IO_PENDING)

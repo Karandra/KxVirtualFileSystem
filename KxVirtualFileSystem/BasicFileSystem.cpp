@@ -202,127 +202,247 @@ namespace KxVFS
 {
 	void DOKAN_CALLBACK BasicFileSystem::Dokan_Mount(EvtMounted* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s"), __FUNCTIONW__);
+		KxVFS_Log(LogLevel::Info, L"%1",
+				  __FUNCTIONW__
+		);
+
 		return (void)GetFromContext(eventInfo->DokanOptions)->OnMountInternal(*eventInfo);
 	}
 	void DOKAN_CALLBACK BasicFileSystem::Dokan_Unmount(EvtUnMounted* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s"), __FUNCTIONW__);
+		KxVFS_Log(LogLevel::Info, L"%1",
+				  __FUNCTIONW__
+		);
+
 		return (void)GetFromContext(eventInfo->DokanOptions)->OnUnMountInternal(*eventInfo);
 	}
 
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetVolumeFreeSpace(EvtGetVolumeFreeSpace* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s"), __FUNCTIONW__);
+		KxVFS_Log(LogLevel::Info, L"%1, Requestor Process: %2",
+				  __FUNCTIONW__,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnGetVolumeFreeSpace(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetVolumeInfo(EvtGetVolumeInfo* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s"), __FUNCTIONW__);
+		KxVFS_Log(LogLevel::Info, L"%1, Requestor Process: %2",
+				  __FUNCTIONW__,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnGetVolumeInfo(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetVolumeAttributes(EvtGetVolumeAttributes* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s"), __FUNCTIONW__);
+		KxVFS_Log(LogLevel::Info, L"%1, Requestor Process: %2",
+				  __FUNCTIONW__,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnGetVolumeAttributes(*eventInfo);
 	}
 
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_CreateFile(EvtCreateFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnCreateFile(*eventInfo);
 	}
 	void DOKAN_CALLBACK BasicFileSystem::Dokan_CloseFile(EvtCloseFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\", DeleteOnClose: %d"), __FUNCTIONW__, eventInfo->FileName, (int)eventInfo->DokanFileInfo->DeleteOnClose);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", DeleteOnClose: %3, Requestor Process: %4",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  (bool)eventInfo->DokanFileInfo->DeleteOnClose,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return (void)GetFromContext(eventInfo)->OnCloseFile(*eventInfo);
 	}
 	void DOKAN_CALLBACK BasicFileSystem::Dokan_CleanUp(EvtCleanUp* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\", DeleteOnClose: %d"), __FUNCTIONW__, eventInfo->FileName, (int)eventInfo->DokanFileInfo->DeleteOnClose);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", DeleteOnClose: %3, Requestor Process: %4",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  (bool)eventInfo->DokanFileInfo->DeleteOnClose,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return (void)GetFromContext(eventInfo)->OnCleanUp(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_MoveFile(EvtMoveFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\" -> \"%s\""), __FUNCTIONW__, eventInfo->FileName, eventInfo->NewFileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\" -> \"%3\", Requestor Process: %4",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  (bool)eventInfo->NewFileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnMoveFile(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_CanDeleteFile(EvtCanDeleteFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\", DeleteOnClose: %d"), __FUNCTIONW__, eventInfo->FileName, (int)eventInfo->DokanFileInfo->DeleteOnClose);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", DeleteOnClose: %3, Requestor Process: %4",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  (bool)eventInfo->DokanFileInfo->DeleteOnClose,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnCanDeleteFile(*eventInfo);
 	}
 
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_LockFile(EvtLockFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnLockFile(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_UnlockFile(EvtUnlockFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnUnlockFile(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetFileSecurity(EvtGetFileSecurity* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnGetFileSecurity(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_SetFileSecurity(EvtSetFileSecurity* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnSetFileSecurity(*eventInfo);
 	}
 
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_ReadFile(EvtReadFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", PagingIO: %3, Requestor Process: %4",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  (bool)eventInfo->DokanFileInfo->PagingIo,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnReadFile(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_WriteFile(EvtWriteFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", PagingIO: %3, Requestor Process: %4",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  (bool)eventInfo->DokanFileInfo->PagingIo,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnWriteFile(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FlushFileBuffers(EvtFlushFileBuffers* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnFlushFileBuffers(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_SetEndOfFile(EvtSetEndOfFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnSetEndOfFile(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_SetAllocationSize(EvtSetAllocationSize* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnSetAllocationSize(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetFileInfo(EvtGetFileInfo* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnGetFileInfo(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_SetBasicFileInfo(EvtSetBasicFileInfo* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnSetBasicFileInfo(*eventInfo);
 	}
 
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FindFiles(EvtFindFiles* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\\*\""), __FUNCTIONW__, eventInfo->PathName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\\*\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->PathName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnFindFiles(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FindFilesWithPattern(EvtFindFilesWithPattern* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\\%s\""), __FUNCTIONW__, eventInfo->PathName, eventInfo->SearchPattern);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\\%3\", Requestor Process: %4",
+				  __FUNCTIONW__,
+				  eventInfo->PathName,
+				  eventInfo->SearchPattern,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnFindFilesWithPattern(*eventInfo);
 	}
 	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FindStreams(EvtFindStreams* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, eventInfo->FileName);
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
+				  __FUNCTIONW__,
+				  eventInfo->FileName,
+				  eventInfo->DokanFileInfo->ProcessId
+		);
+
 		return GetFromContext(eventInfo)->OnFindStreams(*eventInfo);
 	}
 }

@@ -82,7 +82,7 @@ namespace KxVFS
 			fileContext = new(std::nothrow) FileContext(m_FileSystem);
 			if (!fileContext)
 			{
-				KxVFS_Log(LogLevel::Fatal, L"%s: Unable allocate memory for 'FileContext'", __FUNCTIONW__);
+				KxVFS_Log(LogLevel::Fatal, L"%1: Unable allocate memory for 'FileContext'", __FUNCTIONW__);
 			}
 		}
 		fileContext->AssignHandle(std::move(fileHandle));

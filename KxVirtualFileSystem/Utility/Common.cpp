@@ -29,7 +29,7 @@ namespace KxVFS::Utility
 	KxDynamicStringW GetErrorMessage(DWORD code, WORD langID)
 	{
 		KxDynamicStringW message = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_MAX_WIDTH_MASK, nullptr, code, langID);
-		return KxDynamicStringW::Format(L"[%u] %s", code, message.data());
+		return FormatString(L"[%1] %2", code, message);
 	}
 
 	bool CreateDirectoryTree(KxDynamicStringRefW pathW, bool skipLastPart, SECURITY_ATTRIBUTES* securityAttributes, DWORD* errorCodeOut)

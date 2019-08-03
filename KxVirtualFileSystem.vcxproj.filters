@@ -55,6 +55,12 @@
     <Filter Include="Source Files\Logger">
       <UniqueIdentifier>{11400979-580b-4fe3-ae06-835a70cd2c2a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Utility\KxFormat">
+      <UniqueIdentifier>{aeb968d4-7b9d-42af-967e-a68d4a6ffd86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utility\KxFormat">
+      <UniqueIdentifier>{2474d8b2-9eaf-4c64-a2e7-8445bd02b089}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h">
@@ -219,6 +225,12 @@
     <ClInclude Include="KxVirtualFileSystem\Logger\ChainLogger.h">
       <Filter>Header Files\Logger</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxFormat\KxFormat.h">
+      <Filter>Header Files\Utility\KxFormat</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\KxFormat\KxFormatTraits.h">
+      <Filter>Header Files\Utility\KxFormat</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
@@ -304,6 +316,9 @@
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\Logger\ConsoleLogger.cpp">
       <Filter>Source Files\Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\KxFormat\KxFormat.cpp">
+      <Filter>Source Files\Utility\KxFormat</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

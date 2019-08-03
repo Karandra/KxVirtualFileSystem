@@ -8,6 +8,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
 #include "KxDynamicString/KxDynamicString.h"
+#include "KxFormat/KxFormat.h"
 #include "Win32Constants.h"
 
 namespace KxVFS::Utility::Internal
@@ -235,4 +236,20 @@ namespace KxVFS::Utility
 	}
 
 	#pragma warning(pop)
+}
+
+
+namespace KxVFS::Utility
+{
+	template<class... Args>
+	static KxDynamicStringW FormatString(const wchar_t* format, Args&&... arg)
+	{
+		if constexpr((sizeof...(Args)) != 0)
+		{
+			KxFormat formatter(format);
+			std::initializer_list<int>{((void)formatter(std::forward<Args>(arg)), 0)...};
+			return formatter;
+		}
+		return format;
+	}
 }

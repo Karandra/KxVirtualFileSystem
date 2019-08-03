@@ -18,7 +18,7 @@ namespace KxVFS
 			DWORD charsWritten = 0;
 			KxDynamicStringW text = FormatInfoPack(infoPack);
 			::WriteConsoleW(handle, text.data(), static_cast<DWORD>(text.size()), &charsWritten, nullptr);
-			return charsWritten;
+			return static_cast<size_t>(charsWritten);
 		}
 		return 0;
 	}

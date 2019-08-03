@@ -17,7 +17,7 @@ namespace KxVFS
 	{
 		if (fileInfo->DeleteOnClose)
 		{
-			KxVFS_Log(LogLevel::Info, TEXT("%s: \"%s\""), __FUNCTIONW__, filePath.data());
+			KxVFS_Log(LogLevel::Info, L"%1: \"%2\"", __FUNCTIONW__, filePath);
 
 			// Should already be deleted by CloseHandle if open with 'FILE_FLAG_DELETE_ON_CLOSE'.
 			if (fileInfo->IsDirectory)
@@ -76,7 +76,7 @@ namespace KxVFS
 
 	NTSTATUS MirrorFS::GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize)
 	{
-		KxVFS_Log(LogLevel::Info, L"Attempt to get volume size info for: %s", m_Source.data());
+		KxVFS_Log(LogLevel::Info, L"Attempt to get volume size info for: %1", m_Source);
 
 		if (::GetDiskFreeSpaceExW(m_Source, nullptr, reinterpret_cast<ULARGE_INTEGER*>(&totalSize), reinterpret_cast<ULARGE_INTEGER*>(&freeBytes)))
 		{
@@ -100,7 +100,7 @@ namespace KxVFS
 		}
 		else
 		{
-			KxVFS_Log(LogLevel::Info, L"Unable get disk size info: %s", m_Source.data());
+			KxVFS_Log(LogLevel::Info, L"Unable get disk size info: %1", m_Source.data());
 			return GetNtStatusByWin32LastErrorCode();
 		}
 	}
@@ -167,7 +167,7 @@ namespace KxVFS
 
 	NTSTATUS MirrorFS::OnCreateFile(EvtCreateFile& eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, L"Trying to create/open file or directory: %s", eventInfo.FileName);
+		KxVFS_Log(LogLevel::Info, L"Trying to create/open file or directory: %1", eventInfo.FileName);
 
 		DWORD errorCode = 0;
 		NTSTATUS statusCode = STATUS_SUCCESS;
@@ -293,7 +293,7 @@ namespace KxVFS
 				ImpersonateLoggedOnUserIfEnabled(userTokenHandle);
 				OpenWithSecurityAccessIfEnabled(genericDesiredAccess, isWriteRequest);
 
-				KxVFS_Log(LogLevel::Info, L"Trying to create/open file: %s", targetPath.data());
+				KxVFS_Log(LogLevel::Info, L"Trying to create/open file: %1", targetPath);
 				FileHandle fileHandle(targetPath,
 									  genericDesiredAccess,
 									  fileShareOptions,
@@ -306,7 +306,7 @@ namespace KxVFS
 
 				if (!fileHandle.IsValid())
 				{
-					KxVFS_Log(LogLevel::Info, L"Failed to create/open file: %s", targetPath.data());
+					KxVFS_Log(LogLevel::Info, L"Failed to create/open file: %1", targetPath);
 					statusCode = GetNtStatusByWin32ErrorCode(errorCode);
 				}
 				else
@@ -491,14 +491,14 @@ namespace KxVFS
 					}
 					else
 					{
-						KxVFS_Log(LogLevel::Info, L"GetKernelObjectSecurity error: %u", error);
+						KxVFS_Log(LogLevel::Info, L"GetKernelObjectSecurity error: %1", error);
 						return GetNtStatusByWin32ErrorCode(error);
 					}
 				}
 
 				// Ensure the Security Descriptor Length is set
 				const DWORD securityDescriptorLength = ::GetSecurityDescriptorLength(eventInfo.SecurityDescriptor);
-				KxVFS_Log(LogLevel::Info, L"GetKernelObjectSecurity return true, 'eventInfo.LengthNeeded = %u, securityDescriptorLength = %u", eventInfo.LengthNeeded, securityDescriptorLength);
+				KxVFS_Log(LogLevel::Info, L"GetKernelObjectSecurity return true, 'eventInfo.LengthNeeded = %1, securityDescriptorLength = %2", eventInfo.LengthNeeded, securityDescriptorLength);
 				eventInfo.LengthNeeded = securityDescriptorLength;
 
 				return STATUS_SUCCESS;
@@ -519,7 +519,7 @@ namespace KxVFS
 				if (!::SetKernelObjectSecurity(fileContext->GetHandle(), eventInfo.SecurityInformation, eventInfo.SecurityDescriptor))
 				{
 					const DWORD error = ::GetLastError();
-					KxVFS_Log(LogLevel::Info, L"SetKernelObjectSecurity error: %u", error);
+					KxVFS_Log(LogLevel::Info, L"SetKernelObjectSecurity error: %1", error);
 					return GetNtStatusByWin32ErrorCode(error);
 				}
 				return STATUS_SUCCESS;
@@ -671,7 +671,7 @@ namespace KxVFS
 			if (!fileContext->GetHandle().GetInfo(eventInfo.FileHandleInfo))
 			{
 				KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
-				KxVFS_Log(LogLevel::Info, L"Couldn't get file info by handle, trying by file name: %s", targetPath.data());
+				KxVFS_Log(LogLevel::Info, L"Couldn't get file info by handle, trying by file name: %1", targetPath);
 
 				// FileName is a root directory, in this case, 'FindFirstFile' can't get directory information.
 				if (wcslen(eventInfo.FileName) == 1)
@@ -695,7 +695,7 @@ namespace KxVFS
 				}
 			}
 
-			KxVFS_Log(LogLevel::Info, L"Successfully retrieved file info by handle: %s", eventInfo.FileName);
+			KxVFS_Log(LogLevel::Info, L"Successfully retrieved file info by handle: %1", eventInfo.FileName);
 			return STATUS_SUCCESS;
 		}
 		return STATUS_FILE_CLOSED;

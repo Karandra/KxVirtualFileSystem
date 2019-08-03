@@ -46,21 +46,21 @@ namespace KxVFS
 	}
 	KxDynamicStringW ILogger::FormatInfoPack(const Logger::InfoPack& infoPack) const
 	{
-		KxDynamicStringW text = KxDynamicStringW::Format(L"[%s][Thread: %u] %s",
-														 GetLogLevelName(infoPack.GetLevel()).data(),
-														 infoPack.GetThreadID(),
-														 infoPack.GetString().data()
+		KxDynamicStringW text = Utility::FormatString(L"[%1][Thread:%2] %3",
+													  GetLogLevelName(infoPack.GetLevel()),
+													  infoPack.GetThreadID(),
+													  infoPack.GetString()
 		);
 
 		if (const IFileSystem* fileSystem = infoPack.GetFileSystem())
 		{
 			KxDynamicStringW mountPoint = fileSystem->GetMountPoint();
-			text += KxDynamicStringW::Format(L"\r\n\t[File System]: %s", mountPoint.data());
+			text += Utility::FormatString(L"\r\n\t[File System]: %1", mountPoint.data());
 		}
 		if (const FileNode* fileNode = infoPack.GetFileNode())
 		{
 			KxDynamicStringW fullPath = fileNode->GetFullPath();
-			text += KxDynamicStringW::Format(L"\r\n\t[File Node]: %s", fullPath.data());
+			text += Utility::FormatString(L"\r\n\t[File Node]: %1", fullPath.data());
 		}
 		text += L"\r\n";
 

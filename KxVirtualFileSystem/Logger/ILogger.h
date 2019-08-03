@@ -93,7 +93,7 @@ namespace KxVFS
 		public:
 			template<class... Args> size_t Log(LogLevel level, const wchar_t* format, Args&& ... arg)
 			{
-				return LogString(Logger::InfoPack(level, KxDynamicStringW::Format(format, std::forward<Args>(arg)...)));
+				return LogString(Logger::InfoPack(level, Utility::FormatString(format, std::forward<Args>(arg)...)));
 			}
 	};
 }
