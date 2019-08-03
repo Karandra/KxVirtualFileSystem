@@ -33,6 +33,11 @@
     <ClInclude Include="KxVirtualFileSystem\Common\IOManager.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\IRequestDispatcher.h" />
     <ClInclude Include="KxVirtualFileSystem\IFileSystem.h" />
+    <ClInclude Include="KxVirtualFileSystem\Logger\ChainLogger.h" />
+    <ClInclude Include="KxVirtualFileSystem\Logger\ConsoleLogger.h" />
+    <ClInclude Include="KxVirtualFileSystem\Logger\DebugLogger.h" />
+    <ClInclude Include="KxVirtualFileSystem\Logger\FileLogger.h" />
+    <ClInclude Include="KxVirtualFileSystem\Logger\ILogger.h" />
     <ClInclude Include="KxVirtualFileSystem\MirrorFS.h" />
     <ClInclude Include="KxVirtualFileSystem\Misc\IncludeDokan.h" />
     <ClInclude Include="KxVirtualFileSystem\Misc\IncludeWindows.h" />
@@ -86,6 +91,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\BasicFileSystem.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Logger\ChainLogger.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Logger\ConsoleLogger.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Logger\DebugLogger.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Logger\FileLogger.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Logger\ILogger.cpp" />
     <ClCompile Include="KxVirtualFileSystem\MirrorFS.cpp" />
     <ClCompile Include="KxVirtualFileSystem\FileSystemService.cpp" />
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">

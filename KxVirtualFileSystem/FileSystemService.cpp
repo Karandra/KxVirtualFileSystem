@@ -10,10 +10,13 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/Utility/Wow64RedirectionDisabler.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
+#include <exception>
 #pragma comment(lib, "Dokan2.lib")
 
 namespace
 {
+	KxVFS::FileSystemService* g_FileSystemServiceInstance = nullptr;
+
 	bool InitDokany()
 	{
 		__try
@@ -49,6 +52,11 @@ namespace
 
 namespace KxVFS
 {
+	FileSystemService* FileSystemService::GetInstance()
+	{
+		return g_FileSystemServiceInstance;
+	}
+
 	KxDynamicStringW FileSystemService::GetLibraryVersion()
 	{
 		return L"2.0a";
@@ -182,6 +190,15 @@ namespace KxVFS
 		m_ServiceManager(ServiceAccess::Start|ServiceAccess::Stop|ServiceAccess::QueryStatus|ServiceAccess::ChangeConfig),
 		m_HasSeSecurityNamePrivilege(AddSeSecurityNamePrivilege())
 	{
+		if (g_FileSystemServiceInstance)
+		{
+			throw std::logic_error("KxVFS: an instance of 'FileSystemService' already created");
+		}
+		g_FileSystemServiceInstance = this;
+
+		m_ChainLogger.AddLogger(m_StdOutLogger);
+		m_ChainLogger.AddLogger(m_DebugLogger);
+
 		if (!serviceName.empty())
 		{
 			InitDriver();
@@ -194,6 +211,8 @@ namespace KxVFS
 			UninitDokany();
 			m_IsFSInitialized = false;
 		}
+
+		g_FileSystemServiceInstance = nullptr;
 	}
 
 	bool FileSystemService::IsOK() const

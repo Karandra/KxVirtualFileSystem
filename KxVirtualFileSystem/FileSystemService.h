@@ -7,11 +7,15 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #pragma once
 #include "KxVirtualFileSystem.h"
 #include "Misc/IncludeWindows.h"
+#include "Logger/ChainLogger.h"
+#include "Logger/ConsoleLogger.h"
+#include "Logger/DebugLogger.h"
 #include "Utility.h"
 
 namespace KxVFS
 {
 	class KxVFS_API IFileSystem;
+	class KxVFS_API ILogger;
 }
 
 namespace KxVFS
@@ -19,6 +23,8 @@ namespace KxVFS
 	class KxVFS_API FileSystemService
 	{
 		public:
+			static FileSystemService* GetInstance();
+
 			static KxDynamicStringW GetLibraryVersion();
 			static KxDynamicStringW GetDokanyVersion();
 
@@ -37,6 +43,10 @@ namespace KxVFS
 			ServiceHandle m_DriverService;
 			const bool m_HasSeSecurityNamePrivilege = false;
 			bool m_IsFSInitialized = false;
+
+			ChainLogger m_ChainLogger;
+			StdOutLogger m_StdOutLogger;
+			DebugLogger m_DebugLogger;
 
 		private:
 			bool AddSeSecurityNamePrivilege();
@@ -76,5 +86,11 @@ namespace KxVFS
 			}
 			void AddActiveFS(IFileSystem& fileSystem);
 			void RemoveActiveFS(IFileSystem& fileSystem);
+
+		public:
+			virtual ILogger& GetLogger()
+			{
+				return m_ChainLogger;
+			}
 	};
 }

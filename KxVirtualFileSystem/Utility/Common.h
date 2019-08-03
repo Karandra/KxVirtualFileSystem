@@ -236,32 +236,3 @@ namespace KxVFS::Utility
 
 	#pragma warning(pop)
 }
-
-namespace KxVFS::Utility
-{
-	size_t Print(KxDynamicStringRefA text);
-	size_t Print(KxDynamicStringRefW text);
-
-	template<class... Args> size_t Print(const char* format, Args&&... arg)
-	{
-		KxDynamicStringA text = KxDynamicStringA::Format("[Thread:%u] ", ::GetCurrentThreadId());
-		text += KxDynamicStringA::Format(format, std::forward<Args>(arg)...);
-		text += "\r\n";
-
-		return Print(text);
-	}
-	template<class... Args> size_t Print(const wchar_t* format, Args&&... arg)
-	{
-		KxDynamicStringW text = KxDynamicStringW::Format(L"[Thread:%u] ", ::GetCurrentThreadId());
-		text += KxDynamicStringW::Format(format, std::forward<Args>(arg)...);
-		text += L"\r\n";
-
-		return Print(text);
-	}
-};
-
-#if KxVFS_DEBUG_ENABLE_LOG
-	#define KxVFS_DebugPrint KxVFS::Utility::Print
-#else
-	#define KxVFS_DebugPrint
-#endif

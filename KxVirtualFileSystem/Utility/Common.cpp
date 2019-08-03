@@ -194,36 +194,3 @@ namespace KxVFS::Utility
 		return srcBytesLength / sizeof(wchar_t);
 	}
 }
-
-namespace KxVFS::Utility
-{
-	namespace
-	{
-		static SRWLock PrintLock;
-	}
-
-	size_t Print(KxDynamicStringRefA text)
-	{
-		ExclusiveSRWLocker lock(PrintLock);
-
-		// Print to VS 'Output' window
-		::OutputDebugStringA(text.data());
-
-		// Print to console stdout
-		DWORD charsWritten = 0;
-		::WriteConsoleA(::GetStdHandle(STD_OUTPUT_HANDLE), text.data(), static_cast<DWORD>(text.size()), &charsWritten, nullptr);
-		return text.length();
-	}
-	size_t Print(KxDynamicStringRefW text)
-	{
-		ExclusiveSRWLocker lock(PrintLock);
-
-		// Print to VS 'Output' window
-		::OutputDebugStringW(text.data());
-
-		// Print to console stdout
-		DWORD charsWritten = 0;
-		::WriteConsoleW(::GetStdHandle(STD_OUTPUT_HANDLE), text.data(), static_cast<DWORD>(text.size()), &charsWritten, nullptr);
-		return text.length();
-	}
-}

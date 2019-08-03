@@ -87,7 +87,7 @@ int _tmain()
 			case 'm':
 			{
 				FSError error = mainVFS->Mount();
-				Utility::Print(L"%d: %s\r\n", error.GetCode(), error.GetMessage().data());
+				KxVFS_Log(LogLevel::Info, L"%d: %s\r\n", error.GetCode(), error.GetMessage().data());
 				break;
 			}
 			case 'r':
@@ -120,12 +120,12 @@ int _tmain()
 
 				#if 0
 				FileHandle handle = ::CreateFileW(L"C:\\Users\\Kerber\\Desktop\\Test\\VeryHigh.ini",
-														   GENERIC_READ,
-														   FILE_SHARE_READ,
-														   nullptr,
-														   OPEN_EXISTING,
-														   FILE_ATTRIBUTE_NORMAL,
-														   nullptr);
+												  GENERIC_READ,
+												  FILE_SHARE_READ,
+												  nullptr,
+												  OPEN_EXISTING,
+												  FILE_ATTRIBUTE_NORMAL,
+												  nullptr);
 
 				BY_HANDLE_FILE_INFORMATION info = {0};
 				::GetFileInformationByHandle(handle, &info);
@@ -149,7 +149,7 @@ int _tmain()
 				Utility::CreateDirectory(L"C:\\Users\\Kerber\\Desktop\\Test\\123");
 				Utility::CreateDirectory(L"C:\\Users\\Kerber\\Desktop\\Test\\123\\456");
 				::CopyFileW(source, target, FALSE);
-				Utility::Print("Done: %u", ::GetLastError());
+				KxVFS_Log(LogLevel::Info, L"Done: %u", ::GetLastError());
 
 				break;
 			}
@@ -157,20 +157,20 @@ int _tmain()
 			{
 				constexpr auto path = L"C:\\Users\\Kerber\\Desktop\\Test\\Data\\Scripts\\TestFile.json";
 				FileHandle handle(path, AccessRights::GenericWrite, FileShare::All, CreationDisposition::CreateAlways);
-				Utility::Print("Done: %u", ::GetLastError());
+				KxVFS_Log(LogLevel::Info, L"Done: %u", ::GetLastError());
 				break;
 			}
 			case 'b':
 			{
 				constexpr auto path = L"C:\\Users\\Kerber\\Desktop\\Test\\Data\\Scripts\\TestFolder";
 				Utility::CreateDirectory(path, nullptr);
-				Utility::Print("Done: %u", ::GetLastError());
+				KxVFS_Log(LogLevel::Info, L"Done: %u", ::GetLastError());
 				break;
 			}
 
 			case 'u':
 			{
-				Utility::Print("%s\r\n", mainVFS->UnMount() ? "true" : "false");
+				KxVFS_Log(LogLevel::Info, L"%s\r\n", mainVFS->UnMount() ? "true" : "false");
 				break;
 			}
 			case 'x':

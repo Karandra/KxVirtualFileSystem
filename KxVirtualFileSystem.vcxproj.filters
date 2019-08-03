@@ -49,6 +49,12 @@
     <Filter Include="Resource Files\Common">
       <UniqueIdentifier>{70ddaa96-e511-4b80-879b-a785152eba04}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Logger">
+      <UniqueIdentifier>{fd99d919-9a63-4f3c-ba96-84bca37a4317}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Logger">
+      <UniqueIdentifier>{11400979-580b-4fe3-ae06-835a70cd2c2a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h">
@@ -198,6 +204,21 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\Wow64RedirectionDisabler.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Logger\ILogger.h">
+      <Filter>Header Files\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Logger\ConsoleLogger.h">
+      <Filter>Header Files\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Logger\DebugLogger.h">
+      <Filter>Header Files\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Logger\FileLogger.h">
+      <Filter>Header Files\Logger</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Logger\ChainLogger.h">
+      <Filter>Header Files\Logger</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
@@ -268,6 +289,21 @@
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\Common\FileContextEventInfo.cpp">
       <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Logger\DebugLogger.cpp">
+      <Filter>Source Files\Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Logger\FileLogger.cpp">
+      <Filter>Source Files\Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Logger\ChainLogger.cpp">
+      <Filter>Source Files\Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Logger\ILogger.cpp">
+      <Filter>Source Files\Logger</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Logger\ConsoleLogger.cpp">
+      <Filter>Source Files\Logger</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

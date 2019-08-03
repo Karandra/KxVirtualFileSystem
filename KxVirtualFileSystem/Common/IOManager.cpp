@@ -6,6 +6,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
+#include "KxVirtualFileSystem/Logger/ILogger.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "IOManager.h"
@@ -114,7 +115,7 @@ namespace KxVFS
 			}
 			default:
 			{
-				KxVFS_DebugPrint(L"Unknown operation type in async IO callback: %d", (int)asyncContext.GetOperationType());
+				KxVFS_Log(LogLevel::Info, L"Unknown operation type in async IO callback: %d", (int)asyncContext.GetOperationType());
 				break;
 			}
 		};
@@ -219,6 +220,8 @@ namespace KxVFS
 
 	NTSTATUS IOManager::ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext) const
 	{
+		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTION__, fileHandle.GetPath().data());
+
 		if (!fileHandle.Seek(eventInfo.Offset, FileSeekMode::Start))
 		{
 			return IFileSystem::GetNtStatusByWin32LastErrorCode();
@@ -235,6 +238,8 @@ namespace KxVFS
 	}
 	NTSTATUS IOManager::WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext) const
 	{
+		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTION__, fileHandle.GetPath().data());
+
 		if (eventInfo.DokanFileInfo->WriteToEndOfFile)
 		{
 			if (!fileHandle.Seek(0, FileSeekMode::End))
@@ -259,7 +264,7 @@ namespace KxVFS
 					return STATUS_SUCCESS;
 				}
 
-				// WFT is happening here?
+				// WTF is happening here?
 				if ((uint64_t)(eventInfo.Offset + eventInfo.NumberOfBytesToWrite) > (uint64_t)fileSize)
 				{
 					uint64_t bytes = fileSize - eventInfo.Offset;
@@ -303,6 +308,8 @@ namespace KxVFS
 
 	NTSTATUS IOManager::ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo)
 	{
+		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTION__, fileContext.GetHandle().GetPath().data());
+
 		AsyncIOContext* asyncContext = PopContext(fileContext);
 		if (!asyncContext)
 		{
@@ -324,6 +331,8 @@ namespace KxVFS
 	}
 	NTSTATUS IOManager::WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo)
 	{
+		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTION__, fileContext.GetHandle().GetPath().data());
+
 		int64_t fileSize = 0;
 		if (!fileContext.GetHandle().GetFileSize(fileSize))
 		{
@@ -344,11 +353,11 @@ namespace KxVFS
 				uint64_t bytes = fileSize - eventInfo.Offset;
 				if (bytes >> 32)
 				{
-					eventInfo.NumberOfBytesToWrite = (DWORD)(bytes & 0xFFFFFFFFUL);
+					eventInfo.NumberOfBytesToWrite = static_cast<DWORD>(bytes & std::numeric_limits<DWORD>::max());
 				}
 				else
 				{
-					eventInfo.NumberOfBytesToWrite = (DWORD)bytes;
+					eventInfo.NumberOfBytesToWrite = static_cast<DWORD>(bytes);
 				}
 			}
 		}
