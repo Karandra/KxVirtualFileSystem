@@ -63,9 +63,7 @@ namespace KxVFS
 
 			int64_t GetOperationOffset() const
 			{
-				int64_t offset = 0;
-				Utility::OverlappedOffsetToInt64(offset, m_Overlapped);
-				return offset;
+				return Utility::OverlappedOffsetToInt64(m_Overlapped);
 			}
 			OperationType GetOperationType() const
 			{
@@ -84,7 +82,7 @@ namespace KxVFS
 			}
 			void ResetOperationContext()
 			{
-				Utility::Int64ToOverlappedOffset(0i64, m_Overlapped);
+				Utility::Int64ToOverlappedOffset(0, m_Overlapped);
 				m_OperationContext = nullptr;
 				m_OperationType = OperationType::Unknown;
 			}

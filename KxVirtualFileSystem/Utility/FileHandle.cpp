@@ -90,11 +90,11 @@ namespace KxVFS
 	{
 		DWORD offsetLowPart = 0;
 		DWORD offsetHighPart = 0;
-		Utility::Int64ToHighLow(offset, offsetLowPart, offsetHighPart);
+		Utility::Int64ToLowHigh(offset, offsetLowPart, offsetHighPart);
 
 		DWORD lengthLowPart = 0;
 		DWORD lengthHighPart = 0;
-		Utility::Int64ToHighLow(length, lengthLowPart, lengthHighPart);
+		Utility::Int64ToLowHigh(length, lengthLowPart, lengthHighPart);
 
 		return ::LockFile(m_Handle, offsetLowPart, offsetHighPart, lengthLowPart, lengthHighPart);
 	}
@@ -102,11 +102,11 @@ namespace KxVFS
 	{
 		DWORD offsetLowPart = 0;
 		DWORD offsetHighPart = 0;
-		Utility::Int64ToHighLow(offset, offsetLowPart, offsetHighPart);
+		Utility::Int64ToLowHigh(offset, offsetLowPart, offsetHighPart);
 
 		DWORD lengthLowPart = 0;
 		DWORD lengthHighPart = 0;
-		Utility::Int64ToHighLow(length, lengthLowPart, lengthHighPart);
+		Utility::Int64ToLowHigh(length, lengthLowPart, lengthHighPart);
 
 		return ::UnlockFile(m_Handle, offsetLowPart, offsetHighPart, lengthLowPart, lengthHighPart);
 	}
