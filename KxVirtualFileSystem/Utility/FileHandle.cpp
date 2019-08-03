@@ -41,16 +41,17 @@ namespace KxVFS
 	}
 	KxDynamicStringW FileHandle::GetPath() const
 	{
-		KxDynamicStringW out;
+		KxDynamicStringW path;
 		const DWORD flags = VOLUME_NAME_DOS|FILE_NAME_NORMALIZED;
 		const DWORD length = ::GetFinalPathNameByHandleW(m_Handle, nullptr, 0, flags);
 		if (length != 0)
 		{
-			out.reserve(length);
-			::GetFinalPathNameByHandleW(m_Handle, out.data(), static_cast<DWORD>(out.length()), flags);
-			out.erase(0, 4); // Remove "\\?\" prefix
+			path.resize(length - 1); // -1 for null terminator
+			::GetFinalPathNameByHandleW(m_Handle, path.data(), length, flags);
+
+			path.erase(0, 4); // Remove "\\?\" prefix
 		}
-		return out;
+		return path;
 	}
 	NTSTATUS FileHandle::SetPath(KxDynamicStringRefW path, bool replaceIfExist)
 	{
