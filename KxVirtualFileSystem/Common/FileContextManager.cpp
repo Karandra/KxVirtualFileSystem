@@ -6,6 +6,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
+#include "KxVirtualFileSystem/Logger/ILogger.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "FileContextManager.h"
@@ -78,7 +79,11 @@ namespace KxVFS
 
 		if (!fileContext)
 		{
-			fileContext = new FileContext(m_FileSystem);
+			fileContext = new(std::nothrow) FileContext(m_FileSystem);
+			if (!fileContext)
+			{
+				KxVFS_Log(LogLevel::Fatal, L"%s: Unable allocate memory for 'FileContext'", __FUNCTIONW__);
+			}
 		}
 		fileContext->AssignHandle(std::move(fileHandle));
 		fileContext->MarkOpen();

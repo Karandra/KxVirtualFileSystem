@@ -209,7 +209,11 @@ namespace KxVFS
 
 		if (!asyncContext)
 		{
-			asyncContext = new AsyncIOContext(fileContext);
+			asyncContext = new(std::nothrow) AsyncIOContext(fileContext);
+			if (!asyncContext)
+			{
+				KxVFS_Log(LogLevel::Fatal, L"%s: Unable allocate memory for 'AsyncIOContext'", __FUNCTIONW__);
+			}
 		}
 		else
 		{
@@ -220,7 +224,7 @@ namespace KxVFS
 
 	NTSTATUS IOManager::ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext) const
 	{
-		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTION__, fileHandle.GetPath().data());
+		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTIONW__, fileHandle.GetPath().data());
 
 		if (!fileHandle.Seek(eventInfo.Offset, FileSeekMode::Start))
 		{
@@ -238,7 +242,7 @@ namespace KxVFS
 	}
 	NTSTATUS IOManager::WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext) const
 	{
-		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTION__, fileHandle.GetPath().data());
+		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTIONW__, fileHandle.GetPath().data());
 
 		if (eventInfo.DokanFileInfo->WriteToEndOfFile)
 		{
@@ -308,7 +312,7 @@ namespace KxVFS
 
 	NTSTATUS IOManager::ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTION__, fileContext.GetHandle().GetPath().data());
+		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTIONW__, fileContext.GetHandle().GetPath().data());
 
 		AsyncIOContext* asyncContext = PopContext(fileContext);
 		if (!asyncContext)
@@ -331,7 +335,7 @@ namespace KxVFS
 	}
 	NTSTATUS IOManager::WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTION__, fileContext.GetHandle().GetPath().data());
+		KxVFS_Log(LogLevel::Info, L"%s: %s", __FUNCTIONW__, fileContext.GetHandle().GetPath().data());
 
 		int64_t fileSize = 0;
 		if (!fileContext.GetHandle().GetFileSize(fileSize))
