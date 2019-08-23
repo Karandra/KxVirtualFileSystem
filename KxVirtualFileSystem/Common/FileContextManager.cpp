@@ -68,13 +68,10 @@ namespace KxVFS
 		}
 
 		FileContext* fileContext = nullptr;
-		if (CriticalSectionLocker lock(m_FileContextPoolCS); true)
+		if (CriticalSectionLocker lock(m_FileContextPoolCS); !m_FileContextPool.empty())
 		{
-			if (!m_FileContextPool.empty())
-			{
-				fileContext = m_FileContextPool.back();
-				m_FileContextPool.pop_back();
-			}
+			fileContext = m_FileContextPool.back();
+			m_FileContextPool.pop_back();
 		}
 
 		if (!fileContext)

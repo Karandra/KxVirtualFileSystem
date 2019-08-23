@@ -98,7 +98,7 @@ namespace KxVFS
 			case AsyncIOContext::OperationType::Read:
 			{
 				EvtReadFile& readFileEvent = *asyncContext.GetOperationContext<EvtReadFile>();
-				readFileEvent.NumberOfBytesRead = (DWORD)bytesTransferred;
+				readFileEvent.NumberOfBytesRead = static_cast<DWORD>(bytesTransferred);
 				fileSystemInstance.OnFileRead(readFileEvent, fileContext);
 
 				Dokany2::DokanEndDispatchRead(&readFileEvent, Dokany2::DokanNtStatusFromWin32(resultIO));
@@ -107,7 +107,7 @@ namespace KxVFS
 			case AsyncIOContext::OperationType::Write:
 			{
 				EvtWriteFile& writeFileEvent = *asyncContext.GetOperationContext<EvtWriteFile>();
-				writeFileEvent.NumberOfBytesWritten = (DWORD)bytesTransferred;
+				writeFileEvent.NumberOfBytesWritten = static_cast<DWORD>(bytesTransferred);
 				fileSystemInstance.OnFileWritten(writeFileEvent, fileContext);
 
 				Dokany2::DokanEndDispatchWrite(&writeFileEvent, Dokany2::DokanNtStatusFromWin32(resultIO));
@@ -115,7 +115,7 @@ namespace KxVFS
 			}
 			default:
 			{
-				KxVFS_Log(LogLevel::Info, L"Unknown operation type in async IO callback: %1", (int)asyncContext.GetOperationType());
+				KxVFS_Log(LogLevel::Info, L"Unknown operation type in async IO callback: %1", asyncContext.GetOperationType());
 				break;
 			}
 		};
@@ -198,13 +198,10 @@ namespace KxVFS
 	AsyncIOContext* IOManager::PopContext(FileContext& fileContext)
 	{
 		AsyncIOContext* asyncContext = nullptr;
-		if (CriticalSectionLocker lock(m_AsyncContextPoolCS); true)
+		if (CriticalSectionLocker lock(m_AsyncContextPoolCS); !m_AsyncContextPool.empty())
 		{
-			if (!m_AsyncContextPool.empty())
-			{
-				asyncContext = m_AsyncContextPool.back();
-				m_AsyncContextPool.pop_back();
-			}
+			asyncContext = m_AsyncContextPool.back();
+			m_AsyncContextPool.pop_back();
 		}
 
 		if (!asyncContext)
@@ -230,7 +227,7 @@ namespace KxVFS
 		{
 			return IFileSystem::GetNtStatusByWin32LastErrorCode();
 		}
-		if (fileHandle.Read(eventInfo.Buffer, eventInfo.NumberOfBytesToRead, eventInfo.NumberOfBytesRead, nullptr))
+		if (fileHandle.Read(eventInfo.Buffer, eventInfo.NumberOfBytesToRead, eventInfo.NumberOfBytesRead))
 		{
 			if (fileContext)
 			{
