@@ -7,6 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Common/FileContext.h"
+#include <atomic>
 
 namespace KxVFS
 {
@@ -28,7 +29,7 @@ namespace KxVFS
 			CriticalSection m_FileContextPoolCS;
 			size_t m_FileContextPoolMaxSize = 0;
 
-			volatile LONG m_IsUnmounted = 0;
+			std::atomic<bool> m_IsUnmounted = false;
 			bool m_IsInitialized = false;
 
 		public:

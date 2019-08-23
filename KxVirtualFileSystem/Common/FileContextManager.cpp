@@ -62,7 +62,7 @@ namespace KxVFS
 	}
 	FileContext* FileContextManager::PopContext(FileHandle fileHandle)
 	{
-		if (fileHandle.IsNull() || !fileHandle.IsValid() || InterlockedAdd(&m_IsUnmounted, 0) != FALSE)
+		if (fileHandle.IsNull() || !fileHandle.IsValid() || m_IsUnmounted)
 		{
 			return nullptr;
 		}
