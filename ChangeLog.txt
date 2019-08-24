@@ -1,11 +1,18 @@
+Version 2.0 - 24.08.2019
+- Fixed some functions in Utility library.
+- Added option to use default Dokany2 installation and driver service
+- Implemented 'FindFilesWithPattern' Dokany event.
+- Improved performance.
+- General fixes and refactoring.
+
 Version 2.0a - 18.03.2019
-- New implementation for Convergence. Now it uses in-memory file tree and operates on it accessing real file system only when necessary.
-- Removed MultiMirror implementation, use Convergence.
-- Class AbstractFS splitted into IFileSystem interface and BasicFileSystem with some base operations.
-- File context and overlapped IO management moved from MirrorFS to their own classes FileContextManager and IOManager respectively.
-- Security and impersonation operations moved to ExtendedSecurity and CallerUserImpersonation classes.
-- Removed use of DOKAN_VECTOR in favor of std::vector. Many C-style operations replaced by C++ equivalents.
-- Added a bunch of new utility classes: SRWLock, string utils, KxComparator, operations for 'enum class' types, handle wrappers, useful constants, etc.
+- New implementation for 'Convergence'. Now it uses in-memory file tree and operates on it accessing real file system only when necessary.
+- Removed 'MultiMirror' implementation, use 'Convergence'.
+- Class 'AbstractFS' splitted into IFileSystem interface and BasicFileSystem with some basic operations.
+- File context and overlapped IO management moved from 'MirrorFS' to their own classes 'FileContextManager' and 'IOManager' respectively.
+- Security and impersonation operations moved to 'ExtendedSecurity' and 'CallerUserImpersonation' classes.
+- Removed use of 'DOKAN_VECTOR' in favor of std::vector. Many C-style operations replaced by C++ equivalents.
+- Added a bunch of new utility classes: 'SRWLock', string utils, 'KxComparator', operations for 'enum class' types, handle wrappers, useful constants, etc.
 - General refactoring and fixes.
 
 Version 1.4.1 - 06.01.2019

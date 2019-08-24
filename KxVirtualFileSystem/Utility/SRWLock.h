@@ -24,45 +24,49 @@ namespace KxVFS
 		public:
 			void AcquireShared() noexcept
 			{
-				#if !KxVFS_DEBUG_DISABLE_LOCKS
-				::AcquireSRWLockShared(&m_Lock);
-				#endif
+				if constexpr(!Setup::DisableLocks)
+				{
+					::AcquireSRWLockShared(&m_Lock);
+				}
 			}
 			void AcquireExclusive() noexcept
 			{
-				#if !KxVFS_DEBUG_DISABLE_LOCKS
-				::AcquireSRWLockExclusive(&m_Lock);
-				#endif
+				if constexpr(!Setup::DisableLocks)
+				{
+					::AcquireSRWLockExclusive(&m_Lock);
+				}
 			}
 
 			bool TryAcquireShared() noexcept
 			{
-				#if !KxVFS_DEBUG_DISABLE_LOCKS
-				return ::TryAcquireSRWLockShared(&m_Lock);
-				#else
+				if constexpr(!Setup::DisableLocks)
+				{
+					return ::TryAcquireSRWLockShared(&m_Lock);
+				}
 				return true;
-				#endif
 			}
 			bool TryAcquireExclusive() noexcept
 			{
-				#if !KxVFS_DEBUG_DISABLE_LOCKS
-				return ::TryAcquireSRWLockExclusive(&m_Lock);
-				#else
+				if constexpr(!Setup::DisableLocks)
+				{
+					return ::TryAcquireSRWLockExclusive(&m_Lock);
+				}
 				return true;
-				#endif
 			}
 
 			void ReleaseShared() noexcept
 			{
-				#if !KxVFS_DEBUG_DISABLE_LOCKS
-				::ReleaseSRWLockShared(&m_Lock);
-				#endif
+				if constexpr(!Setup::DisableLocks)
+				{
+					::ReleaseSRWLockShared(&m_Lock);
+				}
 			}
 			void ReleaseExclusive() noexcept
 			{
-				#if !KxVFS_DEBUG_DISABLE_LOCKS
-				::ReleaseSRWLockExclusive(&m_Lock);
-				#endif
+				if constexpr(!Setup::DisableLocks)
+				{
+					::ReleaseSRWLockExclusive(&m_Lock);
+				}
 			}
 	};
 }
