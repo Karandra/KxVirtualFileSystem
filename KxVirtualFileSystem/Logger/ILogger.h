@@ -98,8 +98,8 @@ namespace KxVFS
 	};
 }
 
-#if KxVFS_DEBUG_ENABLE_LOG
-#define KxVFS_Log ILogger::Get().Log
-#else
-#define KxVFS_Log
-#endif
+#define KxVFS_Log(level, format, ...)	\
+if constexpr(KxVFS::Setup::EnableDebugLog)	\
+{	\
+	ILogger::Get().Log(level, format, __VA_ARGS__);	\
+}	\

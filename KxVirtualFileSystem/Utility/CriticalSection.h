@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -17,39 +17,59 @@ namespace KxVFS
 		public:
 			CriticalSection() noexcept
 			{
-				::InitializeCriticalSection(&m_CritSec);
+				if constexpr(!Setup::DisableLocks)
+				{
+					::InitializeCriticalSection(&m_CritSec);
+				}
 			}
 			CriticalSection(uint32_t count)
 			{
-				::InitializeCriticalSectionAndSpinCount(&m_CritSec, count);
+				if constexpr(!Setup::DisableLocks)
+				{
+					::InitializeCriticalSectionAndSpinCount(&m_CritSec, count);
+				}
 			}
 			CriticalSection(const CriticalSection&) = delete;
 			CriticalSection(CriticalSection&&) = delete;
 			~CriticalSection() noexcept
 			{
-				::DeleteCriticalSection(&m_CritSec);
+				if constexpr(!Setup::DisableLocks)
+				{
+					::DeleteCriticalSection(&m_CritSec);
+				}
 			}
 
 		public:
 			void Enter() noexcept
 			{
-				#if !KxVFS_DEBUG_DISABLE_LOCKS
-				::EnterCriticalSection(&m_CritSec);
-				#endif
+				if constexpr(!Setup::DisableLocks)
+				{
+					::EnterCriticalSection(&m_CritSec);
+				}
 			}
 			bool TryEnter() noexcept
 			{
-				#if !KxVFS_DEBUG_DISABLE_LOCKS
-				return ::TryEnterCriticalSection(&m_CritSec);
-				#else
+				if constexpr(!Setup::DisableLocks)
+				{
+					return ::TryEnterCriticalSection(&m_CritSec);
+				}
 				return true;
-				#endif
 			}
 			void Leave() noexcept
 			{
-				#if !KxVFS_DEBUG_DISABLE_LOCKS
-				::LeaveCriticalSection(&m_CritSec);
-				#endif
+				if constexpr(!Setup::DisableLocks)
+				{
+					::LeaveCriticalSection(&m_CritSec);
+				}
+			}
+
+			uint32_t SetSpinCount(uint32_t count) noexcept
+			{
+				if constexpr(!Setup::DisableLocks)
+				{
+					return ::SetCriticalSectionSpinCount(&m_CritSec, count);
+				}
+				return 0;
 			}
 
 		public:
