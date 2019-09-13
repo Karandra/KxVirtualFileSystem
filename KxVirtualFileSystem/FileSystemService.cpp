@@ -19,6 +19,8 @@ namespace
 
 	bool InitDokany()
 	{
+		using namespace KxVFS;
+
 		__try
 		{
 			Dokany2::DokanInit(nullptr);
@@ -26,11 +28,20 @@ namespace
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER)
 		{
+			if (g_FileSystemServiceInstance)
+			{
+				const uint32_t exceptionCode = GetExceptionCode();
+				const KxDynamicStringRefW exceptionMessage = Utility::ExceptionCodeToString(exceptionCode);
+
+				KxVFS_Log(LogLevel::Fatal, L"Fatal exception '%1 (%2)' occurred while initializing Dokany", exceptionMessage, exceptionCode);
+			}
 			return false;
 		}
 	}
 	bool UninitDokany()
 	{
+		using namespace KxVFS;
+
 		// If VFS fails, it will uninitialize itself. I have no way to tell if it's failed, so just ignore that.
 		__try
 		{
@@ -39,7 +50,13 @@ namespace
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER)
 		{
-			// DOKAN_EXCEPTION_NOT_INITIALIZED was thrown
+			if (g_FileSystemServiceInstance)
+			{
+				const uint32_t exceptionCode = GetExceptionCode();
+				const KxDynamicStringRefW exceptionMessage = Utility::ExceptionCodeToString(exceptionCode);
+
+				KxVFS_Log(LogLevel::Fatal, L"Fatal exception '%1 (%2)' occurred in the process of Dokany shutdown", exceptionMessage, exceptionCode);
+			}
 			return false;
 		}
 	}
@@ -198,9 +215,13 @@ namespace KxVFS
 		g_FileSystemServiceInstance = this;
 
 		// Init default logger
-		m_ChainLogger.AddLogger(m_StdOutLogger);
+		if (Setup::Configuration::Debug)
+		{
+			m_ChainLogger.AddLogger(m_StdOutLogger);
+		}
 		m_ChainLogger.AddLogger(m_DebugLogger);
 
+		// Init driver
 		if (!serviceName.empty())
 		{
 			InitDriver();

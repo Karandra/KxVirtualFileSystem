@@ -10,11 +10,11 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS::Utility
 {
-	WORD LocaleIDToLangID(WORD localeID)
+	uint16_t LocaleIDToLangID(uint16_t localeID)
 	{
 		return MAKELANGID(PRIMARYLANGID(localeID), SUBLANGID(localeID));
 	}
-	KxDynamicStringW FormatMessage(DWORD flags, const void* source, DWORD messageID, WORD langID)
+	KxDynamicStringW FormatMessage(uint32_t flags, const void* source, uint32_t messageID, uint16_t langID)
 	{
 		LPWSTR formattedMessage = nullptr;
 		DWORD length = ::FormatMessageW(flags|FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_IGNORE_INSERTS, source, messageID, LocaleIDToLangID(langID), (LPWSTR)&formattedMessage, 0, nullptr);
@@ -26,7 +26,7 @@ namespace KxVFS::Utility
 		}
 		return L"";
 	}
-	KxDynamicStringW GetErrorMessage(DWORD code, WORD langID)
+	KxDynamicStringW GetErrorMessage(uint32_t code, uint16_t langID)
 	{
 		KxDynamicStringW message = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_MAX_WIDTH_MASK, nullptr, code, langID);
 		return FormatString(L"[%1] %2", code, message);
@@ -44,10 +44,10 @@ namespace KxVFS::Utility
 			// Construct array
 			const auto stdNOT_FOUND = KxDynamicStringRefW::npos;
 
-			size_t folderStart = path.find(':');
+			size_t folderStart = path.find(L':');
 			if (folderStart != stdNOT_FOUND)
 			{
-				if (path[folderStart + 1] == '\\')
+				if (path[folderStart + 1] == L'\\')
 				{
 					folderStart += 2;
 				}
@@ -60,7 +60,7 @@ namespace KxVFS::Utility
 			size_t next = stdNOT_FOUND;
 			do
 			{
-				next = path.find('\\', folderStart);
+				next = path.find(L'\\', folderStart);
 				folderArray.push_back(path.substr(folderStart, next - folderStart));
 				folderStart = next + 1;
 			}
@@ -72,7 +72,7 @@ namespace KxVFS::Utility
 			for (size_t i = 0; i < folderArray.size(); i++)
 			{
 				fullPath += folderArray[i];
-				fullPath += L"\\";
+				fullPath += L'\\';
 
 				ret = ::CreateDirectoryW(fullPath.c_str(), securityAttributes);
 				if (!ret)
@@ -97,7 +97,7 @@ namespace KxVFS::Utility
 
 		bool isSuccess = true;
 		KxDynamicStringW fullPath = baseDirectory;
-		String::SplitBySeparator(path, L"\\", [&fullPath, &isSuccess, securityAttributes](KxDynamicStringRefW directoryName)
+		String::SplitBySeparator(path, L'\\', [&fullPath, &isSuccess, securityAttributes](KxDynamicStringRefW directoryName)
 		{
 			fullPath += L'\\';
 			fullPath += directoryName;
@@ -192,5 +192,117 @@ namespace KxVFS::Utility
 
 		memcpy_s(destination, dstBytesLength, source.data(), srcBytesLength);
 		return srcBytesLength / sizeof(wchar_t);
+	}
+	KxDynamicStringRefW ExceptionCodeToString(uint32_t code)
+	{
+		switch (code)
+		{
+			case ToInt(Dokany2::ExceptionCode::NotInitialized):
+			{
+				return L"<Dokany> NotInitialized";
+			}
+			case ToInt(Dokany2::ExceptionCode::InitializationFailed):
+			{
+				return L"<Dokany> InitializationFailed";
+			}
+			case ToInt(Dokany2::ExceptionCode::ShutdownFailed):
+			{
+				return L"<Dokany> ShutdownFailed";
+			}
+
+			case EXCEPTION_ACCESS_VIOLATION:
+			{
+				return L"<System> EXCEPTION_ACCESS_VIOLATION";
+			}
+			case EXCEPTION_DATATYPE_MISALIGNMENT:
+			{
+				return L"<System> EXCEPTION_DATATYPE_MISALIGNMENT";
+			}
+			case EXCEPTION_BREAKPOINT:
+			{
+				return L"<System> EXCEPTION_BREAKPOINT";
+			}
+			case EXCEPTION_SINGLE_STEP:
+			{
+				return L"<System> EXCEPTION_SINGLE_STEP";
+			}
+			case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
+			{
+				return L"<System> EXCEPTION_ARRAY_BOUNDS_EXCEEDED";
+			}
+			case EXCEPTION_FLT_DENORMAL_OPERAND:
+			{
+				return L"<System> EXCEPTION_FLT_DENORMAL_OPERAND";
+			}
+			case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+			{
+				return L"<System> EXCEPTION_FLT_DIVIDE_BY_ZERO";
+			}
+			case EXCEPTION_FLT_INEXACT_RESULT:
+			{
+				return L"<System> EXCEPTION_FLT_INEXACT_RESULT";
+			}
+			case EXCEPTION_FLT_INVALID_OPERATION:
+			{
+				return L"<System> EXCEPTION_FLT_INVALID_OPERATION";
+			}
+			case EXCEPTION_FLT_OVERFLOW:
+			{
+				return L"<System> EXCEPTION_FLT_OVERFLOW";
+			}
+			case EXCEPTION_FLT_STACK_CHECK:
+			{
+				return L"<System> EXCEPTION_FLT_STACK_CHECK";
+			}
+			case EXCEPTION_FLT_UNDERFLOW:
+			{
+				return L"<System> EXCEPTION_FLT_UNDERFLOW";
+			}
+			case EXCEPTION_INT_DIVIDE_BY_ZERO:
+			{
+				return L"<System> EXCEPTION_INT_DIVIDE_BY_ZERO";
+			}
+			case EXCEPTION_INT_OVERFLOW:
+			{
+				return L"<System> EXCEPTION_INT_OVERFLOW";
+			}
+			case EXCEPTION_PRIV_INSTRUCTION:
+			{
+				return L"<System> EXCEPTION_PRIV_INSTRUCTION";
+			}
+			case EXCEPTION_IN_PAGE_ERROR:
+			{
+				return L"<System> EXCEPTION_IN_PAGE_ERROR";
+			}
+			case EXCEPTION_ILLEGAL_INSTRUCTION:
+			{
+				return L"<System> EXCEPTION_ILLEGAL_INSTRUCTION";
+			}
+			case EXCEPTION_NONCONTINUABLE_EXCEPTION:
+			{
+				return L"<System> EXCEPTION_NONCONTINUABLE_EXCEPTION";
+			}
+			case EXCEPTION_STACK_OVERFLOW:
+			{
+				return L"<System> EXCEPTION_STACK_OVERFLOW";
+			}
+			case EXCEPTION_INVALID_DISPOSITION:
+			{
+				return L"<System> EXCEPTION_INVALID_DISPOSITION";
+			}
+			case EXCEPTION_GUARD_PAGE:
+			{
+				return L"<System> EXCEPTION_GUARD_PAGE";
+			}
+			case EXCEPTION_INVALID_HANDLE:
+			{
+				return L"<System> EXCEPTION_INVALID_HANDLE";
+			}
+			case EXCEPTION_POSSIBLE_DEADLOCK:
+			{
+				return L"<System> EXCEPTION_POSSIBLE_DEADLOCK";
+			}
+		};
+		return L"<Unknown>";
 	}
 }

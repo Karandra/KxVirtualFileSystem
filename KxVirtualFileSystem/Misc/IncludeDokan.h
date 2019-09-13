@@ -5,6 +5,7 @@ Copyright © 2018 Kerber. All rights reserved.
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
+#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 #pragma warning(disable: 4005) // Macro redefinition
 
@@ -23,7 +24,6 @@ extern "C"
 		#include "Dokan/fileinfo.h"
 
 		#undef _EXPORTING
-
 	}
 	#pragma warning(pop)
 }
@@ -59,4 +59,19 @@ namespace KxVFS
 	using EvtFindFiles = Dokany2::DOKAN_FIND_FILES_EVENT;
 	using EvtFindFilesWithPattern = Dokany2::DOKAN_FIND_FILES_PATTERN_EVENT;
 	using EvtFindStreams = Dokany2::DOKAN_FIND_STREAMS_EVENT;
+}
+
+namespace Dokany2
+{
+	enum class ExceptionCode: uint32_t
+	{
+		NotInitialized = DOKAN_EXCEPTION_NOT_INITIALIZED,
+		InitializationFailed = DOKAN_EXCEPTION_INITIALIZATION_FAILED,
+		ShutdownFailed = DOKAN_EXCEPTION_SHUTDOWN_FAILED
+	};
+}
+
+namespace KxVFS
+{
+	KxVFS_AllowEnumCastOp(Dokany2::ExceptionCode);
 }

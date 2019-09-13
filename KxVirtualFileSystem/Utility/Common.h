@@ -18,9 +18,9 @@ namespace KxVFS::Utility::Internal
 
 namespace KxVFS::Utility
 {
-	WORD LocaleIDToLangID(WORD localeID);
-	KxDynamicStringW FormatMessage(DWORD flags, const void* source, DWORD messageID, WORD langID = 0);
-	KxDynamicStringW GetErrorMessage(DWORD code = GetLastError(), WORD langID = 0);
+	uint16_t LocaleIDToLangID(uint16_t localeID);
+	KxDynamicStringW FormatMessage(uint32_t flags, const void* source, uint32_t messageID, uint16_t langID = 0);
+	KxDynamicStringW GetErrorMessage(uint32_t code = ::GetLastError(), uint16_t langID = 0);
 
 	template<class T1, class T2> static bool SetIfNotNull(T1* pointer, T2&& value)
 	{
@@ -95,6 +95,7 @@ namespace KxVFS::Utility
 	KxDynamicStringRefW NormalizeFilePath(KxDynamicStringRefW path);
 
 	KxDynamicStringW ExpandEnvironmentStrings(KxDynamicStringRefW variables);
+	KxDynamicStringRefW ExceptionCodeToString(uint32_t code);
 
 	// Writes a string 'source' into specified buffer but no more than 'maxDstLength' CHARS. Returns number of BYTES written.
 	size_t WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength);

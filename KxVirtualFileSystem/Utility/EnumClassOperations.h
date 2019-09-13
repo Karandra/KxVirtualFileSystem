@@ -15,8 +15,8 @@ namespace KxVFS
 	template<class T> struct IsEnumBitwiseOpAllowed: std::false_type {};
 	template<class T> inline constexpr bool IsEnumBitwiseOpAllowedV = IsEnumBitwiseOpAllowed<T>::value;
 
-	#define KxVFS_AllowEnumCastOp(T) template<> struct KxVFS::IsEnumCastOpAllowed<T>: std::true_type {}
-	#define KxVFS_AllowEnumBitwiseOp(T) template<> struct KxVFS::IsEnumBitwiseOpAllowed<T>: std::true_type {}
+	#define KxVFS_AllowEnumCastOp(T) template<> struct IsEnumCastOpAllowed<T>: std::true_type {}
+	#define KxVFS_AllowEnumBitwiseOp(T) template<> struct IsEnumBitwiseOpAllowed<T>: std::true_type {}
 }
 
 namespace KxVFS::Internal
