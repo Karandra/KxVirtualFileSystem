@@ -4,6 +4,7 @@
 
 # Output binaries
 Bin/*
+Build/*
 Junk/*
 Release/*
 Debug/*

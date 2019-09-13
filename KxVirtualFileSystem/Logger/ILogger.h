@@ -99,7 +99,7 @@ namespace KxVFS
 }
 
 #define KxVFS_Log(level, format, ...)	\
-if constexpr(KxVFS::Setup::EnableDebugLog)	\
+if constexpr(KxVFS::Setup::EnableLog)	\
 {	\
 	ILogger::Get().Log(level, format, __VA_ARGS__);	\
 }	\
