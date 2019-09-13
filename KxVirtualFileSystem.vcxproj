@@ -300,8 +300,8 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir "$(ProjectDir)Bin"
-copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(ProjectDir)Bin\$(ProjectName).$(Configuration).$(PlatformShortName)$(TargetExt)"</Command>
+      <Command>mkdir "$(ProjectDir)Bin\$(Configuration)"
+copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(TargetExt)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying to Bin</Message>
@@ -327,8 +327,8 @@ copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(Proje
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir "$(ProjectDir)Bin"
-copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(ProjectDir)Bin\$(ProjectName).$(Configuration).$(PlatformShortName)$(TargetExt)"</Command>
+      <Command>mkdir "$(ProjectDir)Bin\$(Configuration)"
+copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(TargetExt)"</Command>
     </PostBuildEvent>
     <PostBuildEvent>
       <Message>Copying to Bin</Message>
@@ -357,8 +357,8 @@ copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(Proje
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir "$(ProjectDir)Bin"
-copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(ProjectDir)Bin\$(ProjectName).$(Configuration).$(PlatformShortName)$(TargetExt)"</Command>
+      <Command>mkdir "$(ProjectDir)Bin\$(Configuration)"
+copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(TargetExt)"</Command>
       <Message>Copying to Bin</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -385,8 +385,8 @@ copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(Proje
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir "$(ProjectDir)Bin"
-copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(ProjectDir)Bin\$(ProjectName).$(Configuration).$(PlatformShortName)$(TargetExt)"</Command>
+      <Command>mkdir "$(ProjectDir)Bin\$(Configuration)"
+copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(TargetExt)"</Command>
       <Message>Copying to Bin</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -413,8 +413,8 @@ copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(Proje
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir "$(ProjectDir)Bin"
-copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(ProjectDir)Bin\$(ProjectName).$(Configuration).$(PlatformShortName)$(TargetExt)"</Command>
+      <Command>mkdir "$(ProjectDir)Bin\$(Configuration)"
+copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(TargetExt)"</Command>
       <Message>Copying to Bin</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -441,8 +441,8 @@ copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(Proje
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
     <PostBuildEvent>
-      <Command>mkdir "$(ProjectDir)Bin"
-copy /Y "$(ProjectDir)Build\$(Configuration)\$(TargetName)$(TargetExt)" "$(ProjectDir)Bin\$(ProjectName).$(Configuration).$(PlatformShortName)$(TargetExt)"</Command>
+      <Command>mkdir "$(ProjectDir)Bin\$(Configuration)"
+copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(TargetExt)"</Command>
       <Message>Copying to Bin</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
