@@ -46,9 +46,9 @@ namespace KxVFS
 
 		OpenRequiringOplock = FILE_OPEN_REQUIRING_OPLOCK,
 		DisallowExclusive = FILE_DISALLOW_EXCLUSIVE,
-		DessionAware = FILE_SESSION_AWARE,
+		SessionAware = FILE_SESSION_AWARE,
 
-		ReserveOpfilter = FILE_RESERVE_OPFILTER,
+		ReserveOpFilter = FILE_RESERVE_OPFILTER,
 		OpenReparsePoint = FILE_OPEN_REPARSE_POINT,
 		OpenNoRecall = FILE_OPEN_NO_RECALL,
 		OpenForFreeSpaceQuery = FILE_OPEN_FOR_FREE_SPACE_QUERY,
