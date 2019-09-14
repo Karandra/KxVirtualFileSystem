@@ -288,13 +288,13 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;KxVFS_CONFIGURATION_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany2\Win32\Release;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <SetChecksum>true</SetChecksum>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -314,14 +314,14 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;KxVFS_CONFIGURATION_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany2\x64\Release;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
       <SetChecksum>true</SetChecksum>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
@@ -344,7 +344,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;KxVFS_EXPORTS;KxVFS_CONFIGURATION_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -352,7 +352,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany2\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SetChecksum>true</SetChecksum>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -372,7 +372,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;KxVFS_EXPORTS;KxVFS_CONFIGURATION_RELWITHLOG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -380,7 +380,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany2\Win32\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany\$(Platform)\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SetChecksum>true</SetChecksum>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -399,7 +399,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;KxVFS_EXPORTS;KxVFS_CONFIGURATION_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -408,7 +408,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany2\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany\$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SetChecksum>true</SetChecksum>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -427,7 +427,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;KxVFS_EXPORTS;KxVFS_CONFIGURATION_RELWITHLOG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany2\;$(SolutionDir)..\Dokany2\sys\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -436,7 +436,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany2\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Dokany\$(Platform)\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SetChecksum>true</SetChecksum>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
