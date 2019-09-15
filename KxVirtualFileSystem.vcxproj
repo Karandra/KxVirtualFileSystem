@@ -154,6 +154,9 @@
   <ItemGroup>
     <Text Include="ChangeLog.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F79583B3-ED13-48F1-BC7F-AFAC9756FD7C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
