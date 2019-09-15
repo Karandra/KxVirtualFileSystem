@@ -91,6 +91,10 @@ namespace KxVFS
 			virtual size_t LogString(const Logger::InfoPack& infoPack) = 0;
 
 		public:
+			size_t Log(LogLevel level, const wchar_t* logString)
+			{
+				return LogString(Logger::InfoPack(level, logString));
+			}
 			template<class... Args> size_t Log(LogLevel level, const wchar_t* format, Args&& ... arg)
 			{
 				return LogString(Logger::InfoPack(level, Utility::FormatString(format, std::forward<Args>(arg)...)));

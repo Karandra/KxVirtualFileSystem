@@ -17,13 +17,13 @@ namespace
 {
 	KxVFS::FileSystemService* g_FileSystemServiceInstance = nullptr;
 
-	bool InitDokany()
+	bool InitDokany(Dokany2::DOKAN_LOG_CALLBACKS* logCallbacks = nullptr)
 	{
 		using namespace KxVFS;
 
 		__try
 		{
-			Dokany2::DokanInit(nullptr);
+			Dokany2::DokanInit(nullptr, logCallbacks);
 			return true;
 		}
 		__except (EXCEPTION_EXECUTE_HANDLER)
@@ -64,6 +64,20 @@ namespace
 	bool operator==(const LUID& left, const LUID& right) noexcept
 	{
 		return left.HighPart == right.HighPart && left.LowPart == right.LowPart;
+	}
+	KxVFS::KxDynamicStringW ProcessDokanyLogString(KxVFS::KxDynamicStringRefW logString)
+	{
+		using namespace KxVFS;
+
+		KxDynamicStringW temp = logString;
+		temp.trim_linebreak_chars();
+		temp.trim_space_chars();
+
+		KxDynamicStringW fullLogString = L"<Dokany> ";
+		fullLogString += temp;
+		fullLogString.trim_space_chars();
+
+		return fullLogString;
 	}
 }
 
@@ -195,7 +209,30 @@ namespace KxVFS
 		{
 			if (!m_IsFSInitialized)
 			{
-				m_IsFSInitialized = InitDokany();
+				if (Setup::EnableLog)
+				{
+					Dokany2::DOKAN_LOG_CALLBACKS logCallbacks = {};
+					logCallbacks.DbgPrint = [](const char* logString)
+					{
+						KxDynamicStringW logStringW = KxDynamicStringA::to_utf16(logString, KxDynamicStringA::npos, CP_ACP);
+						KxDynamicStringW fullLogString = ProcessDokanyLogString(logStringW);
+
+						g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, fullLogString);
+						return FALSE;
+					};
+					logCallbacks.DbgPrintW = [](const wchar_t* logString)
+					{
+						KxDynamicStringW fullLogString = ProcessDokanyLogString(logString);
+						g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, logString);
+						return FALSE;
+					};
+
+					m_IsFSInitialized = InitDokany(&logCallbacks);
+				}
+				else
+				{
+					m_IsFSInitialized = InitDokany();
+				}
 			}
 			return m_IsFSInitialized;
 		}

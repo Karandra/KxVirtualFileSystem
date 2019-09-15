@@ -36,6 +36,11 @@ namespace KxVFS
 				m_Options.Options = ConvertDokanyOptions(m_Flags);
 				m_Options.Timeout = 0; // Doesn't seems to affect anything
 
+				// Disable use of stderr log output and enable Dokany's  built-in log for configurations
+				// with enabled logging features.
+				m_Options.Options &= ~DOKAN_OPTION_STDERR;
+				m_Options.Options |= Setup::EnableLog ? DOKAN_OPTION_DEBUG : 0;
+
 				// Create file system
 				__try
 				{
