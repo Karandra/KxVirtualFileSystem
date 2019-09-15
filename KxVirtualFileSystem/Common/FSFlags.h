@@ -20,9 +20,7 @@ namespace KxVFS
 		FileLockUserMode = 1 << 4,
 		AlternateStream = 1 << 5,
 		ForceSingleThreaded = 1 << 6,
-		CurrentSession = 1 << 7,
-		UseStdErr = 1 << 8,
-		Debug = 1 << 9,
+		CurrentSession = 1 << 7
 	};
 	KxVFS_AllowEnumBitwiseOp(FSFlags);
 }

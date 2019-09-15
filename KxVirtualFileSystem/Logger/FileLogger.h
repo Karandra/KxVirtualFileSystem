@@ -27,7 +27,7 @@ namespace KxVFS
 			}
 			
 		public:
-			size_t LogString(const Logger::InfoPack& infoPack) override;
+			size_t LogString(Logger::InfoPack& infoPack) override;
 
 		public:
 			const FileHandle& GetHandle() const

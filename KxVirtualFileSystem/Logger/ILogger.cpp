@@ -10,6 +10,11 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "ILogger.h"
 
+namespace
+{
+	static bool g_LogEnabled = false;
+}
+
 namespace KxVFS
 {
 	bool ILogger::HasPrimaryLogger()
@@ -19,6 +24,15 @@ namespace KxVFS
 	ILogger& ILogger::Get()
 	{
 		return FileSystemService::GetInstance()->GetLogger();
+	}
+
+	bool ILogger::IsLogEnabled()
+	{
+		return g_LogEnabled;
+	}
+	void ILogger::EnableLog(bool value)
+	{
+		g_LogEnabled = value;
 	}
 
 	KxDynamicStringRefW ILogger::GetLogLevelName(LogLevel level) const
@@ -47,19 +61,19 @@ namespace KxVFS
 	KxDynamicStringW ILogger::FormatInfoPack(const Logger::InfoPack& infoPack) const
 	{
 		KxDynamicStringW text = Utility::FormatString(L"[%1][Thread:%2] %3",
-													  GetLogLevelName(infoPack.GetLevel()),
-													  infoPack.GetThreadID(),
-													  infoPack.GetString()
+													  GetLogLevelName(infoPack.LogLevel),
+													  infoPack.ThreadID,
+													  infoPack.String
 		);
 
-		if (const IFileSystem* fileSystem = infoPack.GetFileSystem())
+		if (infoPack.FileSystem)
 		{
-			KxDynamicStringW mountPoint = fileSystem->GetMountPoint();
+			KxDynamicStringW mountPoint = infoPack.FileSystem->GetMountPoint();
 			text += Utility::FormatString(L"\r\n\t[File System]: %1", mountPoint.data());
 		}
-		if (const FileNode* fileNode = infoPack.GetFileNode())
+		if (infoPack.FileNode)
 		{
-			KxDynamicStringW fullPath = fileNode->GetFullPath();
+			KxDynamicStringW fullPath = infoPack.FileNode->GetFullPath();
 			text += Utility::FormatString(L"\r\n\t[File Node]: %1", fullPath.data());
 		}
 		text += L"\r\n";

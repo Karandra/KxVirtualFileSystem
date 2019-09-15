@@ -24,6 +24,7 @@ namespace KxVFS
 	{
 		private:
 			static void LogDokanyException(uint32_t exceptionCode);
+			static uint32_t ConvertDokanyOptions(FSFlags flags);
 
 		public:
 			template<class TEvent>

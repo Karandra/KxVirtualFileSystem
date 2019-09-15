@@ -19,6 +19,24 @@ namespace KxVFS
 			KxVFS_Log(LogLevel::Fatal, L"Fatal exception '%1 (%2)' occurred while initializing Dokany", exceptionMessage, exceptionCode);
 		}
 	}
+	uint32_t BasicFileSystem::ConvertDokanyOptions(FSFlags flags)
+	{
+		uint32_t dokanyOptions = 0;
+		auto TestAndSet = [&dokanyOptions, flags](uint32_t dokanyOption, FSFlags flag)
+		{
+			Utility::ModFlagRef(dokanyOptions, dokanyOption, flags & flag);
+		};
+
+		TestAndSet(DOKAN_OPTION_ALT_STREAM, FSFlags::AlternateStream);
+		TestAndSet(DOKAN_OPTION_WRITE_PROTECT, FSFlags::WriteProtected);
+		TestAndSet(DOKAN_OPTION_NETWORK, FSFlags::NetworkDrive);
+		TestAndSet(DOKAN_OPTION_REMOVABLE, FSFlags::RemoveableDrive);
+		TestAndSet(DOKAN_OPTION_MOUNT_MANAGER, FSFlags::MountManager);
+		TestAndSet(DOKAN_OPTION_CURRENT_SESSION, FSFlags::CurrentSession);
+		TestAndSet(DOKAN_OPTION_FILELOCK_USER_MODE, FSFlags::FileLockUserMode);
+		TestAndSet(DOKAN_OPTION_FORCE_SINGLE_THREADED, FSFlags::ForceSingleThreaded);
+		return dokanyOptions;
+	}
 
 	FSError BasicFileSystem::DoMount()
 	{
@@ -42,10 +60,9 @@ namespace KxVFS
 				m_Options.Options = ConvertDokanyOptions(m_Flags);
 				m_Options.Timeout = 0; // Doesn't seems to affect anything
 
-				// Disable use of stderr log output and enable Dokany's built-in log for configurations
-				// with enabled logging features.
+				// Disable use of stderr log output and enable Dokany's built-in log features if allowed.
 				m_Options.Options &= ~DOKAN_OPTION_STDERR;
-				m_Options.Options |= Setup::EnableLog ? DOKAN_OPTION_DEBUG : 0;
+				m_Options.Options |= Setup::EnableLog && ILogger::IsLogEnabled() ? DOKAN_OPTION_DEBUG : 0;
 
 				// Create file system
 				bool isCreated = false;

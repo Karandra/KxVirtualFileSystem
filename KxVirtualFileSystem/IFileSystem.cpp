@@ -40,26 +40,6 @@ namespace KxVFS
 		return Dokany2::DokanRemoveMountPoint(mountPoint.data());
 	}
 
-	uint32_t IFileSystem::ConvertDokanyOptions(FSFlags flags) const
-	{
-		uint32_t dokanyOptions = 0;
-		auto TestAndSet = [&dokanyOptions, flags](uint32_t dokanyOption, FSFlags flag)
-		{
-			Utility::ModFlagRef(dokanyOptions, dokanyOption, flags & flag);
-		};
-
-		TestAndSet(DOKAN_OPTION_DEBUG, FSFlags::Debug);
-		TestAndSet(DOKAN_OPTION_STDERR, FSFlags::UseStdErr);
-		TestAndSet(DOKAN_OPTION_ALT_STREAM, FSFlags::AlternateStream);
-		TestAndSet(DOKAN_OPTION_WRITE_PROTECT, FSFlags::WriteProtected);
-		TestAndSet(DOKAN_OPTION_NETWORK, FSFlags::NetworkDrive);
-		TestAndSet(DOKAN_OPTION_REMOVABLE, FSFlags::RemoveableDrive);
-		TestAndSet(DOKAN_OPTION_MOUNT_MANAGER, FSFlags::MountManager);
-		TestAndSet(DOKAN_OPTION_CURRENT_SESSION, FSFlags::CurrentSession);
-		TestAndSet(DOKAN_OPTION_FILELOCK_USER_MODE, FSFlags::FileLockUserMode);
-		TestAndSet(DOKAN_OPTION_FORCE_SINGLE_THREADED, FSFlags::ForceSingleThreaded);
-		return dokanyOptions;
-	}
 	bool IFileSystem::IsWriteRequest(bool isExist, AccessRights desiredAccess, CreationDisposition createDisposition) const
 	{
 		/*

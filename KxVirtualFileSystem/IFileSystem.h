@@ -14,6 +14,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Common/IOManager.h"
 #include "Common/FileContextManager.h"
 #include "Common/IRequestDispatcher.h"
+#include "Logger/ILogger.h"
 
 namespace KxVFS
 {
@@ -40,7 +41,6 @@ namespace KxVFS
 			static bool UnMountDirectory(KxDynamicStringRefW mountPoint);
 
 		protected:
-			uint32_t ConvertDokanyOptions(FSFlags flags) const;
 			bool IsWriteRequest(bool isExist, AccessRights desiredAccess, CreationDisposition createDisposition) const;
 			bool IsWriteRequest(KxDynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const;
 			bool IsWriteRequest(const FileNode* node, AccessRights desiredAccess, CreationDisposition createDisposition) const

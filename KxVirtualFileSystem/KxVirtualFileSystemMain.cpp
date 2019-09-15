@@ -90,6 +90,20 @@ int _tmain()
 				KxVFS_Log(LogLevel::Info, L"%1: %2\r\n", error.GetCode(), error.GetMessage().data());
 				break;
 			}
+			case 'l':
+			{
+				if (ILogger::IsLogEnabled())
+				{
+					ILogger::EnableLog(false);
+					puts("Log disabled");
+				}
+				else
+				{
+					ILogger::EnableLog();
+					puts("Log enabled");
+				}
+				break;
+			}
 			case 'r':
 			{
 				RunProcess();

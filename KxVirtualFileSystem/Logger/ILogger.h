@@ -30,44 +30,25 @@ namespace KxVFS::Logger
 {
 	class InfoPack final
 	{
-		private:
-			KxDynamicStringW m_String;
-			const IFileSystem* m_FileSystem = nullptr;
-			const FileNode* m_FileNode = nullptr;
-			uint32_t m_ThreadID = 0;
-			LogLevel m_LogLevel = LogLevel::Info;
-
 		public:
-			InfoPack(LogLevel level,
-					 KxDynamicStringW&& text,
-					 const IFileSystem* fileSystem = nullptr,
-					 const FileNode* fileNode = nullptr
+			KxDynamicStringW String;
+			const IFileSystem* FileSystem = nullptr;
+			const FileNode* FileNode = nullptr;
+			const uint32_t ThreadID = 0;
+			LogLevel LogLevel = LogLevel::Info;
+		
+		public:
+			InfoPack() = default;
+			InfoPack(KxVFS::LogLevel level,
+					 KxVFS::KxDynamicStringW text,
+					 const KxVFS::IFileSystem* fileSystem = nullptr,
+					 const KxVFS::FileNode* fileNode = nullptr
 			)
-				:m_String(std::move(text)), m_FileSystem(fileSystem), m_FileNode(fileNode), m_LogLevel(level)
+				:String(std::move(text)), FileSystem(fileSystem),
+				FileNode(fileNode),
+				LogLevel(level),
+				ThreadID(::GetCurrentThreadId())
 			{
-				m_ThreadID = ::GetCurrentThreadId();
-			}
-			
-		public:
-			const KxDynamicStringW& GetString() const
-			{
-				return m_String;
-			}
-			const IFileSystem* GetFileSystem() const
-			{
-				return m_FileSystem;
-			}
-			const FileNode* GetFileNode() const
-			{
-				return m_FileNode;
-			}
-			uint32_t GetThreadID() const
-			{
-				return m_ThreadID;
-			}
-			LogLevel GetLevel() const
-			{
-				return m_LogLevel;
 			}
 	};
 }
@@ -80,6 +61,9 @@ namespace KxVFS
 			static bool HasPrimaryLogger();
 			static ILogger& Get();
 
+			static bool IsLogEnabled();
+			static void EnableLog(bool value = true);
+
 		protected:
 			KxDynamicStringRefW GetLogLevelName(LogLevel level) const;
 			KxDynamicStringW FormatInfoPack(const Logger::InfoPack& infoPack) const;
@@ -88,16 +72,12 @@ namespace KxVFS
 			virtual ~ILogger() = default;
 
 		public:
-			virtual size_t LogString(const Logger::InfoPack& infoPack) = 0;
+			virtual size_t LogString(Logger::InfoPack& infoPack) = 0;
 
-		public:
-			size_t Log(LogLevel level, const wchar_t* logString)
-			{
-				return LogString(Logger::InfoPack(level, logString));
-			}
 			template<class... Args> size_t Log(LogLevel level, const wchar_t* format, Args&& ... arg)
 			{
-				return LogString(Logger::InfoPack(level, Utility::FormatString(format, std::forward<Args>(arg)...)));
+				Logger::InfoPack logInfo(level, Utility::FormatString(format, std::forward<Args>(arg)...));
+				return LogString(logInfo);
 			}
 	};
 }
@@ -105,5 +85,8 @@ namespace KxVFS
 #define KxVFS_Log(level, format, ...)	\
 if constexpr(KxVFS::Setup::EnableLog)	\
 {	\
-	ILogger::Get().Log(level, format, __VA_ARGS__);	\
+	if (KxVFS::ILogger::IsLogEnabled())	\
+	{	\
+		KxVFS::ILogger::Get().Log(level, format, __VA_ARGS__);	\
+	}	\
 }	\

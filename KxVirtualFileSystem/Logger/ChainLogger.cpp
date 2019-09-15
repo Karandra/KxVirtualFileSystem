@@ -20,7 +20,7 @@ namespace KxVFS
 		});
 	}
 
-	size_t ChainLogger::LogString(const Logger::InfoPack& infoPack)
+	size_t ChainLogger::LogString(Logger::InfoPack& infoPack)
 	{
 		size_t written = 0;
 		EnumLoggers([&written, &infoPack](ILogger& logger, bool shouldDelete)

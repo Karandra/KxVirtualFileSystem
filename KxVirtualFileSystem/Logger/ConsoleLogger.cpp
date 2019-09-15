@@ -9,7 +9,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	size_t ConsoleLogger::LogString(const Logger::InfoPack& infoPack)
+	size_t ConsoleLogger::LogString(Logger::InfoPack& infoPack)
 	{
 		if (HANDLE handle = GetStdHandle(m_StdHandle); handle != INVALID_HANDLE_VALUE)
 		{
