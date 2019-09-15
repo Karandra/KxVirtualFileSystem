@@ -7,6 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Misc/UndefWindows.h"
+#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include <optional>
 
@@ -31,6 +32,7 @@ namespace KxVFS
 		FileContextManagerInitFailed,
 		IOManagerInitFialed,
 	};
+	KxVFS_AllowEnumCastOp(FSErrorCode);
 }
 
 namespace KxVFS
