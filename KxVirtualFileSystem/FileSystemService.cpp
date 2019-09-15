@@ -66,7 +66,7 @@ namespace KxVFS
 
 	KxDynamicStringW FileSystemService::GetLibraryVersion()
 	{
-		return L"2.0";
+		return L"2.1";
 	}
 	KxDynamicStringW FileSystemService::GetDokanyVersion()
 	{
