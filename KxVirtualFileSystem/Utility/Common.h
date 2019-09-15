@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -113,6 +113,21 @@ namespace KxVFS::Utility
 	template<class T> void CopyMemory(T* destination, const T* source, size_t length)
 	{
 		memcpy(destination, source, length * sizeof(T));
+	}
+
+	template<class TFuncTry, class TFuncExcept>
+	bool SEHTryExcept(TFuncTry&& funcTry, TFuncExcept&& funcExcept)
+	{
+		__try
+		{
+			std::invoke(funcTry);
+			return true;
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			std::invoke(funcExcept, GetExceptionCode());
+			return false;
+		}
 	}
 }
 
