@@ -620,6 +620,68 @@ class KxBasicDynamicString
 			}
 		}
 
+		// Trim
+		size_t trim_chars_from_left(value_type c1, value_type c2)
+		{
+			const value_type* chars = data();
+			const size_t charsSize = size();
+
+			size_t toTrim = 0;
+			for (size_t i = 0; i < charsSize; i++)
+			{
+				if (chars[i] == c1 || chars[i] == c2)
+				{
+					toTrim++;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			if (toTrim != 0)
+			{
+				erase(0, toTrim);
+			}
+			return toTrim;
+		}
+		size_t trim_chars_from_right(value_type c1, value_type c2)
+		{
+			const value_type* chars = data();
+			const size_t charsSize = size();
+
+			size_t toTrim = 0;
+			if (charsSize != 0)
+			{
+				for (size_t i = charsSize - 1; i != 0; i--)
+				{
+					if (chars[i] == c1 || chars[i] == c2)
+					{
+						toTrim++;
+					}
+					else
+					{
+						break;
+					}
+				}
+				erase(charsSize - toTrim, toTrim);
+			}
+			return toTrim;
+		}
+		size_t trim_chars(value_type c1, value_type c2)
+		{
+			return trim_chars_from_left(c1, c2) + trim_chars_from_right(c1, c2);
+		}
+		
+		size_t trim_space_chars()
+		{
+			return trim_chars(' ', '\t');
+		}
+		size_t trim_linebreak_chars()
+		{
+			return trim_chars('\r', '\n');
+		}
+
 		// Assign
 		KxBasicDynamicString& assign(const KxBasicDynamicString& other)
 		{
