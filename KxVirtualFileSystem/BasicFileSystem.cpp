@@ -11,12 +11,18 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
+	void BasicFileSystem::LogDokanyException(uint32_t exceptionCode)
+	{
+		if (FileSystemService::GetInstance())
+		{
+			const KxDynamicStringRefW exceptionMessage = Utility::ExceptionCodeToString(exceptionCode);
+			KxVFS_Log(LogLevel::Fatal, L"Fatal exception '%1 (%2)' occurred while initializing Dokany", exceptionMessage, exceptionCode);
+		}
+	}
+
 	FSError BasicFileSystem::DoMount()
 	{
-		OutputDebugStringA(__FUNCTION__);
-		OutputDebugStringA(": ");
-		OutputDebugStringA(!IsMounted() ? "allowed" : "disallowed");
-		OutputDebugStringA("\r\n");
+		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, !IsMounted() ? L"allowed" : L"disallowed");
 
 		if (!IsMounted())
 		{
@@ -36,28 +42,26 @@ namespace KxVFS
 				m_Options.Options = ConvertDokanyOptions(m_Flags);
 				m_Options.Timeout = 0; // Doesn't seems to affect anything
 
-				// Disable use of stderr log output and enable Dokany's  built-in log for configurations
+				// Disable use of stderr log output and enable Dokany's built-in log for configurations
 				// with enabled logging features.
 				m_Options.Options &= ~DOKAN_OPTION_STDERR;
 				m_Options.Options |= Setup::EnableLog ? DOKAN_OPTION_DEBUG : 0;
 
 				// Create file system
-				__try
-				{
-					return Dokany2::DokanCreateFileSystem(&m_Options, &m_Operations, &m_Handle);
-				}
-				__except (EXCEPTION_EXECUTE_HANDLER)
-				{
-					// Dokany can throw if mount point is used by another process despite of all the checks above
-					// or something else is wrong, so just catch anything and return error.
-					
-					OutputDebugStringA(__FUNCTION__);
-					OutputDebugStringA(": ");
-					OutputDebugStringA("Exception thrown\r\n");
+				bool isCreated = false;
 
+				// Dokany can throw if mount point is used by another process despite of all the checks above
+				// or something else is wrong, so just catch anything and return error.
+				SafelyCallDokanyFunction([this, &isCreated]()
+				{
+					isCreated = Dokany2::DokanCreateFileSystem(&m_Options, &m_Operations, &m_Handle) == ToInt(FSErrorCode::Success);
+				});
+				if (!isCreated)
+				{
 					m_Handle = nullptr;
 					return FSErrorCode::Unknown;
 				}
+				return isCreated;
 			}
 			return FSErrorCode::InvalidMountPoint;
 		}
@@ -65,16 +69,15 @@ namespace KxVFS
 	}
 	bool BasicFileSystem::DoUnMount()
 	{
-		OutputDebugStringA(__FUNCTION__);
-		OutputDebugStringA(": ");
-		OutputDebugStringA(IsMounted() ? "allowed" : "disallowed");
-		OutputDebugStringA("\r\n");
+		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, IsMounted() ? L"allowed" : L"disallowed");
 
 		if (IsMounted())
 		{
 			// Here Dokany will call our unmount handler and that handler in turn will call 'OnUnMountInternal'
-			Dokany2::DokanCloseHandle(m_Handle);
-			return true;
+			return SafelyCallDokanyFunction([this]()
+			{
+				Dokany2::DokanCloseHandle(m_Handle);
+			});
 		}
 		return false;
 	}
@@ -173,15 +176,12 @@ namespace KxVFS
 	}
 	NTSTATUS BasicFileSystem::OnUnMountInternal(EvtUnMounted& eventInfo)
 	{
-		OutputDebugStringA(__FUNCTION__);
-		OutputDebugStringA("\r\n");
+		KxVFS_Log(LogLevel::Info, __FUNCTIONW__);
 
 		NTSTATUS statusCode = STATUS_UNSUCCESSFUL;
 		if (CriticalSectionLocker lock(m_UnmountCS); true)
 		{
-			OutputDebugStringA("In EnterCriticalSection: ");
-			OutputDebugStringA(__FUNCTION__);
-			OutputDebugStringA("\r\n");
+			KxVFS_Log(LogLevel::Info, L"In EnterCriticalSection: %1", __FUNCTIONW__);
 
 			m_Handle = nullptr;
 			m_IsMounted = false;
@@ -195,7 +195,7 @@ namespace KxVFS
 			}
 			else
 			{
-				OutputDebugStringA("We are destructing, don't call 'OnUnMount'\r\n");
+				KxVFS_Log(LogLevel::Info, L"We are destructing, don't call 'OnUnMount'");
 				statusCode = STATUS_SUCCESS;
 			}
 		}

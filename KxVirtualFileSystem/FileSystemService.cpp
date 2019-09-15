@@ -7,6 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
+#include "KxVirtualFileSystem/BasicFileSystem.h"
 #include "KxVirtualFileSystem/Utility/Wow64RedirectionDisabler.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
@@ -21,44 +22,19 @@ namespace
 	{
 		using namespace KxVFS;
 
-		__try
+		return BasicFileSystem::SafelyCallDokanyFunction([logCallbacks]()
 		{
 			Dokany2::DokanInit(nullptr, logCallbacks);
-			return true;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			if (g_FileSystemServiceInstance)
-			{
-				const uint32_t exceptionCode = GetExceptionCode();
-				const KxDynamicStringRefW exceptionMessage = Utility::ExceptionCodeToString(exceptionCode);
-
-				KxVFS_Log(LogLevel::Fatal, L"Fatal exception '%1 (%2)' occurred while initializing Dokany", exceptionMessage, exceptionCode);
-			}
-			return false;
-		}
+		});
 	}
 	bool UninitDokany()
 	{
 		using namespace KxVFS;
 
-		// If VFS fails, it will uninitialize itself. I have no way to tell if it's failed, so just ignore that.
-		__try
+		return BasicFileSystem::SafelyCallDokanyFunction([]()
 		{
 			Dokany2::DokanShutdown();
-			return true;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			if (g_FileSystemServiceInstance)
-			{
-				const uint32_t exceptionCode = GetExceptionCode();
-				const KxDynamicStringRefW exceptionMessage = Utility::ExceptionCodeToString(exceptionCode);
-
-				KxVFS_Log(LogLevel::Fatal, L"Fatal exception '%1 (%2)' occurred in the process of Dokany shutdown", exceptionMessage, exceptionCode);
-			}
-			return false;
-		}
+		});
 	}
 
 	bool operator==(const LUID& left, const LUID& right) noexcept

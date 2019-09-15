@@ -22,10 +22,30 @@ namespace KxVFS
 {
 	class KxVFS_API BasicFileSystem: public IFileSystem
 	{
-		protected:
-			template<class TEvent> static bool OnFileFound(TEvent& eventInfo, const WIN32_FIND_DATAW& findData)
+		private:
+			static void LogDokanyException(uint32_t exceptionCode);
+
+		public:
+			template<class TEvent>
+			static bool OnFileFound(TEvent& eventInfo, const WIN32_FIND_DATAW& findData)
 			{
 				return eventInfo.FillFindData(&eventInfo, const_cast<WIN32_FIND_DATAW*>(&findData)) == 0;
+			}
+			
+			template<class TTryFunc>
+			static bool SafelyCallDokanyFunction(TTryFunc&& tryFunc)
+			{
+				return Utility::SEHTryExcept(std::forward<TTryFunc>(tryFunc), &BasicFileSystem::LogDokanyException);
+			}
+
+			template<class TTryFunc, class TExceptFunc>
+			static bool SafelyCallDokanyFunction(TTryFunc&& tryFunc, TExceptFunc&& exceptFunc)
+			{
+				return Utility::SEHTryExcept(std::forward<TTryFunc>(tryFunc), [&exceptFunc](uint32_t exceptionCode)
+				{
+					LogDokanyException(exceptionCode);
+					std::invoke(exceptFunc, exceptionCode);
+				});
 			}
 
 		private:
@@ -108,7 +128,7 @@ namespace KxVFS
 				return GetFromContext(eventInfo->DokanFileInfo->DokanOptions);
 			}
 
-			// Dokan callbacks
+			// Dokany callbacks
 			static void DOKAN_CALLBACK Dokan_Mount(EvtMounted* eventInfo);
 			static void DOKAN_CALLBACK Dokan_Unmount(EvtUnMounted* eventInfo);
 
