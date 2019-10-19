@@ -18,3 +18,4 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #undef FillMemory
 #undef ZeroMemory
 #undef WriteConsole
+#undef CreateProcess

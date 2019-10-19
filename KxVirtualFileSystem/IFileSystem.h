@@ -74,6 +74,8 @@ namespace KxVFS
 			virtual uint32_t GetVolumeSerialNumber() const = 0;
 			virtual NTSTATUS GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize) = 0;
 
+			virtual bool IsProcessCreatedInVFS(uint32_t pid) const = 0;
+
 		protected:
 			// File context saving and retrieving
 			template<class TEventInfo> FileContext* GetFileContext(TEventInfo& eventInfo) const

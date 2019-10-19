@@ -1,5 +1,5 @@
 /*
-Copyright © 2018 Kerber. All rights reserved.
+Copyright © 2019 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -179,6 +179,13 @@ int _tmain()
 				constexpr auto path = L"C:\\Users\\Kerber\\Desktop\\Test\\Data\\Scripts\\TestFolder";
 				Utility::CreateDirectory(path, nullptr);
 				KxVFS_Log(LogLevel::Info, L"Done: %1", ::GetLastError());
+				break;
+			}
+			case 't':
+			{
+				uint32_t pid = 0;
+				std::cin >> pid;
+				KxVFS_Log(LogLevel::Info, L"IsProcessCreatedInVFS: %1", mainVFS->IsProcessCreatedInVFS(pid));
 				break;
 			}
 

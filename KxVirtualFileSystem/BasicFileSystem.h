@@ -51,9 +51,9 @@ namespace KxVFS
 
 		private:
 			FileSystemService& m_Service;
-			Dokany2::DOKAN_OPTIONS m_Options = {0};
-			Dokany2::DOKAN_OPERATIONS m_Operations = {0};
-			Dokany2::DOKAN_HANDLE m_Handle = nullptr;
+			Dokany2::DOKAN_OPTIONS m_Options = {};
+			Dokany2::DOKAN_OPERATIONS m_Operations = {};
+			Dokany2::DOKAN_INSTANCE* m_Instance = nullptr;
 
 			IOManager m_IOManager;
 			FileContextManager m_FileContextManager;
@@ -80,9 +80,9 @@ namespace KxVFS
 			FSError Mount() override;
 			bool UnMount() override;
 
-			KxDynamicStringW GetVolumeLabel() const;
-			KxDynamicStringW GetVolumeFileSystem() const;
-			uint32_t GetVolumeSerialNumber() const;
+			KxDynamicStringW GetVolumeLabel() const override;
+			KxDynamicStringW GetVolumeFileSystem() const override;
+			uint32_t GetVolumeSerialNumber() const override;
 
 			FileSystemService& GetService() override
 			{
@@ -97,15 +97,17 @@ namespace KxVFS
 				return m_IOManager;
 			}
 
-			virtual KxDynamicStringW GetMountPoint() const override
+			KxDynamicStringW GetMountPoint() const override
 			{
 				return m_MountPoint;
 			}
-			virtual void SetMountPoint(KxDynamicStringRefW mountPoint) override
+			void SetMountPoint(KxDynamicStringRefW mountPoint) override
 			{
 				m_MountPoint = mountPoint;
 			}
 			
+			bool IsProcessCreatedInVFS(uint32_t pid) const override;
+
 			FSFlags GetFlags() const
 			{
 				return m_Flags;

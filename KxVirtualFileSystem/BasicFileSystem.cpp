@@ -71,11 +71,14 @@ namespace KxVFS
 				// or something else is wrong, so just catch anything and return error.
 				SafelyCallDokanyFunction([this, &isCreated]()
 				{
-					isCreated = Dokany2::DokanCreateFileSystem(&m_Options, &m_Operations, &m_Handle) == ToInt(FSErrorCode::Success);
+					// DOKAN_HANDLE is actually DOKAN_INSTANCE
+					Dokany2::DOKAN_HANDLE handle = nullptr;
+					isCreated = Dokany2::DokanCreateFileSystem(&m_Options, &m_Operations, &handle) == ToInt(FSErrorCode::Success);
+					m_Instance = reinterpret_cast<Dokany2::DOKAN_INSTANCE*>(handle);
 				});
 				if (!isCreated)
 				{
-					m_Handle = nullptr;
+					m_Instance = nullptr;
 					return FSErrorCode::Unknown;
 				}
 				return isCreated;
@@ -93,7 +96,7 @@ namespace KxVFS
 			// Here Dokany will call our unmount handler and that handler in turn will call 'OnUnMountInternal'
 			return SafelyCallDokanyFunction([this]()
 			{
-				Dokany2::DokanCloseHandle(m_Handle);
+				Dokany2::DokanCloseHandle(m_Instance);
 			});
 		}
 		return false;
@@ -184,6 +187,27 @@ namespace KxVFS
 		return static_cast<uint32_t>(reinterpret_cast<size_t>(this) ^ reinterpret_cast<size_t>(&m_Service));
 	}
 
+	bool BasicFileSystem::IsProcessCreatedInVFS(uint32_t pid) const
+	{
+		if (IsMounted())
+		{
+			ProcessHandle process(pid, AccessRights::ProcessQueryLimitedInformation);
+			if (process && process.IsActive())
+			{
+				constexpr size_t prefixLength = 7;
+				const size_t deviceNameLength = std::char_traits<wchar_t>::length(m_Instance->DeviceName);
+
+				KxDynamicStringW path = process.GetImagePath();
+
+				// 'DeviceName' string starts with '\Volume' but image name start with '\Device\Volume'
+				path.erase(0, prefixLength);
+				path.resize(deviceNameLength);
+				return path == m_Instance->DeviceName;
+			}
+		}
+		return false;
+	}
+
 	NTSTATUS BasicFileSystem::OnMountInternal(EvtMounted& eventInfo)
 	{
 		m_IsMounted = true;
@@ -200,7 +224,7 @@ namespace KxVFS
 		{
 			KxVFS_Log(LogLevel::Info, L"In EnterCriticalSection: %1", __FUNCTIONW__);
 
-			m_Handle = nullptr;
+			m_Instance = nullptr;
 			m_IsMounted = false;
 			m_Service.RemoveActiveFS(*this);
 			m_FileContextManager.Cleanup();
