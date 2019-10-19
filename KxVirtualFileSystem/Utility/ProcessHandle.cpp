@@ -1,0 +1,80 @@
+/*
+Copyright © 2019 Kerber. All rights reserved.
+
+You should have received a copy of the GNU LGPL v3
+along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
+*/
+#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/IFileSystem.h"
+#include "KxVirtualFileSystem/Utility.h"
+#include "ProcessHandle.h"
+#include <Psapi.h>
+
+namespace
+{
+	HANDLE DuplicateProcessHandle(HANDLE handle, uint32_t access, bool inherit, uint32_t options)
+	{
+		const HANDLE current = ::GetCurrentProcess();
+
+		HANDLE duplicate = nullptr;
+		::DuplicateHandle(current, handle, current, &duplicate, access, inherit, options);
+		return duplicate;
+	}
+}
+
+namespace KxVFS
+{
+	std::vector<uint32_t> ProcessHandle::EnumActiveProcesses()
+	{
+		DWORD processes[1024] = {};
+		DWORD retSize = 0;
+
+		if (::EnumProcesses(processes, std::size(processes) * sizeof(DWORD), &retSize))
+		{
+			const DWORD processesCount = retSize / sizeof(DWORD);
+
+			std::vector<uint32_t> processIDs;
+			processIDs.reserve(processesCount);
+			for (size_t i = 0; i < processesCount; i++)
+			{
+				processIDs.emplace_back(processes[i]);
+			}
+
+			return processIDs;
+		}
+		return {};
+	}
+	KxDynamicStringW ProcessHandle::GetImagePath() const
+	{
+		KxDynamicStringW path;
+
+		// Try using short static storage
+		DWORD length = path.max_size_static() - 1;
+		path.resize(length);
+
+		if (!::QueryFullProcessImageNameW(m_Handle, 0, path.data(), &length))
+		{
+			// If too small allocate maximum possible path name length and call again
+			length = std::numeric_limits<int16_t>::max();
+			path.resize(length);
+
+			if (!::QueryFullProcessImageNameW(m_Handle, 0, path.data(), &length))
+			{
+				length = 0;
+			}
+		}
+
+		// Here 'length' contains valid final path length
+		path.resize(length);
+		return path;
+	}
+
+	ProcessHandle ProcessHandle::Duplicate(bool inheritHandle) const
+	{
+		return DuplicateProcessHandle(m_Handle, 0, inheritHandle, 0);
+	}
+	ProcessHandle ProcessHandle::Duplicate(AccessRights access, bool inheritHandle) const
+	{
+		return DuplicateProcessHandle(m_Handle, ToInt(access), inheritHandle, 0);
+	}
+}

@@ -231,6 +231,9 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFormat\KxFormatTraits.h">
       <Filter>Header Files\Utility\KxFormat</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\ProcessHandle.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
@@ -319,6 +322,9 @@
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\Utility\KxFormat\KxFormat.cpp">
       <Filter>Source Files\Utility\KxFormat</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\Utility\ProcessHandle.cpp">
+      <Filter>Source Files\Utility</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

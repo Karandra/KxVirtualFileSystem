@@ -48,6 +48,7 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\GenericHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFormat\KxFormat.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFormat\KxFormatTraits.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\ProcessHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ServiceConstants.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ServiceHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\Win32Constants.h" />
@@ -122,6 +123,7 @@
     <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\KxFormat\KxFormat.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\ProcessHandle.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\ServiceHandle.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\ServiceManager.cpp" />
   </ItemGroup>
