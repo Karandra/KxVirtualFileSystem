@@ -66,7 +66,7 @@ namespace KxVFS
 
 	KxDynamicStringW FileSystemService::GetLibraryVersion()
 	{
-		return L"2.1";
+		return L"2.1.1";
 	}
 	KxDynamicStringW FileSystemService::GetDokanyVersion()
 	{
@@ -75,8 +75,8 @@ namespace KxVFS
 		#undef DOKAN_VERSION
 		#define DOKAN_VERSION 200
 
-		const KxDynamicStringW temp = KxDynamicStringW::Format(L"%d", static_cast<int>(DOKAN_VERSION));
-		return KxDynamicStringW::Format(L"%c.%c.%c", temp[0], temp[1], temp[2]);
+		const KxDynamicStringW temp = Utility::FormatString(L"%1", DOKAN_VERSION);
+		return Utility::FormatString(L"%1.%2.%3", temp[0], temp[1], temp[2]);
 	}
 
 	KxDynamicStringW FileSystemService::GetDokanyDefaultServiceName()
