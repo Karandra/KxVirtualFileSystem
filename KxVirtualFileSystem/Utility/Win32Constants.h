@@ -110,20 +110,39 @@ namespace KxVFS
 	{
 		None = 0,
 
-		// For a directory
+		// Directory
 		AddFile = FILE_ADD_FILE,
 		AddSubDirectory = FILE_ADD_SUBDIRECTORY,
 		DeleteChild = FILE_DELETE_CHILD,
 		ListDirectory = FILE_LIST_DIRECTORY,
 		Traverse = FILE_TRAVERSE,
 
-		// For a file
+		// File
 		ReadEA = FILE_READ_EA,
 		ReadData = FILE_READ_DATA,
 		WriteData = FILE_WRITE_DATA,
 		AppendData = FILE_APPEND_DATA,
 		Execute = FILE_EXECUTE,
 		CreatePipeInstance = FILE_CREATE_PIPE_INSTANCE,
+
+		// Process and thread
+		ProcessAll = PROCESS_ALL_ACCESS,
+
+		ProcessCreate = PROCESS_CREATE_PROCESS,
+		CreateThread = PROCESS_CREATE_THREAD,
+		DuplicateHandle = PROCESS_DUP_HANDLE,
+
+		ProcessQueryInformation = PROCESS_QUERY_INFORMATION,
+		ProcessQueryLimitedInformation = PROCESS_QUERY_LIMITED_INFORMATION,
+		ProcessSetInformation = PROCESS_SET_INFORMATION,
+		ProcessSetQuota = PROCESS_SET_QUOTA,
+
+		ProcessSuspendResume = PROCESS_SUSPEND_RESUME,
+		ProcessTerminate = PROCESS_TERMINATE,
+
+		ProcessVMOperation = PROCESS_VM_OPERATION,
+		ProcessVMRead = PROCESS_VM_READ,
+		ProcessVMWrite = PROCESS_VM_WRITE,
 
 		// Common
 		ReadAttributes = FILE_READ_ATTRIBUTES,
@@ -175,4 +194,16 @@ namespace KxVFS
 		ReservedRange = IO_REPARSE_TAG_RESERVED_RANGE,
 	};
 	KxVFS_AllowEnumBitwiseOp(ReparsePointTags);
+	
+	enum class PriorityClass: uint32_t
+	{
+		None = 0,
+
+		RealTime = REALTIME_PRIORITY_CLASS,
+		High = HIGH_PRIORITY_CLASS,
+		Normal = ABOVE_NORMAL_PRIORITY_CLASS,
+		BelowNormal = BELOW_NORMAL_PRIORITY_CLASS,
+		Idle = IDLE_PRIORITY_CLASS,
+	};
+	KxVFS_AllowEnumBitwiseOp(PriorityClass);
 }
