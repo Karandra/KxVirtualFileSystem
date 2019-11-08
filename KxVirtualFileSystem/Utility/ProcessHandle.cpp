@@ -29,7 +29,7 @@ namespace KxVFS
 		DWORD processes[1024] = {};
 		DWORD retSize = 0;
 
-		if (::EnumProcesses(processes, std::size(processes) * sizeof(DWORD), &retSize))
+		if (::EnumProcesses(processes, static_cast<DWORD>(std::size(processes) * sizeof(DWORD)), &retSize))
 		{
 			const DWORD processesCount = retSize / sizeof(DWORD);
 
@@ -49,7 +49,7 @@ namespace KxVFS
 		KxDynamicStringW path;
 
 		// Try using short static storage
-		DWORD length = path.max_size_static() - 1;
+		DWORD length = static_cast<DWORD>(path.max_size_static()) - 1;
 		path.resize(length);
 
 		if (!::QueryFullProcessImageNameW(m_Handle, 0, path.data(), &length))

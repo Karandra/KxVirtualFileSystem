@@ -86,7 +86,7 @@ namespace KxVFS
 	KxDynamicStringW FileSystemService::GetDokanyDefaultDriverPath()
 	{
 		// There's a 'DOKAN_DRIVER_FULL_PATH' constant in Dokany control app, but it's defined in the .cpp file
-		return Utility::ExpandEnvironmentStrings(L"%SystemRoot%\\system32\\drivers\\Dokan" DOKAN_MAJOR_API_VERSION L".sys");
+		return Utility::ExpandEnvironmentStrings(L"%SystemRoot%\\System32\\Drivers\\Dokan" DOKAN_MAJOR_API_VERSION L".sys");
 	}
 	bool FileSystemService::IsDokanyDefaultInstallPresent()
 	{
@@ -194,13 +194,11 @@ namespace KxVFS
 						KxDynamicStringW fullLogString = ProcessDokanyLogString(logStringW);
 
 						g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, fullLogString);
-						return FALSE;
 					};
 					logCallbacks.DbgPrintW = [](const wchar_t* logString)
 					{
 						KxDynamicStringW fullLogString = ProcessDokanyLogString(logString);
 						g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, logString);
-						return FALSE;
 					};
 
 					m_IsFSInitialized = InitDokany(&logCallbacks);
@@ -349,24 +347,5 @@ namespace KxVFS
 
 BOOL WINAPI DllMain(HMODULE moduleHandle, DWORD event, LPVOID reserved)
 {
-	switch (event)
-	{
-		case DLL_PROCESS_ATTACH:
-		{
-			break;
-		}
-		case DLL_PROCESS_DETACH:
-		{
-			break;
-		}
-		case DLL_THREAD_ATTACH:
-		{
-			break;
-		}
-		case DLL_THREAD_DETACH:
-		{
-			break;
-		}
-	};
-	return true;
+	return Dokany2::DllMainRoutine(moduleHandle, event, reserved);
 }
