@@ -6,7 +6,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 */
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/BasicFileSystem.h"
+#include "KxVirtualFileSystem/DokanyFileSystem.h"
 #include "KxVirtualFileSystem/MirrorFS.h"
 #include "KxVirtualFileSystem/Utility.h"
 

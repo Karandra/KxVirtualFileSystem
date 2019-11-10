@@ -177,9 +177,6 @@
     <ClInclude Include="KxVirtualFileSystem\Common\FSFlags.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\BasicFileSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\Utility\ServiceHandle.h">
       <Filter>Header Files\Utility</Filter>
     </ClInclude>
@@ -233,6 +230,9 @@
     </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\Utility\ProcessHandle.h">
       <Filter>Header Files\Utility</Filter>
+    </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\DokanyFileSystem.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -290,9 +290,6 @@
     <ClCompile Include="KxVirtualFileSystem\IFileSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\BasicFileSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\Utility\ServiceHandle.cpp">
       <Filter>Source Files\Utility</Filter>
     </ClCompile>
@@ -325,6 +322,9 @@
     </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\Utility\ProcessHandle.cpp">
       <Filter>Source Files\Utility</Filter>
+    </ClCompile>
+    <ClCompile Include="KxVirtualFileSystem\DokanyFileSystem.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

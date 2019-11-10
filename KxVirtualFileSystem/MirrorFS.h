@@ -8,13 +8,13 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Common/CallerUserImpersonation.h"
 #include "KxVirtualFileSystem/Common/ExtendedSecurity.h"
-#include "KxVirtualFileSystem/BasicFileSystem.h"
+#include "KxVirtualFileSystem/DokanyFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
 
 namespace KxVFS
 {
 	class KxVFS_API MirrorFS:
-		public BasicFileSystem,
+		public DokanyFileSystem,
 		public CallerUserImpersonation,
 		public ExtendedSecurity,
 		public IRequestDispatcher

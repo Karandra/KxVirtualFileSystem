@@ -61,7 +61,7 @@ namespace KxVFS
 namespace KxVFS
 {
 	MirrorFS::MirrorFS(FileSystemService& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, FSFlags flags)
-		:BasicFileSystem(service, mountPoint, flags), ExtendedSecurity(this), CallerUserImpersonation(this), m_Source(source)
+		:DokanyFileSystem(service, mountPoint, flags), ExtendedSecurity(this), CallerUserImpersonation(this), m_Source(source)
 	{
 	}
 

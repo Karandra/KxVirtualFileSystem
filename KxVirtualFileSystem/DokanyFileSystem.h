@@ -20,7 +20,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	class KxVFS_API BasicFileSystem: public IFileSystem
+	class KxVFS_API DokanyFileSystem: public IFileSystem
 	{
 		private:
 			static void LogDokanyException(uint32_t exceptionCode);
@@ -36,7 +36,7 @@ namespace KxVFS
 			template<class TTryFunc>
 			static bool SafelyCallDokanyFunction(TTryFunc&& tryFunc)
 			{
-				return Utility::SEHTryExcept(std::forward<TTryFunc>(tryFunc), &BasicFileSystem::LogDokanyException);
+				return Utility::SEHTryExcept(std::forward<TTryFunc>(tryFunc), &DokanyFileSystem::LogDokanyException);
 			}
 
 			template<class TTryFunc, class TExceptFunc>
@@ -69,8 +69,8 @@ namespace KxVFS
 			bool DoUnMount();
 
 		public:
-			BasicFileSystem(FileSystemService& service, KxDynamicStringRefW mountPoint, FSFlags flags = FSFlags::None);
-			virtual ~BasicFileSystem();
+			DokanyFileSystem(FileSystemService& service, KxDynamicStringRefW mountPoint, FSFlags flags = FSFlags::None);
+			virtual ~DokanyFileSystem();
 
 		public:
 			bool IsMounted() const override
@@ -122,9 +122,9 @@ namespace KxVFS
 			NTSTATUS OnUnMountInternal(EvtUnMounted& eventInfo);
 
 		private:
-			static BasicFileSystem* GetFromContext(Dokany2::DOKAN_OPTIONS* dokanOptions)
+			static DokanyFileSystem* GetFromContext(Dokany2::DOKAN_OPTIONS* dokanOptions)
 			{
-				return static_cast<BasicFileSystem*>(reinterpret_cast<IFileSystem*>(dokanOptions->GlobalContext));
+				return static_cast<DokanyFileSystem*>(reinterpret_cast<IFileSystem*>(dokanOptions->GlobalContext));
 			}
 			template<class T> static IFileSystem* GetFromContext(const T* eventInfo)
 			{

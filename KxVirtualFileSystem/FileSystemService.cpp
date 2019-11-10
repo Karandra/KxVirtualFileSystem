@@ -7,7 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
-#include "KxVirtualFileSystem/BasicFileSystem.h"
+#include "KxVirtualFileSystem/DokanyFileSystem.h"
 #include "KxVirtualFileSystem/Utility/Wow64RedirectionDisabler.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
@@ -22,7 +22,7 @@ namespace
 	{
 		using namespace KxVFS;
 
-		return BasicFileSystem::SafelyCallDokanyFunction([logCallbacks]()
+		return DokanyFileSystem::SafelyCallDokanyFunction([logCallbacks]()
 		{
 			Dokany2::DokanInit(nullptr, logCallbacks);
 		});
@@ -31,7 +31,7 @@ namespace
 	{
 		using namespace KxVFS;
 
-		return BasicFileSystem::SafelyCallDokanyFunction([]()
+		return DokanyFileSystem::SafelyCallDokanyFunction([]()
 		{
 			Dokany2::DokanShutdown();
 		});

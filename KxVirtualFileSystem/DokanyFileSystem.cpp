@@ -5,13 +5,13 @@ You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
 */
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/BasicFileSystem.h"
+#include "KxVirtualFileSystem/DokanyFileSystem.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/Utility.h"
 
 namespace KxVFS
 {
-	void BasicFileSystem::LogDokanyException(uint32_t exceptionCode)
+	void DokanyFileSystem::LogDokanyException(uint32_t exceptionCode)
 	{
 		if (FileSystemService::GetInstance())
 		{
@@ -19,7 +19,7 @@ namespace KxVFS
 			KxVFS_Log(LogLevel::Fatal, L"Fatal exception '%1 (%2)' occurred while initializing Dokany", exceptionMessage, exceptionCode);
 		}
 	}
-	uint32_t BasicFileSystem::ConvertDokanyOptions(FSFlags flags)
+	uint32_t DokanyFileSystem::ConvertDokanyOptions(FSFlags flags)
 	{
 		uint32_t dokanyOptions = 0;
 		auto TestAndSet = [&dokanyOptions, flags](uint32_t dokanyOption, FSFlags flag)
@@ -38,7 +38,7 @@ namespace KxVFS
 		return dokanyOptions;
 	}
 
-	FSError BasicFileSystem::DoMount()
+	FSError DokanyFileSystem::DoMount()
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, !IsMounted() ? L"allowed" : L"disallowed");
 
@@ -87,7 +87,7 @@ namespace KxVFS
 		}
 		return FSErrorCode::CanNotMount;
 	}
-	bool BasicFileSystem::DoUnMount()
+	bool DokanyFileSystem::DoUnMount()
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, IsMounted() ? L"allowed" : L"disallowed");
 
@@ -102,7 +102,7 @@ namespace KxVFS
 		return false;
 	}
 
-	BasicFileSystem::BasicFileSystem(FileSystemService& service, KxDynamicStringRefW mountPoint, FSFlags flags)
+	DokanyFileSystem::DokanyFileSystem(FileSystemService& service, KxDynamicStringRefW mountPoint, FSFlags flags)
 		:m_FileContextManager(*this), m_IOManager(*this), m_Service(service), m_MountPoint(mountPoint), m_Flags(flags)
 	{
 		// Options
@@ -140,7 +140,7 @@ namespace KxVFS
 		m_Operations.FindFilesWithPattern = Dokan_FindFilesWithPattern;
 		m_Operations.FindStreams = Dokan_FindStreams;
 	}
-	BasicFileSystem::~BasicFileSystem()
+	DokanyFileSystem::~DokanyFileSystem()
 	{
 		OutputDebugStringA(__FUNCTION__);
 		OutputDebugStringA("\r\n");
@@ -149,7 +149,7 @@ namespace KxVFS
 		DoUnMount();
 	}
 
-	FSError BasicFileSystem::Mount()
+	FSError DokanyFileSystem::Mount()
 	{
 		if (!m_FileContextManager.Init())
 		{
@@ -161,23 +161,23 @@ namespace KxVFS
 		}
 		return DoMount();
 	}
-	bool BasicFileSystem::UnMount()
+	bool DokanyFileSystem::UnMount()
 	{
 		return DoUnMount();
 	}
 
-	KxDynamicStringW BasicFileSystem::GetVolumeLabel() const
+	KxDynamicStringW DokanyFileSystem::GetVolumeLabel() const
 	{
 		return m_Service.GetServiceName();
 	}
-	KxDynamicStringW BasicFileSystem::GetVolumeFileSystem() const
+	KxDynamicStringW DokanyFileSystem::GetVolumeFileSystem() const
 	{
 		// File system name could be anything up to 10 characters.
 		// But Windows check few feature availability based on file system name.
 		// For this, it is recommended to set NTFS or FAT here.
 		return L"NTFS";
 	}
-	uint32_t BasicFileSystem::GetVolumeSerialNumber() const
+	uint32_t DokanyFileSystem::GetVolumeSerialNumber() const
 	{
 		// I assume the volume serial needs to be just a random number,
 		// so I think this would suffice. Mirror sample uses '0x19831116' constant.
@@ -187,7 +187,7 @@ namespace KxVFS
 		return static_cast<uint32_t>(reinterpret_cast<size_t>(this) ^ reinterpret_cast<size_t>(&m_Service));
 	}
 
-	bool BasicFileSystem::IsProcessCreatedInVFS(uint32_t pid) const
+	bool DokanyFileSystem::IsProcessCreatedInVFS(uint32_t pid) const
 	{
 		if (IsMounted())
 		{
@@ -208,14 +208,14 @@ namespace KxVFS
 		return false;
 	}
 
-	NTSTATUS BasicFileSystem::OnMountInternal(EvtMounted& eventInfo)
+	NTSTATUS DokanyFileSystem::OnMountInternal(EvtMounted& eventInfo)
 	{
 		m_IsMounted = true;
 		m_Service.AddActiveFS(*this);
 
 		return OnMount(eventInfo);
 	}
-	NTSTATUS BasicFileSystem::OnUnMountInternal(EvtUnMounted& eventInfo)
+	NTSTATUS DokanyFileSystem::OnUnMountInternal(EvtUnMounted& eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, __FUNCTIONW__);
 
@@ -246,7 +246,7 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	void DOKAN_CALLBACK BasicFileSystem::Dokan_Mount(EvtMounted* eventInfo)
+	void DOKAN_CALLBACK DokanyFileSystem::Dokan_Mount(EvtMounted* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1",
 				  __FUNCTIONW__
@@ -254,7 +254,7 @@ namespace KxVFS
 
 		return (void)GetFromContext(eventInfo->DokanOptions)->OnMountInternal(*eventInfo);
 	}
-	void DOKAN_CALLBACK BasicFileSystem::Dokan_Unmount(EvtUnMounted* eventInfo)
+	void DOKAN_CALLBACK DokanyFileSystem::Dokan_Unmount(EvtUnMounted* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1",
 				  __FUNCTIONW__
@@ -263,7 +263,7 @@ namespace KxVFS
 		return (void)GetFromContext(eventInfo->DokanOptions)->OnUnMountInternal(*eventInfo);
 	}
 
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetVolumeFreeSpace(EvtGetVolumeFreeSpace* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_GetVolumeFreeSpace(EvtGetVolumeFreeSpace* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1, Requestor Process: %2",
 				  __FUNCTIONW__,
@@ -272,7 +272,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnGetVolumeFreeSpace(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetVolumeInfo(EvtGetVolumeInfo* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_GetVolumeInfo(EvtGetVolumeInfo* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1, Requestor Process: %2",
 				  __FUNCTIONW__,
@@ -281,7 +281,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnGetVolumeInfo(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetVolumeAttributes(EvtGetVolumeAttributes* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_GetVolumeAttributes(EvtGetVolumeAttributes* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1, Requestor Process: %2",
 				  __FUNCTIONW__,
@@ -291,7 +291,7 @@ namespace KxVFS
 		return GetFromContext(eventInfo)->OnGetVolumeAttributes(*eventInfo);
 	}
 
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_CreateFile(EvtCreateFile* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_CreateFile(EvtCreateFile* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -301,7 +301,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnCreateFile(*eventInfo);
 	}
-	void DOKAN_CALLBACK BasicFileSystem::Dokan_CloseFile(EvtCloseFile* eventInfo)
+	void DOKAN_CALLBACK DokanyFileSystem::Dokan_CloseFile(EvtCloseFile* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", DeleteOnClose: %3, Requestor Process: %4",
 				  __FUNCTIONW__,
@@ -312,7 +312,7 @@ namespace KxVFS
 
 		return (void)GetFromContext(eventInfo)->OnCloseFile(*eventInfo);
 	}
-	void DOKAN_CALLBACK BasicFileSystem::Dokan_CleanUp(EvtCleanUp* eventInfo)
+	void DOKAN_CALLBACK DokanyFileSystem::Dokan_CleanUp(EvtCleanUp* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", DeleteOnClose: %3, Requestor Process: %4",
 				  __FUNCTIONW__,
@@ -323,7 +323,7 @@ namespace KxVFS
 
 		return (void)GetFromContext(eventInfo)->OnCleanUp(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_MoveFile(EvtMoveFile* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_MoveFile(EvtMoveFile* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\" -> \"%3\", Requestor Process: %4",
 				  __FUNCTIONW__,
@@ -334,7 +334,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnMoveFile(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_CanDeleteFile(EvtCanDeleteFile* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_CanDeleteFile(EvtCanDeleteFile* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", DeleteOnClose: %3, Requestor Process: %4",
 				  __FUNCTIONW__,
@@ -346,7 +346,7 @@ namespace KxVFS
 		return GetFromContext(eventInfo)->OnCanDeleteFile(*eventInfo);
 	}
 
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_LockFile(EvtLockFile* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_LockFile(EvtLockFile* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -356,7 +356,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnLockFile(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_UnlockFile(EvtUnlockFile* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_UnlockFile(EvtUnlockFile* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -366,7 +366,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnUnlockFile(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetFileSecurity(EvtGetFileSecurity* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_GetFileSecurity(EvtGetFileSecurity* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -376,7 +376,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnGetFileSecurity(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_SetFileSecurity(EvtSetFileSecurity* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_SetFileSecurity(EvtSetFileSecurity* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -387,7 +387,7 @@ namespace KxVFS
 		return GetFromContext(eventInfo)->OnSetFileSecurity(*eventInfo);
 	}
 
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_ReadFile(EvtReadFile* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_ReadFile(EvtReadFile* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", PagingIO: %3, Requestor Process: %4",
 				  __FUNCTIONW__,
@@ -398,7 +398,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnReadFile(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_WriteFile(EvtWriteFile* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_WriteFile(EvtWriteFile* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", PagingIO: %3, Requestor Process: %4",
 				  __FUNCTIONW__,
@@ -409,7 +409,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnWriteFile(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FlushFileBuffers(EvtFlushFileBuffers* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_FlushFileBuffers(EvtFlushFileBuffers* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -419,7 +419,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnFlushFileBuffers(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_SetEndOfFile(EvtSetEndOfFile* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_SetEndOfFile(EvtSetEndOfFile* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -429,7 +429,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnSetEndOfFile(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_SetAllocationSize(EvtSetAllocationSize* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_SetAllocationSize(EvtSetAllocationSize* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -439,7 +439,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnSetAllocationSize(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_GetFileInfo(EvtGetFileInfo* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_GetFileInfo(EvtGetFileInfo* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -449,7 +449,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnGetFileInfo(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_SetBasicFileInfo(EvtSetBasicFileInfo* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_SetBasicFileInfo(EvtSetBasicFileInfo* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -460,7 +460,7 @@ namespace KxVFS
 		return GetFromContext(eventInfo)->OnSetBasicFileInfo(*eventInfo);
 	}
 
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FindFiles(EvtFindFiles* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_FindFiles(EvtFindFiles* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\\*\", Requestor Process: %3",
 				  __FUNCTIONW__,
@@ -470,7 +470,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnFindFiles(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FindFilesWithPattern(EvtFindFilesWithPattern* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_FindFilesWithPattern(EvtFindFilesWithPattern* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\\%3\", Requestor Process: %4",
 				  __FUNCTIONW__,
@@ -481,7 +481,7 @@ namespace KxVFS
 
 		return GetFromContext(eventInfo)->OnFindFilesWithPattern(*eventInfo);
 	}
-	NTSTATUS DOKAN_CALLBACK BasicFileSystem::Dokan_FindStreams(EvtFindStreams* eventInfo)
+	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_FindStreams(EvtFindStreams* eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: \"%2\", Requestor Process: %3",
 				  __FUNCTIONW__,

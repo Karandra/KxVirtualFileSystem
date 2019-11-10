@@ -21,8 +21,7 @@ int _tmain()
 {
 	using namespace KxVFS;
 
-	auto service = std::make_unique<FileSystemService>(L"KortexVFS");
-	service->Install(L"C:\\Users\\Kerber\\Documents\\Visual Studio 2019\\Projects\\Kortex Mod Manager\\Kortex\\Bin\\Data\\VFS\\Drivers\\Win7 x64\\dokan2.sys");
+	auto service = std::make_unique<FileSystemService>(L"Dokan2");
 	service->Start();
 
 	#if 1

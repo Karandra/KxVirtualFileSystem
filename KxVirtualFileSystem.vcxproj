@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="KxVirtualFileSystem\BasicFileSystem.h" />
+    <ClInclude Include="KxVirtualFileSystem\DokanyFileSystem.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\AsyncIOContext.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\BranchLocker.h" />
     <ClInclude Include="KxVirtualFileSystem\Common\CallerUserImpersonation.h" />
@@ -93,7 +93,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\BasicFileSystem.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\DokanyFileSystem.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Logger\ChainLogger.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Logger\ConsoleLogger.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Logger\DebugLogger.cpp" />
@@ -236,7 +236,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
@@ -263,7 +263,7 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>

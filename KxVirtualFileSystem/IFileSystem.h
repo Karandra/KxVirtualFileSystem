@@ -19,7 +19,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 namespace KxVFS
 {
 	class KxVFS_API FileSystemService;
-	class KxVFS_API BasicFileSystem;
+	class KxVFS_API DokanyFileSystem;
 	class KxVFS_API FileContextManager;
 	class KxVFS_API IOManager;
 	class KxVFS_API FileNode;
@@ -29,7 +29,7 @@ namespace KxVFS
 {
 	class KxVFS_API IFileSystem
 	{
-		friend class BasicFileSystem;
+		friend class DokanyFileSystem;
 		friend class FileContextManager;
 		friend class IOManager;
 
