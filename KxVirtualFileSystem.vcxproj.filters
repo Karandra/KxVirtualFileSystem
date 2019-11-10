@@ -234,6 +234,9 @@
     <ClInclude Include="KxVirtualFileSystem\DokanyFileSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="KxVirtualFileSystem\Utility\NtStatusConstants.h">
+      <Filter>Header Files\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">

@@ -10,6 +10,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Utility/Common.h"
 #include "Utility/Win32Constants.h"
 #include "Utility/WinKernelConstants.h"
+#include "Utility/NtStatusConstants.h"
 #include "Utility/EnumClassOperations.h"
 
 // KxDynamicString

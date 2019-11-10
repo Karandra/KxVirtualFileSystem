@@ -48,6 +48,7 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\GenericHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFormat\KxFormat.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\KxFormat\KxFormatTraits.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\NtStatusConstants.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ProcessHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ServiceConstants.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ServiceHandle.h" />
