@@ -81,7 +81,7 @@ namespace KxVFS
 					m_Instance = nullptr;
 					return FSErrorCode::Unknown;
 				}
-				return isCreated;
+				return FSErrorCode::Success;
 			}
 			return FSErrorCode::InvalidMountPoint;
 		}
