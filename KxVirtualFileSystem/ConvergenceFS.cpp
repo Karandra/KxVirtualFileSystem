@@ -205,7 +205,7 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	NTSTATUS ConvergenceFS::OnCreateFile(EvtCreateFile& eventInfo)
+	NtStatus ConvergenceFS::OnCreateFile(EvtCreateFile& eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"Trying to create/open file or directory: %1", eventInfo.FileName);
 
@@ -238,7 +238,7 @@ namespace KxVFS
 				else
 				{
 					// Can't open a directory as a file
-					return STATUS_FILE_IS_A_DIRECTORY;
+					return NtStatus::FileIsADirectory;
 				}
 			}
 
@@ -268,7 +268,7 @@ namespace KxVFS
 			return OnCreateFile(eventInfo, targetNode, parentNode);
 		}
 	}
-	NTSTATUS ConvergenceFS::OnCreateFile(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode)
+	NtStatus ConvergenceFS::OnCreateFile(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode)
 	{
 		KxVFS_Log(LogLevel::Info, L"Trying to create/open file: %1", eventInfo.FileName);
 
@@ -286,13 +286,13 @@ namespace KxVFS
 		// Can't open non-existing file
 		if (!targetNode && (creationDisposition == CreationDisposition::OpenExisting || creationDisposition == CreationDisposition::TruncateExisting))
 		{
-			return STATUS_OBJECT_PATH_NOT_FOUND;
+			return NtStatus::ObjectPathNotFound;
 		}
 
 		// Cannot overwrite a hidden or system file if flag not set
 		if (!CheckAttributesToOverwriteFile(fileAttributes, requestAttributes, creationDisposition))
 		{
-			return STATUS_ACCESS_DENIED;
+			return NtStatus::AccessDenied;
 		}
 
 		// Truncate should always be used with write access
@@ -344,7 +344,7 @@ namespace KxVFS
 				if (!parentNode)
 				{
 					::SetLastError(ERROR_INTERNAL_ERROR);
-					return STATUS_INTERNAL_ERROR;
+					return NtStatus::InternalError;
 				}
 
 				auto lock = parentNode->LockExclusive();
@@ -377,17 +377,17 @@ namespace KxVFS
 					if (errorCode == ERROR_ALREADY_EXISTS)
 					{
 						// Open succeed but we need to inform the driver,
-						// that the file open and not created by returning STATUS_OBJECT_NAME_COLLISION
-						return STATUS_OBJECT_NAME_COLLISION;
+						// that the file open and not created by returning NtStatus::ObjectNameCollision
+						return NtStatus::ObjectNameCollision;
 					}
 				}
 			}
 			else
 			{
 				::SetLastError(ERROR_INTERNAL_ERROR);
-				return STATUS_INTERNAL_ERROR;
+				return NtStatus::InternalError;
 			}
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
 		else
 		{
@@ -395,7 +395,7 @@ namespace KxVFS
 			return GetNtStatusByWin32ErrorCode(errorCode);
 		}
 	}
-	NTSTATUS ConvergenceFS::OnCreateDirectory(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode)
+	NtStatus ConvergenceFS::OnCreateDirectory(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode)
 	{
 		KxVFS_Log(LogLevel::Info, L"Trying to create/open directory: %1", eventInfo.FileName);
 
@@ -412,7 +412,7 @@ namespace KxVFS
 		// Can't open non-existing directory
 		if (!targetNode && (creationDisposition == CreationDisposition::OpenExisting || creationDisposition == CreationDisposition::TruncateExisting))
 		{
-			return STATUS_OBJECT_PATH_NOT_FOUND;
+			return NtStatus::ObjectPathNotFound;
 		}
 
 		// Get directory path
@@ -426,7 +426,7 @@ namespace KxVFS
 		{
 			ImpersonateLoggedOnUserIfEnabled(userTokenHandle);
 
-			NTSTATUS statusCode = STATUS_SUCCESS;
+			NtStatus statusCode = NtStatus::Success;
 			KxCallAtScopeExit atExit([this, &userTokenHandle, &statusCode]()
 			{
 				CleanupImpersonateCallerUserIfEnabled(userTokenHandle, statusCode);
@@ -437,7 +437,7 @@ namespace KxVFS
 				if (parentNode == nullptr)
 				{
 					::SetLastError(ERROR_INTERNAL_ERROR);
-					return STATUS_INTERNAL_ERROR;
+					return NtStatus::InternalError;
 				}
 
 				auto lock = parentNode->LockExclusive();
@@ -450,7 +450,7 @@ namespace KxVFS
 				if (errorCode != ERROR_ALREADY_EXISTS || creationDisposition == CreationDisposition::CreateNew)
 				{
 					statusCode = GetNtStatusByWin32ErrorCode(errorCode);
-					if (statusCode != STATUS_SUCCESS)
+					if (statusCode != NtStatus::Success)
 					{
 						return statusCode;
 					}
@@ -462,7 +462,7 @@ namespace KxVFS
 		if (targetNode && !targetNode->IsDirectory() && (eventInfo.CreateOptions & FILE_DIRECTORY_FILE))
 		{
 			KxVFS_Log(LogLevel::Info, L"Attempt to open a file as a directory: %1", targetPath);
-			return STATUS_NOT_A_DIRECTORY;
+			return NtStatus::NotADirectory;
 		}
 
 		// FileAttributes::FlagBackupSemantics is required for opening directory handles
@@ -482,7 +482,7 @@ namespace KxVFS
 			if (!targetNode)
 			{
 				::SetLastError(ERROR_INTERNAL_ERROR);
-				return STATUS_INTERNAL_ERROR;
+				return NtStatus::InternalError;
 			}
 
 			FileContextManager& fileContextManager = GetFileContextManager();
@@ -496,16 +496,16 @@ namespace KxVFS
 			else
 			{
 				::SetLastError(ERROR_INTERNAL_ERROR);
-				return STATUS_INTERNAL_ERROR;
+				return NtStatus::InternalError;
 			}
 
 			// Open succeed but we need to inform the driver that the directory was open and not created
-			// by returning STATUS_OBJECT_NAME_COLLISION
+			// by returning NtStatus::ObjectNameCollision
 			if (targetNode && creationDisposition == CreationDisposition::OpenAlways)
 			{
-				return STATUS_OBJECT_NAME_COLLISION;
+				return NtStatus::ObjectNameCollision;
 			}
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
 		else
 		{
@@ -514,7 +514,7 @@ namespace KxVFS
 		}
 	}
 
-	NTSTATUS ConvergenceFS::OnCanDeleteFile(EvtCanDeleteFile& eventInfo)
+	NtStatus ConvergenceFS::OnCanDeleteFile(EvtCanDeleteFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -524,19 +524,19 @@ namespace KxVFS
 
 				if (fileNode->IsReadOnly())
 				{
-					return STATUS_CANNOT_DELETE;
+					return NtStatus::CannotDelete;
 				}
 				if (fileNode->IsDirectory() && fileNode->HasChildren())
 				{
-					return STATUS_DIRECTORY_NOT_EMPTY;
+					return NtStatus::DirectoryNotEmpty;
 				}
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
-			return STATUS_FILE_INVALID;
+			return NtStatus::FileInvalid;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS ConvergenceFS::OnCloseFile(EvtCloseFile& eventInfo)
+	NtStatus ConvergenceFS::OnCloseFile(EvtCloseFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -560,13 +560,13 @@ namespace KxVFS
 
 				ResetFileContext(eventInfo);
 				GetFileContextManager().PushContext(*fileContext);
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
-			return STATUS_FILE_INVALID;
+			return NtStatus::FileInvalid;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS ConvergenceFS::OnCleanUp(EvtCleanUp& eventInfo)
+	NtStatus ConvergenceFS::OnCleanUp(EvtCleanUp& eventInfo)
 	{
 		// Look for comment in 'MirrorFS::OnCleanUp' for some important details
 		if (FileContext* fileContext = GetFileContext(eventInfo))
@@ -585,14 +585,14 @@ namespace KxVFS
 						OnFileDeleted(eventInfo, *fileContext);
 					}
 				}
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
-			return STATUS_FILE_INVALID;
+			return NtStatus::FileInvalid;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
 
-	NTSTATUS ConvergenceFS::OnReadFile(EvtReadFile& eventInfo)
+	NtStatus ConvergenceFS::OnReadFile(EvtReadFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -615,7 +615,7 @@ namespace KxVFS
 						}
 						return GetNtStatusByWin32LastErrorCode();
 					}
-					return STATUS_FILE_INVALID;
+					return NtStatus::FileInvalid;
 				}
 				else
 				{
@@ -631,9 +631,9 @@ namespace KxVFS
 				}
 			}
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS ConvergenceFS::OnWriteFile(EvtWriteFile& eventInfo)
+	NtStatus ConvergenceFS::OnWriteFile(EvtWriteFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -657,7 +657,7 @@ namespace KxVFS
 						}
 						return GetNtStatusByWin32LastErrorCode();
 					}
-					return STATUS_FILE_INVALID;
+					return NtStatus::FileInvalid;
 				}
 				else
 				{
@@ -673,10 +673,10 @@ namespace KxVFS
 				}
 			}
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
 
-	NTSTATUS ConvergenceFS::OnMoveFile(EvtMoveFile& eventInfo)
+	NtStatus ConvergenceFS::OnMoveFile(EvtMoveFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -701,7 +701,7 @@ namespace KxVFS
 							// And remove original file from the tree
 							originalNode->RemoveThisChild();
 
-							return STATUS_SUCCESS;
+							return NtStatus::Success;
 						}
 						return GetNtStatusByWin32LastErrorCode();
 					}
@@ -734,8 +734,8 @@ namespace KxVFS
 						const KxDynamicStringW newPath = GetNewPath();
 
 						// Rename file system object
-						const NTSTATUS status = fileContext->GetHandle().SetPath(newPath, eventInfo.ReplaceIfExists);
-						if (status == STATUS_SUCCESS)
+						const NtStatus status = fileContext->GetHandle().SetPath(newPath, eventInfo.ReplaceIfExists);
+						if (status == NtStatus::Success)
 						{
 							// Rename the node if we successfully renamed file system object
 							auto parentLock = targetNodeParent->LockExclusive();
@@ -743,7 +743,7 @@ namespace KxVFS
 						}
 						return status;
 					}
-					return STATUS_OBJECT_NAME_INVALID;
+					return NtStatus::ObjectNameInvalid;
 				}
 				else
 				{
@@ -764,16 +764,16 @@ namespace KxVFS
 						newNode.TakeItem(std::move(*originalNode));
 						originalNode->RemoveThisChild();
 
-						return STATUS_SUCCESS;
+						return NtStatus::Success;
 					}
 					return GetNtStatusByWin32LastErrorCode();
 				}
 			}
-			return STATUS_FILE_INVALID;
+			return NtStatus::FileInvalid;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS ConvergenceFS::OnGetFileInfo(EvtGetFileInfo& eventInfo)
+	NtStatus ConvergenceFS::OnGetFileInfo(EvtGetFileInfo& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -781,7 +781,7 @@ namespace KxVFS
 			if (fileContext->GetHandle().GetInfo(eventInfo.FileHandleInfo))
 			{
 				KxVFS_Log(LogLevel::Info, L"Successfully retrieved file info by handle for: %1", eventInfo.FileName);
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
 			else if (FileNode* fileNode = fileContext->GetFileNode())
 			{
@@ -789,16 +789,16 @@ namespace KxVFS
 				fileNode->GetItem().ToBY_HANDLE_FILE_INFORMATION(eventInfo.FileHandleInfo);
 
 				KxVFS_Log(LogLevel::Info, L"Successfully retrieved file info by node for: %1", eventInfo.FileName);
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
 
 			KxVFS_Log(LogLevel::Info, L"Couldn't find file node for: %1", eventInfo.FileName);
-			return STATUS_FILE_INVALID;
+			return NtStatus::FileInvalid;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
 	
-	NTSTATUS ConvergenceFS::OnFindFiles(EvtFindFiles& eventInfo)
+	NtStatus ConvergenceFS::OnFindFiles(EvtFindFiles& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -812,13 +812,13 @@ namespace KxVFS
 				});
 				KxVFS_Log(LogLevel::Info, L"Found %1 files", fileNode->GetChildrenCount());
 
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
-			return STATUS_FILE_INVALID;
+			return NtStatus::FileInvalid;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS ConvergenceFS::OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo)
+	NtStatus ConvergenceFS::OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -841,13 +841,13 @@ namespace KxVFS
 				});
 				KxVFS_Log(LogLevel::Info, L"Found %1 files", foundCount);
 
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
-			return STATUS_FILE_INVALID;
+			return NtStatus::FileInvalid;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS ConvergenceFS::OnFindStreams(EvtFindStreams& eventInfo)
+	NtStatus ConvergenceFS::OnFindStreams(EvtFindStreams& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -876,21 +876,21 @@ namespace KxVFS
 					KxVFS_Log(LogLevel::Info, L"Found %1 streams", foundStreamsCount);
 					if (findResult == Dokany2::DOKAN_STREAM_BUFFER_FULL)
 					{
-						// FindStreams returned 'foundStreamsCount' entries in 'node' with STATUS_BUFFER_OVERFLOW
+						// FindStreams returned 'foundStreamsCount' entries in 'node' with NtStatus::BufferOverflow
 						// https://msdn.microsoft.com/en-us/library/windows/hardware/ff540364(v=vs.85).aspx
-						return STATUS_BUFFER_OVERFLOW;
+						return NtStatus::BufferOverflow;
 					}
 					if (errorCode != ERROR_HANDLE_EOF)
 					{
 						return GetNtStatusByWin32ErrorCode(errorCode);
 					}
-					return STATUS_SUCCESS;
+					return NtStatus::Success;
 				}
 				return GetNtStatusByWin32LastErrorCode();
 			}
-			return STATUS_FILE_INVALID;
+			return NtStatus::FileInvalid;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
 }
 

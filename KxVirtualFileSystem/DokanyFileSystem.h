@@ -118,8 +118,8 @@ namespace KxVFS
 			}
 
 		private:
-			NTSTATUS OnMountInternal(EvtMounted& eventInfo);
-			NTSTATUS OnUnMountInternal(EvtUnMounted& eventInfo);
+			NtStatus OnMountInternal(EvtMounted& eventInfo);
+			NtStatus OnUnMountInternal(EvtUnMounted& eventInfo);
 
 		private:
 			static DokanyFileSystem* GetFromContext(Dokany2::DOKAN_OPTIONS* dokanOptions)

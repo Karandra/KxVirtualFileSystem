@@ -53,7 +53,7 @@ namespace KxVFS
 		}
 		return path;
 	}
-	NTSTATUS FileHandle::SetPath(KxDynamicStringRefW path, bool replaceIfExist)
+	NtStatus FileHandle::SetPath(KxDynamicStringRefW path, bool replaceIfExist)
 	{
 		// Allocate buffer for rename info
 		FILE_RENAME_INFO* renameInfo = nullptr;
@@ -67,11 +67,11 @@ namespace KxVFS
 		}
 		catch (std::bad_alloc&)
 		{
-			return STATUS_BUFFER_OVERFLOW;
+			return NtStatus::BufferOverflow;
 		}
 		catch (...)
 		{
-			return STATUS_INTERNAL_ERROR;
+			return NtStatus::InternalError;
 		}
 
 		renameInfo->ReplaceIfExists = replaceIfExist;
@@ -81,7 +81,7 @@ namespace KxVFS
 
 		if (SetInfo(FileRenameInfo, renameInfo, renameInfoBuffer.size()))
 		{
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
 		return IFileSystem::GetNtStatusByWin32LastErrorCode();
 	}

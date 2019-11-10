@@ -24,7 +24,7 @@ namespace KxVFS
 
 		protected:
 			bool CheckDeleteOnClose(Dokany2::PDOKAN_FILE_INFO fileInfo, KxDynamicStringRefW filePath) const;
-			NTSTATUS CanDeleteDirectory(KxDynamicStringRefW directoryPath) const;
+			NtStatus CanDeleteDirectory(KxDynamicStringRefW directoryPath) const;
 
 			KxDynamicStringW DispatchLocationRequest(KxDynamicStringRefW requestedPath) override;
 
@@ -35,40 +35,40 @@ namespace KxVFS
 			KxDynamicStringRefW GetSource() const;
 			void SetSource(KxDynamicStringRefW source);
 
-			NTSTATUS GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize) override;
+			NtStatus GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize) override;
 
 		protected:
-			NTSTATUS OnMount(EvtMounted& eventInfo) override;
-			NTSTATUS OnUnMount(EvtUnMounted& eventInfo) override;
+			NtStatus OnMount(EvtMounted& eventInfo) override;
+			NtStatus OnUnMount(EvtUnMounted& eventInfo) override;
 
-			NTSTATUS OnGetVolumeFreeSpace(EvtGetVolumeFreeSpace& eventInfo) override;
-			NTSTATUS OnGetVolumeInfo(EvtGetVolumeInfo& eventInfo) override;
-			NTSTATUS OnGetVolumeAttributes(EvtGetVolumeAttributes& eventInfo) override;
+			NtStatus OnGetVolumeFreeSpace(EvtGetVolumeFreeSpace& eventInfo) override;
+			NtStatus OnGetVolumeInfo(EvtGetVolumeInfo& eventInfo) override;
+			NtStatus OnGetVolumeAttributes(EvtGetVolumeAttributes& eventInfo) override;
 
-			NTSTATUS OnCreateFile(EvtCreateFile& eventInfo) override;
-			NTSTATUS OnCloseFile(EvtCloseFile& eventInfo) override;
-			NTSTATUS OnCleanUp(EvtCleanUp& eventInfo) override;
-			NTSTATUS OnMoveFile(EvtMoveFile& eventInfo) override;
-			NTSTATUS OnCanDeleteFile(EvtCanDeleteFile& eventInfo) override;
+			NtStatus OnCreateFile(EvtCreateFile& eventInfo) override;
+			NtStatus OnCloseFile(EvtCloseFile& eventInfo) override;
+			NtStatus OnCleanUp(EvtCleanUp& eventInfo) override;
+			NtStatus OnMoveFile(EvtMoveFile& eventInfo) override;
+			NtStatus OnCanDeleteFile(EvtCanDeleteFile& eventInfo) override;
 
-			NTSTATUS OnLockFile(EvtLockFile& eventInfo) override;
-			NTSTATUS OnUnlockFile(EvtUnlockFile& eventInfo) override;
+			NtStatus OnLockFile(EvtLockFile& eventInfo) override;
+			NtStatus OnUnlockFile(EvtUnlockFile& eventInfo) override;
 
-			NTSTATUS OnGetFileSecurity(EvtGetFileSecurity& eventInfo) override;
-			NTSTATUS OnSetFileSecurity(EvtSetFileSecurity& eventInfo) override;
+			NtStatus OnGetFileSecurity(EvtGetFileSecurity& eventInfo) override;
+			NtStatus OnSetFileSecurity(EvtSetFileSecurity& eventInfo) override;
 
-			NTSTATUS OnReadFile(EvtReadFile& eventInfo) override;
-			NTSTATUS OnWriteFile(EvtWriteFile& eventInfo) override;
+			NtStatus OnReadFile(EvtReadFile& eventInfo) override;
+			NtStatus OnWriteFile(EvtWriteFile& eventInfo) override;
 			
-			NTSTATUS OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo) override;
-			NTSTATUS OnSetEndOfFile(EvtSetEndOfFile& eventInfo) override;
-			NTSTATUS OnSetAllocationSize(EvtSetAllocationSize& eventInfo) override;
-			NTSTATUS OnGetFileInfo(EvtGetFileInfo& eventInfo) override;
-			NTSTATUS OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo) override;
+			NtStatus OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo) override;
+			NtStatus OnSetEndOfFile(EvtSetEndOfFile& eventInfo) override;
+			NtStatus OnSetAllocationSize(EvtSetAllocationSize& eventInfo) override;
+			NtStatus OnGetFileInfo(EvtGetFileInfo& eventInfo) override;
+			NtStatus OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo) override;
 
-			NTSTATUS OnFindFiles(KxDynamicStringRefW path, KxDynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2);
-			NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
-			NTSTATUS OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) override;
-			NTSTATUS OnFindStreams(EvtFindStreams& eventInfo) override;
+			NtStatus OnFindFiles(KxDynamicStringRefW path, KxDynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2);
+			NtStatus OnFindFiles(EvtFindFiles& eventInfo) override;
+			NtStatus OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) override;
+			NtStatus OnFindStreams(EvtFindStreams& eventInfo) override;
 	};
 }

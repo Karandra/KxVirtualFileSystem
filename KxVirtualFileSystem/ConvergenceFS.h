@@ -63,23 +63,23 @@ namespace KxVFS
 			size_t BuildFileTree();
 
 		protected:
-			NTSTATUS OnCreateFile(EvtCreateFile& eventInfo) override;
-			NTSTATUS OnCreateFile(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode);
-			NTSTATUS OnCreateDirectory(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode);
+			NtStatus OnCreateFile(EvtCreateFile& eventInfo) override;
+			NtStatus OnCreateFile(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode);
+			NtStatus OnCreateDirectory(EvtCreateFile& eventInfo, FileNode* targetNode, FileNode* parentNode);
 			
-			NTSTATUS OnCanDeleteFile(EvtCanDeleteFile& eventInfo) override;
-			NTSTATUS OnCloseFile(EvtCloseFile& eventInfo) override;
-			NTSTATUS OnCleanUp(EvtCleanUp& eventInfo) override;
+			NtStatus OnCanDeleteFile(EvtCanDeleteFile& eventInfo) override;
+			NtStatus OnCloseFile(EvtCloseFile& eventInfo) override;
+			NtStatus OnCleanUp(EvtCleanUp& eventInfo) override;
 
-			NTSTATUS OnReadFile(EvtReadFile& eventInfo) override;
-			NTSTATUS OnWriteFile(EvtWriteFile& eventInfo) override;
+			NtStatus OnReadFile(EvtReadFile& eventInfo) override;
+			NtStatus OnWriteFile(EvtWriteFile& eventInfo) override;
 
-			NTSTATUS OnMoveFile(EvtMoveFile& eventInfo) override;
-			NTSTATUS OnGetFileInfo(EvtGetFileInfo& eventInfo) override;
+			NtStatus OnMoveFile(EvtMoveFile& eventInfo) override;
+			NtStatus OnGetFileInfo(EvtGetFileInfo& eventInfo) override;
 
-			NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) override;
-			NTSTATUS OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) override;
-			NTSTATUS OnFindStreams(EvtFindStreams& eventInfo) override;
+			NtStatus OnFindFiles(EvtFindFiles& eventInfo) override;
+			NtStatus OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) override;
+			NtStatus OnFindStreams(EvtFindStreams& eventInfo) override;
 
 		protected:
 			bool UpdateAttributes(FileContext& fileContext);

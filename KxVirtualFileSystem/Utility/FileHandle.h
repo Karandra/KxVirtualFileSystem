@@ -7,6 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #pragma once
 #include "KxVirtualFileSystem/KxVirtualFileSystem.h"
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
+#include "NtStatusConstants.h"
 #include "Win32Constants.h"
 #include "GenericHandle.h"
 
@@ -92,7 +93,7 @@ namespace KxVFS
 
 			bool SetDeleteOnClose(bool deleteOnClose);
 			KxDynamicStringW GetPath() const;
-			NTSTATUS SetPath(KxDynamicStringRefW path, bool replaceIfExist);
+			NtStatus SetPath(KxDynamicStringRefW path, bool replaceIfExist);
 
 			int64_t GetPosition() const
 			{

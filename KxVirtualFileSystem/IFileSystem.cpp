@@ -12,13 +12,13 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	NTSTATUS IFileSystem::GetNtStatusByWin32ErrorCode(DWORD errorCode)
+	NtStatus IFileSystem::GetNtStatusByWin32ErrorCode(DWORD errorCode)
 	{
-		return Dokany2::DokanNtStatusFromWin32(errorCode);
+		return FromInt<NtStatus>(Dokany2::DokanNtStatusFromWin32(errorCode));
 	}
-	NTSTATUS IFileSystem::GetNtStatusByWin32LastErrorCode()
+	NtStatus IFileSystem::GetNtStatusByWin32LastErrorCode()
 	{
-		return Dokany2::DokanNtStatusFromWin32(::GetLastError());
+		return FromInt<NtStatus>(Dokany2::DokanNtStatusFromWin32(::GetLastError()));
 	}
 	std::tuple<FileAttributes, CreationDisposition, AccessRights> IFileSystem::MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo)
 	{

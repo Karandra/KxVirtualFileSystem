@@ -208,18 +208,18 @@ namespace KxVFS
 		return false;
 	}
 
-	NTSTATUS DokanyFileSystem::OnMountInternal(EvtMounted& eventInfo)
+	NtStatus DokanyFileSystem::OnMountInternal(EvtMounted& eventInfo)
 	{
 		m_IsMounted = true;
 		m_Service.AddActiveFS(*this);
 
 		return OnMount(eventInfo);
 	}
-	NTSTATUS DokanyFileSystem::OnUnMountInternal(EvtUnMounted& eventInfo)
+	NtStatus DokanyFileSystem::OnUnMountInternal(EvtUnMounted& eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, __FUNCTIONW__);
 
-		NTSTATUS statusCode = STATUS_UNSUCCESSFUL;
+		NtStatus statusCode = NtStatus::Unsuccessful;
 		if (CriticalSectionLocker lock(m_UnmountCS); true)
 		{
 			KxVFS_Log(LogLevel::Info, L"In EnterCriticalSection: %1", __FUNCTIONW__);
@@ -237,7 +237,7 @@ namespace KxVFS
 			else
 			{
 				KxVFS_Log(LogLevel::Info, L"We are destructing, don't call 'OnUnMount'");
-				statusCode = STATUS_SUCCESS;
+				statusCode = NtStatus::Success;
 			}
 		}
 		return statusCode;
@@ -270,7 +270,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnGetVolumeFreeSpace(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnGetVolumeFreeSpace(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_GetVolumeInfo(EvtGetVolumeInfo* eventInfo)
 	{
@@ -279,7 +279,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnGetVolumeInfo(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnGetVolumeInfo(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_GetVolumeAttributes(EvtGetVolumeAttributes* eventInfo)
 	{
@@ -288,7 +288,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnGetVolumeAttributes(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnGetVolumeAttributes(*eventInfo));
 	}
 
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_CreateFile(EvtCreateFile* eventInfo)
@@ -299,7 +299,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnCreateFile(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnCreateFile(*eventInfo));
 	}
 	void DOKAN_CALLBACK DokanyFileSystem::Dokan_CloseFile(EvtCloseFile* eventInfo)
 	{
@@ -332,7 +332,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnMoveFile(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnMoveFile(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_CanDeleteFile(EvtCanDeleteFile* eventInfo)
 	{
@@ -343,7 +343,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnCanDeleteFile(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnCanDeleteFile(*eventInfo));
 	}
 
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_LockFile(EvtLockFile* eventInfo)
@@ -354,7 +354,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnLockFile(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnLockFile(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_UnlockFile(EvtUnlockFile* eventInfo)
 	{
@@ -364,7 +364,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnUnlockFile(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnUnlockFile(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_GetFileSecurity(EvtGetFileSecurity* eventInfo)
 	{
@@ -374,7 +374,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnGetFileSecurity(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnGetFileSecurity(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_SetFileSecurity(EvtSetFileSecurity* eventInfo)
 	{
@@ -384,7 +384,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnSetFileSecurity(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnSetFileSecurity(*eventInfo));
 	}
 
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_ReadFile(EvtReadFile* eventInfo)
@@ -396,7 +396,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnReadFile(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnReadFile(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_WriteFile(EvtWriteFile* eventInfo)
 	{
@@ -407,7 +407,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnWriteFile(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnWriteFile(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_FlushFileBuffers(EvtFlushFileBuffers* eventInfo)
 	{
@@ -417,7 +417,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnFlushFileBuffers(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnFlushFileBuffers(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_SetEndOfFile(EvtSetEndOfFile* eventInfo)
 	{
@@ -427,7 +427,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnSetEndOfFile(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnSetEndOfFile(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_SetAllocationSize(EvtSetAllocationSize* eventInfo)
 	{
@@ -437,7 +437,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnSetAllocationSize(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnSetAllocationSize(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_GetFileInfo(EvtGetFileInfo* eventInfo)
 	{
@@ -447,7 +447,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnGetFileInfo(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnGetFileInfo(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_SetBasicFileInfo(EvtSetBasicFileInfo* eventInfo)
 	{
@@ -457,7 +457,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnSetBasicFileInfo(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnSetBasicFileInfo(*eventInfo));
 	}
 
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_FindFiles(EvtFindFiles* eventInfo)
@@ -468,7 +468,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnFindFiles(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnFindFiles(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_FindFilesWithPattern(EvtFindFilesWithPattern* eventInfo)
 	{
@@ -479,7 +479,7 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnFindFilesWithPattern(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnFindFilesWithPattern(*eventInfo));
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_FindStreams(EvtFindStreams* eventInfo)
 	{
@@ -489,6 +489,6 @@ namespace KxVFS
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
-		return GetFromContext(eventInfo)->OnFindStreams(*eventInfo);
+		return ToInt(GetFromContext(eventInfo)->OnFindStreams(*eventInfo));
 	}
 }

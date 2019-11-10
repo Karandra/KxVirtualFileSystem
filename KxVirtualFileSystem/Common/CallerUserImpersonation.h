@@ -26,10 +26,10 @@ namespace KxVFS
 			bool ImpersonateLoggedOnUser(TokenHandle& userTokenHandle) const;
 			bool CleanupImpersonateCallerUser(TokenHandle& userTokenHandle) const
 			{
-				// Something which is not 'STATUS_SUCCESS'.
-				return CleanupImpersonateCallerUser(userTokenHandle, STATUS_NOT_SUPPORTED);
+				// Something which is not 'NtStatus::Success'.
+				return CleanupImpersonateCallerUser(userTokenHandle, NtStatus::NotSupported);
 			}
-			bool CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NTSTATUS status) const;
+			bool CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NtStatus status) const;
 
 			TokenHandle ImpersonateCallerUserIfEnabled(EvtCreateFile& eventInfo) const
 			{
@@ -55,7 +55,7 @@ namespace KxVFS
 				}
 				return false;
 			}
-			bool CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle, NTSTATUS status) const
+			bool CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle, NtStatus status) const
 			{
 				if (m_Enabled)
 				{

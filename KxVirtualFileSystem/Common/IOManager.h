@@ -87,10 +87,10 @@ namespace KxVFS
 			AsyncIOContext* PopContext(FileContext& fileContext);
 
 		public:
-			NTSTATUS ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext = nullptr) const;
-			NTSTATUS WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext = nullptr) const;
+			NtStatus ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext = nullptr) const;
+			NtStatus WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext = nullptr) const;
 
-			NTSTATUS ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo);
-			NTSTATUS WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo);
+			NtStatus ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo);
+			NtStatus WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo);
 	};
 }

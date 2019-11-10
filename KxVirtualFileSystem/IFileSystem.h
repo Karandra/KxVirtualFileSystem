@@ -34,8 +34,8 @@ namespace KxVFS
 		friend class IOManager;
 
 		public:
-			static NTSTATUS GetNtStatusByWin32ErrorCode(DWORD errorCode);
-			static NTSTATUS GetNtStatusByWin32LastErrorCode();
+			static NtStatus GetNtStatusByWin32ErrorCode(DWORD errorCode);
+			static NtStatus GetNtStatusByWin32LastErrorCode();
 			static std::tuple<FileAttributes, CreationDisposition, AccessRights> MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo);
 
 			static bool UnMountDirectory(KxDynamicStringRefW mountPoint);
@@ -72,7 +72,7 @@ namespace KxVFS
 			virtual KxDynamicStringW GetVolumeLabel() const = 0;
 			virtual KxDynamicStringW GetVolumeFileSystem() const = 0;
 			virtual uint32_t GetVolumeSerialNumber() const = 0;
-			virtual NTSTATUS GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize) = 0;
+			virtual NtStatus GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize) = 0;
 
 			virtual bool IsProcessCreatedInVFS(uint32_t pid) const = 0;
 
@@ -94,35 +94,35 @@ namespace KxVFS
 
 		protected:
 			// File system events
-			virtual NTSTATUS OnMount(EvtMounted& eventInfo) = 0;
-			virtual NTSTATUS OnUnMount(EvtUnMounted& eventInfo) = 0;
+			virtual NtStatus OnMount(EvtMounted& eventInfo) = 0;
+			virtual NtStatus OnUnMount(EvtUnMounted& eventInfo) = 0;
 
-			virtual NTSTATUS OnGetVolumeFreeSpace(EvtGetVolumeFreeSpace& eventInfo) = 0;
-			virtual NTSTATUS OnGetVolumeInfo(EvtGetVolumeInfo& eventInfo) = 0;
-			virtual NTSTATUS OnGetVolumeAttributes(EvtGetVolumeAttributes& eventInfo) = 0;
+			virtual NtStatus OnGetVolumeFreeSpace(EvtGetVolumeFreeSpace& eventInfo) = 0;
+			virtual NtStatus OnGetVolumeInfo(EvtGetVolumeInfo& eventInfo) = 0;
+			virtual NtStatus OnGetVolumeAttributes(EvtGetVolumeAttributes& eventInfo) = 0;
 
-			virtual NTSTATUS OnCreateFile(EvtCreateFile& eventInfo) = 0;
-			virtual NTSTATUS OnCloseFile(EvtCloseFile& eventInfo) = 0;
-			virtual NTSTATUS OnCleanUp(EvtCleanUp& eventInfo) = 0;
-			virtual NTSTATUS OnMoveFile(EvtMoveFile& eventInfo) = 0;
-			virtual NTSTATUS OnCanDeleteFile(EvtCanDeleteFile& eventInfo) = 0;
+			virtual NtStatus OnCreateFile(EvtCreateFile& eventInfo) = 0;
+			virtual NtStatus OnCloseFile(EvtCloseFile& eventInfo) = 0;
+			virtual NtStatus OnCleanUp(EvtCleanUp& eventInfo) = 0;
+			virtual NtStatus OnMoveFile(EvtMoveFile& eventInfo) = 0;
+			virtual NtStatus OnCanDeleteFile(EvtCanDeleteFile& eventInfo) = 0;
 
-			virtual NTSTATUS OnLockFile(EvtLockFile& eventInfo) = 0;
-			virtual NTSTATUS OnUnlockFile(EvtUnlockFile& eventInfo) = 0;
-			virtual NTSTATUS OnGetFileSecurity(EvtGetFileSecurity& eventInfo) = 0;
-			virtual NTSTATUS OnSetFileSecurity(EvtSetFileSecurity& eventInfo) = 0;
+			virtual NtStatus OnLockFile(EvtLockFile& eventInfo) = 0;
+			virtual NtStatus OnUnlockFile(EvtUnlockFile& eventInfo) = 0;
+			virtual NtStatus OnGetFileSecurity(EvtGetFileSecurity& eventInfo) = 0;
+			virtual NtStatus OnSetFileSecurity(EvtSetFileSecurity& eventInfo) = 0;
 
-			virtual NTSTATUS OnReadFile(EvtReadFile& eventInfo) = 0;
-			virtual NTSTATUS OnWriteFile(EvtWriteFile& eventInfo) = 0;
-			virtual NTSTATUS OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo) = 0;
-			virtual NTSTATUS OnSetEndOfFile(EvtSetEndOfFile& eventInfo) = 0;
-			virtual NTSTATUS OnSetAllocationSize(EvtSetAllocationSize& eventInfo) = 0;
-			virtual NTSTATUS OnGetFileInfo(EvtGetFileInfo& eventInfo) = 0;
-			virtual NTSTATUS OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo) = 0;
+			virtual NtStatus OnReadFile(EvtReadFile& eventInfo) = 0;
+			virtual NtStatus OnWriteFile(EvtWriteFile& eventInfo) = 0;
+			virtual NtStatus OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo) = 0;
+			virtual NtStatus OnSetEndOfFile(EvtSetEndOfFile& eventInfo) = 0;
+			virtual NtStatus OnSetAllocationSize(EvtSetAllocationSize& eventInfo) = 0;
+			virtual NtStatus OnGetFileInfo(EvtGetFileInfo& eventInfo) = 0;
+			virtual NtStatus OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo) = 0;
 
-			virtual NTSTATUS OnFindFiles(EvtFindFiles& eventInfo) = 0;
-			virtual NTSTATUS OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) = 0;
-			virtual NTSTATUS OnFindStreams(EvtFindStreams& eventInfo) = 0;
+			virtual NtStatus OnFindFiles(EvtFindFiles& eventInfo) = 0;
+			virtual NtStatus OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) = 0;
+			virtual NtStatus OnFindStreams(EvtFindStreams& eventInfo) = 0;
 
 		protected:
 			// Events for derived classes. Call them in your implementation to allow easier customization.

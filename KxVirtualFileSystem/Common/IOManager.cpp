@@ -219,7 +219,7 @@ namespace KxVFS
 		return asyncContext;
 	}
 
-	NTSTATUS IOManager::ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext) const
+	NtStatus IOManager::ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext) const
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileHandle.GetPath());
 
@@ -233,11 +233,11 @@ namespace KxVFS
 			{
 				m_FileSystem.OnFileRead(eventInfo, *fileContext);
 			}
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
 		return IFileSystem::GetNtStatusByWin32LastErrorCode();
 	}
-	NTSTATUS IOManager::WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext) const
+	NtStatus IOManager::WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext) const
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileHandle.GetPath());
 
@@ -262,7 +262,7 @@ namespace KxVFS
 				if (eventInfo.Offset >= fileSize)
 				{
 					eventInfo.NumberOfBytesWritten = 0;
-					return STATUS_SUCCESS;
+					return NtStatus::Success;
 				}
 
 				// WTF is happening here?
@@ -302,19 +302,19 @@ namespace KxVFS
 			{
 				m_FileSystem.OnFileWritten(eventInfo, *fileContext);
 			}
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
 		return IFileSystem::GetNtStatusByWin32LastErrorCode();
 	}
 
-	NTSTATUS IOManager::ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo)
+	NtStatus IOManager::ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileContext.GetHandle().GetPath());
 
 		AsyncIOContext* asyncContext = PopContext(fileContext);
 		if (!asyncContext)
 		{
-			return STATUS_MEMORY_NOT_ALLOCATED;
+			return NtStatus::MemoryNotAllocated;
 		}
 		asyncContext->SetOperationContext(eventInfo, eventInfo.Offset, AsyncIOContext::OperationType::Read);
 
@@ -328,9 +328,9 @@ namespace KxVFS
 				return IFileSystem::GetNtStatusByWin32ErrorCode(errorCode);
 			}
 		}
-		return STATUS_PENDING;
+		return NtStatus::Pending;
 	}
-	NTSTATUS IOManager::WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo)
+	NtStatus IOManager::WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileContext.GetHandle().GetPath());
 
@@ -348,7 +348,7 @@ namespace KxVFS
 			if (eventInfo.Offset >= fileSize)
 			{
 				eventInfo.NumberOfBytesWritten = 0;
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
 
 			if ((uint64_t)(eventInfo.Offset + eventInfo.NumberOfBytesToWrite) > (uint64_t)fileSize)
@@ -368,7 +368,7 @@ namespace KxVFS
 		AsyncIOContext* asyncContext = PopContext(fileContext);
 		if (!asyncContext)
 		{
-			return STATUS_MEMORY_NOT_ALLOCATED;
+			return NtStatus::MemoryNotAllocated;
 		}
 		asyncContext->SetOperationContext(eventInfo, eventInfo.Offset, AsyncIOContext::OperationType::Write);
 
@@ -382,6 +382,6 @@ namespace KxVFS
 				return IFileSystem::GetNtStatusByWin32ErrorCode(errorCode);
 			}
 		}
-		return STATUS_PENDING;
+		return NtStatus::Pending;
 	}
 }

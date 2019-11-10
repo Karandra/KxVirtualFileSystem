@@ -32,20 +32,20 @@ namespace KxVFS
 		}
 		return false;
 	}
-	NTSTATUS MirrorFS::CanDeleteDirectory(KxDynamicStringRefW directoryPath) const
+	NtStatus MirrorFS::CanDeleteDirectory(KxDynamicStringRefW directoryPath) const
 	{
 		if (!directoryPath.empty())
 		{
 			if (KxFileFinder::IsDirectoryEmpty(directoryPath))
 			{
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
 			else
 			{
-				return STATUS_DIRECTORY_NOT_EMPTY;
+				return NtStatus::DirectoryNotEmpty;
 			}
 		}
-		return STATUS_OBJECT_PATH_INVALID;
+		return NtStatus::ObjectPathInvalid;
 	}
 
 	KxDynamicStringW MirrorFS::DispatchLocationRequest(KxDynamicStringRefW requestedPath)
@@ -74,7 +74,7 @@ namespace KxVFS
 		m_Source = source;
 	}
 
-	NTSTATUS MirrorFS::GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize)
+	NtStatus MirrorFS::GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize)
 	{
 		KxVFS_Log(LogLevel::Info, L"Attempt to get volume size info for: %1", m_Source);
 
@@ -96,7 +96,7 @@ namespace KxVFS
 				KxVFS_Log(LogLevel::Info, L"Unable get disk size info using 'DeviceIoControl', total size might be incorrect");
 			}
 			#endif
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
 		else
 		{
@@ -108,27 +108,27 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	NTSTATUS MirrorFS::OnMount(EvtMounted& eventInfo)
+	NtStatus MirrorFS::OnMount(EvtMounted& eventInfo)
 	{
-		return STATUS_SUCCESS;
+		return NtStatus::Success;
 	}
-	NTSTATUS MirrorFS::OnUnMount(EvtUnMounted& eventInfo)
+	NtStatus MirrorFS::OnUnMount(EvtUnMounted& eventInfo)
 	{
-		return STATUS_SUCCESS;
+		return NtStatus::Success;
 	}
 
-	NTSTATUS MirrorFS::OnGetVolumeFreeSpace(EvtGetVolumeFreeSpace& eventInfo)
+	NtStatus MirrorFS::OnGetVolumeFreeSpace(EvtGetVolumeFreeSpace& eventInfo)
 	{
 		int64_t freeBytes = 0;
 		int64_t totalSize = 0;
-		const NTSTATUS status = GetVolumeSizeInfo(freeBytes, totalSize);
+		const NtStatus status = GetVolumeSizeInfo(freeBytes, totalSize);
 
 		eventInfo.FreeBytesAvailable = freeBytes;
 		eventInfo.TotalNumberOfFreeBytes = freeBytes;
 		eventInfo.TotalNumberOfBytes = totalSize;
 		return status;
 	}
-	NTSTATUS MirrorFS::OnGetVolumeInfo(EvtGetVolumeInfo& eventInfo)
+	NtStatus MirrorFS::OnGetVolumeInfo(EvtGetVolumeInfo& eventInfo)
 	{
 		eventInfo.VolumeInfo->VolumeSerialNumber = GetVolumeSerialNumber();
 		eventInfo.VolumeInfo->SupportsObjects = FALSE;
@@ -137,9 +137,9 @@ namespace KxVFS
 		const size_t labelLength = std::min<size_t>(volumeLabel.length(), eventInfo.MaxLabelLengthInChars);
 		eventInfo.VolumeInfo->VolumeLabelLength = Utility::WriteString(volumeLabel.data(), eventInfo.VolumeInfo->VolumeLabel, labelLength);
 
-		return STATUS_SUCCESS;
+		return NtStatus::Success;
 	}
-	NTSTATUS MirrorFS::OnGetVolumeAttributes(EvtGetVolumeAttributes& eventInfo)
+	NtStatus MirrorFS::OnGetVolumeAttributes(EvtGetVolumeAttributes& eventInfo)
 	{
 		const size_t maxFileSystemNameLengthInBytes = eventInfo.MaxFileSystemNameLengthInChars * sizeof(wchar_t);
 
@@ -162,15 +162,15 @@ namespace KxVFS
 		}
 		eventInfo.Attributes->FileSystemNameLength = Utility::WriteString(fileSystemNameBuffer, eventInfo.Attributes->FileSystemName, eventInfo.MaxFileSystemNameLengthInChars);
 
-		return STATUS_SUCCESS;
+		return NtStatus::Success;
 	}
 
-	NTSTATUS MirrorFS::OnCreateFile(EvtCreateFile& eventInfo)
+	NtStatus MirrorFS::OnCreateFile(EvtCreateFile& eventInfo)
 	{
 		KxVFS_Log(LogLevel::Info, L"Trying to create/open file or directory: %1", eventInfo.FileName);
 
 		DWORD errorCode = 0;
-		NTSTATUS statusCode = STATUS_SUCCESS;
+		NtStatus statusCode = NtStatus::Success;
 		KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
 		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
@@ -192,7 +192,7 @@ namespace KxVFS
 				else
 				{
 					// FILE_NON_DIRECTORY_FILE - Cannot open a dir as a file
-					return STATUS_FILE_IS_A_DIRECTORY;
+					return NtStatus::FileIsADirectory;
 				}
 			}
 		}
@@ -228,12 +228,12 @@ namespace KxVFS
 				CleanupImpersonateCallerUserIfEnabled(userTokenHandle, statusCode);
 			}
 
-			if (statusCode == STATUS_SUCCESS)
+			if (statusCode == NtStatus::Success)
 			{
 				// Check first if we're trying to open a file as a directory.
 				if (fileAttributes != FileAttributes::Invalid && !(fileAttributes & FileAttributes::Directory) && (eventInfo.CreateOptions & FILE_DIRECTORY_FILE))
 				{
-					return STATUS_NOT_A_DIRECTORY;
+					return NtStatus::NotADirectory;
 				}
 
 				// FILE_FLAG_BACKUP_SEMANTICS is required for opening directory handles
@@ -259,13 +259,13 @@ namespace KxVFS
 					else
 					{
 						SetLastError(ERROR_INTERNAL_ERROR);
-						statusCode = STATUS_INTERNAL_ERROR;
+						statusCode = NtStatus::InternalError;
 					}
 
-					// Open succeed but we need to inform the driver that the dir open and not created by returning STATUS_OBJECT_NAME_COLLISION
+					// Open succeed but we need to inform the driver that the dir open and not created by returning NtStatus::ObjectNameCollision
 					if (creationDisposition == CreationDisposition::OpenAlways && fileAttributes != FileAttributes::Invalid)
 					{
-						statusCode = STATUS_OBJECT_NAME_COLLISION;
+						statusCode = NtStatus::ObjectNameCollision;
 					}
 				}
 				else
@@ -279,7 +279,7 @@ namespace KxVFS
 			// It is a create file request
 			if (!CheckAttributesToOverwriteFile(FromInt<FileAttributes>(fileAttributes), requestAttributes, creationDisposition))
 			{
-				statusCode = STATUS_ACCESS_DENIED;
+				statusCode = NtStatus::AccessDenied;
 			}
 			else
 			{
@@ -322,7 +322,7 @@ namespace KxVFS
 					if (!fileContext)
 					{
 						SetLastError(ERROR_INTERNAL_ERROR);
-						statusCode = STATUS_INTERNAL_ERROR;
+						statusCode = NtStatus::InternalError;
 					}
 					else
 					{
@@ -335,8 +335,8 @@ namespace KxVFS
 							if (errorCode == ERROR_ALREADY_EXISTS)
 							{
 								// Open succeed but we need to inform the driver,
-								// that the file open and not created by returning STATUS_OBJECT_NAME_COLLISION
-								statusCode = STATUS_OBJECT_NAME_COLLISION;
+								// that the file open and not created by returning NtStatus::ObjectNameCollision
+								statusCode = NtStatus::ObjectNameCollision;
 							}
 						}
 					}
@@ -345,7 +345,7 @@ namespace KxVFS
 		}
 		return statusCode;
 	}
-	NTSTATUS MirrorFS::OnCloseFile(EvtCloseFile& eventInfo)
+	NtStatus MirrorFS::OnCloseFile(EvtCloseFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -369,11 +369,11 @@ namespace KxVFS
 
 			ResetFileContext(eventInfo);
 			GetFileContextManager().PushContext(*fileContext);
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS MirrorFS::OnCleanUp(EvtCleanUp& eventInfo)
+	NtStatus MirrorFS::OnCleanUp(EvtCleanUp& eventInfo)
 	{
 		/* This gets called BEFORE MirrorCloseFile(). Per the documentation:
 		*
@@ -403,20 +403,20 @@ namespace KxVFS
 					fileContext->ResetFileNode();
 				}
 			}
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS MirrorFS::OnMoveFile(EvtMoveFile& eventInfo)
+	NtStatus MirrorFS::OnMoveFile(EvtMoveFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			KxDynamicStringW targetPathNew = DispatchLocationRequest(eventInfo.NewFileName);
 			return fileContext->GetHandle().SetPath(targetPathNew, eventInfo.ReplaceIfExists);
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS MirrorFS::OnCanDeleteFile(EvtCanDeleteFile& eventInfo)
+	NtStatus MirrorFS::OnCanDeleteFile(EvtCanDeleteFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -427,7 +427,7 @@ namespace KxVFS
 			}
 			if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
 			{
-				return STATUS_CANNOT_DELETE;
+				return NtStatus::CannotDelete;
 			}
 
 			if (eventInfo.DokanFileInfo->IsDirectory)
@@ -435,12 +435,12 @@ namespace KxVFS
 				KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 				return CanDeleteDirectory(targetPath);
 			}
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
 
-	NTSTATUS MirrorFS::OnLockFile(EvtLockFile& eventInfo)
+	NtStatus MirrorFS::OnLockFile(EvtLockFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -448,11 +448,11 @@ namespace KxVFS
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS MirrorFS::OnUnlockFile(EvtUnlockFile& eventInfo)
+	NtStatus MirrorFS::OnUnlockFile(EvtUnlockFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -460,16 +460,16 @@ namespace KxVFS
 			{
 				return GetNtStatusByWin32LastErrorCode();
 			}
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
 	
-	NTSTATUS MirrorFS::OnGetFileSecurity(EvtGetFileSecurity& eventInfo)
+	NtStatus MirrorFS::OnGetFileSecurity(EvtGetFileSecurity& eventInfo)
 	{
 		if (!IsExtendedSecurityEnabled())
 		{
-			return STATUS_NOT_IMPLEMENTED;
+			return NtStatus::NotImplemented;
 		}
 		else
 		{
@@ -487,7 +487,7 @@ namespace KxVFS
 					if (error == ERROR_INSUFFICIENT_BUFFER)
 					{
 						KxVFS_Log(LogLevel::Info, L"GetKernelObjectSecurity error: ERROR_INSUFFICIENT_BUFFER");
-						return STATUS_BUFFER_OVERFLOW;
+						return NtStatus::BufferOverflow;
 					}
 					else
 					{
@@ -501,16 +501,16 @@ namespace KxVFS
 				KxVFS_Log(LogLevel::Info, L"GetKernelObjectSecurity return true, 'eventInfo.LengthNeeded = %1, securityDescriptorLength = %2", eventInfo.LengthNeeded, securityDescriptorLength);
 				eventInfo.LengthNeeded = securityDescriptorLength;
 
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
-			return STATUS_FILE_CLOSED;
+			return NtStatus::FileClosed;
 		}
 	}
-	NTSTATUS MirrorFS::OnSetFileSecurity(EvtSetFileSecurity& eventInfo)
+	NtStatus MirrorFS::OnSetFileSecurity(EvtSetFileSecurity& eventInfo)
 	{
 		if (!IsExtendedSecurityEnabled())
 		{
-			return STATUS_NOT_IMPLEMENTED;
+			return NtStatus::NotImplemented;
 		}
 		else
 		{
@@ -522,13 +522,13 @@ namespace KxVFS
 					KxVFS_Log(LogLevel::Info, L"SetKernelObjectSecurity error: %1", error);
 					return GetNtStatusByWin32ErrorCode(error);
 				}
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
-			return STATUS_FILE_CLOSED;
+			return NtStatus::FileClosed;
 		}
 	}
 
-	NTSTATUS MirrorFS::OnReadFile(EvtReadFile& eventInfo)
+	NtStatus MirrorFS::OnReadFile(EvtReadFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -538,7 +538,7 @@ namespace KxVFS
 
 			if (isClosed)
 			{
-				return STATUS_FILE_CLOSED;
+				return NtStatus::FileClosed;
 			}
 			if (isCleanedUp)
 			{
@@ -562,9 +562,9 @@ namespace KxVFS
 				return ioManager.ReadFileSync(fileContext->GetHandle(), eventInfo, fileContext);
 			}
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS MirrorFS::OnWriteFile(EvtWriteFile& eventInfo)
+	NtStatus MirrorFS::OnWriteFile(EvtWriteFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -574,7 +574,7 @@ namespace KxVFS
 
 			if (isClosed)
 			{
-				return STATUS_FILE_CLOSED;
+				return NtStatus::FileClosed;
 			}
 			if (isCleanedUp)
 			{
@@ -599,23 +599,23 @@ namespace KxVFS
 				return ioManager.WriteFileSync(fileContext->GetHandle(), eventInfo, fileContext);
 			}
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
 	
-	NTSTATUS MirrorFS::OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo)
+	NtStatus MirrorFS::OnFlushFileBuffers(EvtFlushFileBuffers& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
 			if (fileContext->GetHandle().FlushBuffers())
 			{
 				OnFileBuffersFlushed(eventInfo, *fileContext);
-				return STATUS_SUCCESS;
+				return NtStatus::Success;
 			}
 			return GetNtStatusByWin32LastErrorCode();
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS MirrorFS::OnSetEndOfFile(EvtSetEndOfFile& eventInfo)
+	NtStatus MirrorFS::OnSetEndOfFile(EvtSetEndOfFile& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -630,11 +630,11 @@ namespace KxVFS
 			}
 
 			OnEndOfFileSet(eventInfo, *fileContext);
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS MirrorFS::OnSetAllocationSize(EvtSetAllocationSize& eventInfo)
+	NtStatus MirrorFS::OnSetAllocationSize(EvtSetAllocationSize& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -660,11 +660,11 @@ namespace KxVFS
 			}
 
 			OnAllocationSizeSet(eventInfo, *fileContext);
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS MirrorFS::OnGetFileInfo(EvtGetFileInfo& eventInfo)
+	NtStatus MirrorFS::OnGetFileInfo(EvtGetFileInfo& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -696,11 +696,11 @@ namespace KxVFS
 			}
 
 			KxVFS_Log(LogLevel::Info, L"Successfully retrieved file info by handle: %1", eventInfo.FileName);
-			return STATUS_SUCCESS;
+			return NtStatus::Success;
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
-	NTSTATUS MirrorFS::OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo)
+	NtStatus MirrorFS::OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo)
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
@@ -715,7 +715,7 @@ namespace KxVFS
 
 				// In case of async IO just return success so any copy operation won't hung file system process,
 				// but don't call event handler to avoid behavior described in above comment.
-				// This is actually consistent with old implementation from version 1.x which returned 'STATUS_SUCCESS'
+				// This is actually consistent with old implementation from version 1.x which returned 'NtStatus::Success'
 				// when set info function itself succeeded but regardless of error code.
 				if (sucess)
 				{
@@ -723,15 +723,15 @@ namespace KxVFS
 					{
 						OnBasicFileInfoSet(eventInfo, *fileContext);
 					}
-					return STATUS_SUCCESS;
+					return NtStatus::Success;
 				}
 				return GetNtStatusByWin32ErrorCode(errorCode);
 			}
 		}
-		return STATUS_FILE_CLOSED;
+		return NtStatus::FileClosed;
 	}
 
-	NTSTATUS MirrorFS::OnFindFiles(KxDynamicStringRefW path, KxDynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2)
+	NtStatus MirrorFS::OnFindFiles(KxDynamicStringRefW path, KxDynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2)
 	{
 		KxDynamicStringW targetPath = DispatchLocationRequest(path);
 		size_t targetPathLength = targetPath.length();
@@ -782,17 +782,17 @@ namespace KxVFS
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
-		return STATUS_SUCCESS;
+		return NtStatus::Success;
 	}
-	NTSTATUS MirrorFS::OnFindFiles(EvtFindFiles& eventInfo)
+	NtStatus MirrorFS::OnFindFiles(EvtFindFiles& eventInfo)
 	{
 		return OnFindFiles(eventInfo.PathName, L"*", &eventInfo, nullptr);
 	}
-	NTSTATUS MirrorFS::OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo)
+	NtStatus MirrorFS::OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo)
 	{
 		return OnFindFiles(eventInfo.PathName, eventInfo.SearchPattern, nullptr, &eventInfo);
 	}
-	NTSTATUS MirrorFS::OnFindStreams(EvtFindStreams& eventInfo)
+	NtStatus MirrorFS::OnFindStreams(EvtFindStreams& eventInfo)
 	{
 		KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
@@ -816,9 +816,9 @@ namespace KxVFS
 
 		if (findResult == Dokany2::DOKAN_STREAM_BUFFER_FULL)
 		{
-			// FindStreams returned 'count' entries in 'sInSourcePath' with STATUS_BUFFER_OVERFLOW
+			// FindStreams returned 'count' entries in 'sInSourcePath' with NtStatus::BufferOverflow
 			// https://msdn.microsoft.com/en-us/library/windows/hardware/ff540364(v=vs.85).aspx
-			return STATUS_BUFFER_OVERFLOW;
+			return NtStatus::BufferOverflow;
 		}
 
 		const DWORD errorCode = GetLastError();
@@ -826,6 +826,6 @@ namespace KxVFS
 		{
 			return GetNtStatusByWin32ErrorCode(errorCode);
 		}
-		return STATUS_SUCCESS;
+		return NtStatus::Success;
 	}
 }

@@ -48,7 +48,7 @@ namespace KxVFS
 			return false;
 		}
 	}
-	bool CallerUserImpersonation::CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NTSTATUS status) const
+	bool CallerUserImpersonation::CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NtStatus status) const
 	{
 		if (userTokenHandle)
 		{
@@ -56,7 +56,7 @@ namespace KxVFS
 			const DWORD lastError = ::GetLastError();
 
 			// Keep the handle open for CreateFile
-			if (status != STATUS_SUCCESS)
+			if (status != NtStatus::Success)
 			{
 				userTokenHandle.Close();
 			}
