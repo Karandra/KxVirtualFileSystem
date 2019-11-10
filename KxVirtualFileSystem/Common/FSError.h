@@ -16,8 +16,8 @@ namespace KxVFS
 	enum class FSErrorCode
 	{
 		// Special codes
-		Success = 0,
 		Unknown = -1,
+		Success = 0,
 
 		// Dokany-related
 		InternalError,
