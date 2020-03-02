@@ -67,8 +67,10 @@ namespace KxVFS::Utility
 			while (next != stdNOT_FOUND);
 
 			// Create folder
-			BOOL ret = FALSE;
-			KxDynamicStringW fullPath = GetDriveFromPath(pathW);
+			bool ret = false;
+			KxDynamicStringW fullPath = GetLongPathPrefix();
+			fullPath += GetDriveFromPath(pathW);
+
 			for (size_t i = 0; i < folderArray.size(); i++)
 			{
 				fullPath += folderArray[i];
