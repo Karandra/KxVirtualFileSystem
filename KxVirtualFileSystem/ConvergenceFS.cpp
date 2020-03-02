@@ -680,26 +680,35 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			if (FileNode* originalNode = fileContext->GetFileNode())
+			if (FileNode* sourceNode = fileContext->GetFileNode())
 			{
 				FileNode* targetNodeParent = nullptr;
 				FileNode* targetNode = m_VirtualTree.NavigateToFile(eventInfo.NewFileName, targetNodeParent);
 
+				KxVFS_Log(LogLevel::Info, L"%1: \"%2\" -> \"%3\" (ReplaceIfExists: %4), Target parent: %5",
+						  __FUNCTIONW__,
+						  sourceNode->GetFullPath(),
+						  targetNode ? targetNode->GetFullPath() : L"<null>",
+						  (bool)eventInfo.ReplaceIfExists,
+						  targetNodeParent ? targetNodeParent->GetFullPath() : L"<null>");
+
 				if (targetNode)
 				{
 					// We have both files, so overwrite one with another if allowed
+					KxVFS_Log(LogLevel::Info, L"Direct move: \"%1\" -> \"%2\"", sourceNode->GetFullPathWithNS(), targetNode->GetFullPathWithNS());
+
 					if (eventInfo.ReplaceIfExists)
 					{
-						auto originalLock = originalNode->LockExclusive();
+						auto sourceLock = sourceNode->LockExclusive();
 						auto targetLock = targetNode->LockExclusive();
 
-						if (::MoveFileExW(originalNode->GetFullPathWithNS(), targetNode->GetFullPathWithNS(), MOVEFILE_COPY_ALLOWED|MOVEFILE_REPLACE_EXISTING))
+						if (::MoveFileExW(sourceNode->GetFullPathWithNS(), targetNode->GetFullPathWithNS(), MOVEFILE_COPY_ALLOWED|MOVEFILE_REPLACE_EXISTING))
 						{
-							// Move succeeded, take original node's file info
-							targetNode->TakeItem(std::move(*originalNode));
+							// Move succeeded, move source node's file info into the target
+							targetNode->TakeItem(std::move(*sourceNode));
 
-							// And remove original file from the tree
-							originalNode->RemoveThisChild();
+							// And remove source file from the tree
+							sourceNode->RemoveThisChild();
 
 							return NtStatus::Success;
 						}
@@ -710,36 +719,34 @@ namespace KxVFS
 						return GetNtStatusByWin32ErrorCode(ERROR_ALREADY_EXISTS);
 					}
 				}
-				else if (originalNode->GetParent() == targetNodeParent)
+				else if (sourceNode->GetParent() == targetNodeParent)
 				{
-					// We don't have target file, but original node parent is the same as supposed 
+					// We don't have target file, but source node parent is the same as supposed 
 					// target parent. So this is actually renaming.
-
 					const KxDynamicStringW newName = KxDynamicStringW(eventInfo.NewFileName).after_last(L'\\');
-					if (auto originalLock = originalNode->LockExclusive(); !newName.empty())
-					{
-						// Save original path and name
-						const KxDynamicStringW originalName = originalNode->GetName();
-						const KxDynamicStringW originalPath = originalNode->GetFullPathWithNS();
+					KxVFS_Log(LogLevel::Info, L"New file name: \"%1\"", newName);
 
-						// Set name to temporary item to get new path
-						auto GetNewPath = [originalNode, &newName]()
+					if (auto originalLock = sourceNode->LockExclusive(); !newName.empty())
+					{
+						// Set name to temporary item to construct a new path
+						const KxDynamicStringW newPath = [sourceNode, &newName]()
 						{
 							KxFileItem item;
 							item.SetName(newName);
-							item.SetSource(originalNode->GetSource());
+							item.SetSource(sourceNode->GetSource());
 
 							return item.GetFullPathWithNS();
-						};
-						const KxDynamicStringW newPath = GetNewPath();
+						}();
 
 						// Rename file system object
+						KxVFS_Log(LogLevel::Info, L"Renaming: \"%1\" -> \"%2\"", sourceNode->GetFullPathWithNS(), newPath);
+
 						const NtStatus status = fileContext->GetHandle().SetPath(newPath, eventInfo.ReplaceIfExists);
 						if (status == NtStatus::Success)
 						{
-							// Rename the node if we successfully renamed file system object
+							// Rename the node if we successfully renamed its file system object
 							auto parentLock = targetNodeParent->LockExclusive();
-							originalNode->SetName(newName);
+							sourceNode->SetName(newName);
 						}
 						return status;
 					}
@@ -747,26 +754,46 @@ namespace KxVFS
 				}
 				else
 				{
-					// We don't have target file, nor it's a rename request, so it's a real move.
-					// Branch should be already constructed, so move new node to supposed target parent.
-					auto originalLock = originalNode->LockExclusive();
+					// We don't have target file, nor it's a rename request, so it's a move to a completely new location.
+					// Branch should be already constructed, so move a new node to a supposed target parent.
+					auto sourceLock = sourceNode->LockExclusive();
 					auto parentLock = targetNodeParent->LockExclusive();
 
-					// Get new path
-					auto[newPath, virtualDirectory] = GetTargetPath(targetNode, eventInfo.NewFileName, true);
+					// Get new target path
+					const auto [newTargetPath, virtualDirectory] = GetTargetPath(targetNode, eventInfo.NewFileName, true);
 
 					// Move the file
-					if (::MoveFileExW(originalNode->GetFullPathWithNS(), newPath, MOVEFILE_COPY_ALLOWED))
+					KxVFS_Log(LogLevel::Info, L"Moving file to a new location: \"%1\" -> \"%2\"", sourceNode->GetFullPathWithNS(), newTargetPath);
+
+					// Target directory tree might not exist yet. Try to move the file and, if directory doesn't exist, create it and repeat.
+					auto DoMoveFile = [&]()
 					{
-						FileNode& newNode = targetNodeParent->AddChild(std::make_unique<FileNode>(newPath.get_view(), targetNodeParent), virtualDirectory);
+						return ::MoveFileExW(sourceNode->GetFullPathWithNS(), newTargetPath, MOVEFILE_COPY_ALLOWED);
+					};
 
-						// Take original node attributes and remove it
-						newNode.TakeItem(std::move(*originalNode));
-						originalNode->RemoveThisChild();
+					bool isMoved = DoMoveFile();
+					DWORD errorCode = ::GetLastError();
+					if (!isMoved && errorCode == ERROR_PATH_NOT_FOUND)
+					{
+						// Source is definitely exist so it must be target directory doesn't exist. Create it.
+						KxVFS_Log(LogLevel::Info, L"Target directory tree doesn't exist, creating.");
 
+						Utility::CreateDirectoryTree(newTargetPath, true);
+						isMoved = DoMoveFile();
+						errorCode = ::GetLastError();
+					}
+					if (isMoved)
+					{
+						FileNode& newNode = targetNodeParent->AddChild(std::make_unique<FileNode>(newTargetPath.get_view(), targetNodeParent), virtualDirectory);
+
+						// Move source node attributes to the new node and remove the source
+						newNode.TakeItem(std::move(*sourceNode));
+						sourceNode->RemoveThisChild();
+
+						KxVFS_Log(LogLevel::Info, L"Successfully moved to: %1", newNode.GetFullPath());
 						return NtStatus::Success;
 					}
-					return GetNtStatusByWin32LastErrorCode();
+					return GetNtStatusByWin32ErrorCode(errorCode);
 				}
 			}
 			return NtStatus::FileInvalid;
