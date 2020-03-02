@@ -72,7 +72,7 @@ BEGIN
             VALUE "FileDescription", "A Dokany2-based user mode Virtual File System implementation"
             VALUE "FileVersion", "2.1.1.0"
             VALUE "InternalName", "KxVirtualFileSystem.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2017-2019"
+            VALUE "LegalCopyright", "Copyright (C) 2017-2020"
             VALUE "OriginalFilename", "KxVirtualFileSystem.dll"
             VALUE "ProductName", "KxVirtualFileSystem"
             VALUE "ProductVersion", "2.1.1.0"

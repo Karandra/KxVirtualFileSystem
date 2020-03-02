@@ -1,5 +1,8 @@
+Version 2.1.1 - 02.03.2020
+- Fixed moving files to a different location when target directory tree doesn't exist.
+
 Version 2.1 - 15.09.2019
-- Added toggleable at runtime logging (if the library built with logging enabled).
+- Added toggleable at runtime logging (if the library is built with logging enabled).
 - Added Dokany's own log redirection.
 
 Version 2.0 - 24.08.2019
