@@ -325,10 +325,11 @@ namespace KxVFS
 	}
 	NTSTATUS DOKAN_CALLBACK DokanyFileSystem::Dokan_MoveFile(EvtMoveFile* eventInfo)
 	{
-		KxVFS_Log(LogLevel::Info, L"%1: \"%2\" -> \"%3\", Requestor Process: %4",
+		KxVFS_Log(LogLevel::Info, L"%1: \"%2\" -> \"%3\" (ReplaceIfExists: %4), Requestor Process: %5",
 				  __FUNCTIONW__,
 				  eventInfo->FileName,
-				  (bool)eventInfo->NewFileName,
+				  eventInfo->NewFileName,
+				  (bool)eventInfo->ReplaceIfExists,
 				  eventInfo->DokanFileInfo->ProcessId
 		);
 
