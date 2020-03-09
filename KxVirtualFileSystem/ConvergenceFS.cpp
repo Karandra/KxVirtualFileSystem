@@ -41,7 +41,7 @@ namespace KxVFS
 	{
 		if (fileInfo.DeleteOnClose)
 		{
-			// Should already be deleted by 'CloseHandle' if opened with 'FILE_FLAG_DELETE_ON_CLOSE'.
+			// Should already be deleted by 'CloseHandle' if opened with 'FILE_FLAG_DELETE_ON_CLOSE'
 			if (auto parentLock = fileNode.GetParent()->LockExclusive(); true)
 			{
 				bool success = false;
