@@ -1,5 +1,5 @@
 /*
-Copyright © 2019 Kerber. All rights reserved.
+Copyright © 2020 Kerber. All rights reserved.
 
 You should have received a copy of the GNU LGPL v3
 along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
@@ -10,11 +10,14 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS::Utility::String
 {
-	template<class... Args> KxDynamicStringW Concat(Args&&... arg)
+	template<class... Args>
+	KxDynamicStringW Concat(Args&&... arg)
 	{
 		return (KxDynamicStringW(arg) + ...);
 	}
-	template<class... Args> KxDynamicStringW ConcatWithSeparator(KxDynamicStringRefW sep, Args&&... arg)
+	
+	template<class... Args>
+	KxDynamicStringW ConcatWithSeparator(KxDynamicStringRefW sep, Args&&... arg)
 	{
 		if (!sep.empty())
 		{
@@ -25,31 +28,33 @@ namespace KxVFS::Utility::String
 		return Concat(std::forward<Args>(arg)...);
 	}
 
-	template<class TFunctor> void SplitBySeparator(KxDynamicStringRefW string, wchar_t sep, TFunctor&& func)
+	template<class TFunctor>
+	size_t SplitBySeparator(KxDynamicStringRefW string, wchar_t sep, TFunctor&& func)
 	{
-		if (string.empty())
-		{
-			func(string);
-			return;
-		}
-
 		size_t separatorPos = string.find(sep);
 		if (separatorPos == KxDynamicStringRefW::npos)
 		{
 			func(string);
-			return;
+			return 1;
 		}
 
 		size_t pos = 0;
+		size_t count = 0;
 		while (pos < string.length() && separatorPos <= string.length())
 		{
-			const KxDynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
-			if (!stringPiece.empty() && !func(stringPiece))
+			KxDynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
+			const size_t stringPieceLength = stringPiece.length();
+
+			if (!stringPiece.empty())
 			{
-				return;
+				count++;
+				if (!func(std::move(stringPiece)))
+				{
+					return count;
+				}
 			}
 
-			pos += stringPiece.length() + 1;
+			pos += stringPieceLength + 1;
 			separatorPos = string.find(sep, pos);
 
 			// No separator found, but this is not the last element
@@ -58,32 +63,42 @@ namespace KxVFS::Utility::String
 				separatorPos = string.length();
 			}
 		}
+		return count;
 	}
-	template<class TFunctor> void SplitBySeparator(KxDynamicStringRefW string, KxDynamicStringRefW sep, TFunctor&& func)
+	
+	template<class TFunctor>
+	size_t SplitBySeparator(KxDynamicStringRefW string, KxDynamicStringRefW sep, TFunctor&& func)
 	{
-		if (string.empty() || sep.empty())
+		if (sep.empty() && !string.empty())
 		{
 			func(string);
-			return;
+			return 1;
 		}
 
 		size_t separatorPos = string.find(sep);
 		if (separatorPos == KxDynamicStringRefW::npos)
 		{
 			func(string);
-			return;
+			return 1;
 		}
 
 		size_t pos = 0;
+		size_t count = 0;
 		while (pos < string.length() && separatorPos <= string.length())
 		{
-			const KxDynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
-			if (!stringPiece.empty() && !func(stringPiece))
+			KxDynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
+			const size_t stringPieceLength = stringPiece.length();
+
+			if (!stringPiece.empty())
 			{
-				return;
+				count++;
+				if (!func(std::move(stringPiece)))
+				{
+					return count;
+				}
 			}
 
-			pos += stringPiece.length() + sep.length();
+			pos += stringPieceLength + sep.length();
 			separatorPos = string.find(sep, pos);
 
 			// No separator found, but this is not the last element
@@ -92,25 +107,36 @@ namespace KxVFS::Utility::String
 				separatorPos = string.length();
 			}
 		}
+		return count;
 	}
-	template<class TFunctor> void SplitByLength(KxDynamicStringRefW string, size_t length, TFunctor&& func)
+
+	template<class TFunctor>
+	size_t SplitByLength(KxDynamicStringRefW string, size_t length, TFunctor&& func)
 	{
 		const size_t stringLength = string.length();
 
 		if (length != 0)
 		{
+			size_t count = 0;
 			for (size_t i = 0; i < stringLength; i += length)
 			{
-				const KxDynamicStringRefW stringPiece = string.substr(i, length);
-				if (!stringPiece.empty() && !func(stringPiece))
+				KxDynamicStringRefW stringPiece = string.substr(i, length);
+				if (!stringPiece.empty())
 				{
-					return;
+					count++;
+					if (!func(std::move(stringPiece)))
+					{
+						return count;
+					}
 				}
 			}
+			return count;
 		}
 		else
 		{
 			func(string);
+			return 1;
 		}
+		return 0;
 	}
 }
