@@ -10,8 +10,9 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	ServiceManager::ServiceManager(ServiceAccess accessMode)
-		:m_Handle(::OpenSCManagerW(nullptr, nullptr, ToInt(accessMode)))
+	bool ServiceManager::Open(ServiceManagerAccess accessMode)
 	{
+		m_Handle = ::OpenSCManagerW(nullptr, nullptr, ToInt(accessMode));
+		return IsOK();
 	}
 }

@@ -18,13 +18,18 @@ namespace KxVFS
 			ServiceHandle m_Handle;
 
 		public:
-			ServiceManager(ServiceAccess accessMode = ServiceAccess::All);
+			ServiceManager() = default;
+			ServiceManager(ServiceManagerAccess accessMode)
+			{
+				Open(accessMode);
+			}
 
 		public:
 			bool IsOK() const
 			{
 				return m_Handle.IsValid();
 			}
+			bool Open(ServiceManagerAccess accessMode);
 
 		public:
 			operator SC_HANDLE() const
