@@ -49,6 +49,7 @@ namespace KxVFS
 
 		Start = SERVICE_START,
 		Stop = SERVICE_STOP,
+		Delete = DELETE,
 		Interrogate = SERVICE_INTERROGATE,
 		PauseContinue = SERVICE_PAUSE_CONTINUE,
 		UserDefinedControl = SERVICE_USER_DEFINED_CONTROL,
@@ -56,6 +57,20 @@ namespace KxVFS
 		All = SERVICE_ALL_ACCESS,
 	};
 	KxVFS_AllowEnumBitwiseOp(ServiceAccess);
+
+	enum class ServiceManagerAccess: uint32_t
+	{
+		None = 0,
+
+		All = SC_MANAGER_ALL_ACCESS,
+		Lock = SC_MANAGER_LOCK,
+		Connect = SC_MANAGER_CONNECT,
+		Enumerate = SC_MANAGER_ENUMERATE_SERVICE,
+		CreateService = SC_MANAGER_CREATE_SERVICE,
+		QueryLockStatus = SC_MANAGER_QUERY_LOCK_STATUS,
+		ChangeBootConfig = SC_MANAGER_MODIFY_BOOT_CONFIG,
+	};
+	KxVFS_AllowEnumBitwiseOp(ServiceManagerAccess);
 
 	enum class ServiceType: uint32_t
 	{
