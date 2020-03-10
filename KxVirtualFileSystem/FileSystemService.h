@@ -38,9 +38,9 @@ namespace KxVFS
 		private:
 			TActiveFileSystems m_ActiveFileSystems;
 
+			mutable ServiceManager m_ServiceManager;
 			KxDynamicStringW m_ServiceName;
-			ServiceManager m_ServiceManager;
-			ServiceHandle m_DriverService;
+
 			const bool m_HasSeSecurityNamePrivilege = false;
 			bool m_IsFSInitialized = false;
 
@@ -49,6 +49,12 @@ namespace KxVFS
 			DebugLogger m_DebugLogger;
 
 		private:
+			ServiceHandle OpenService(ServiceAccess serviceAccess) const
+			{
+				return OpenService(m_ServiceManager, serviceAccess);
+			}
+			ServiceHandle OpenService(ServiceManager& manager, ServiceAccess serviceAccess) const;
+
 			bool AddSeSecurityNamePrivilege();
 			bool InitDriver();
 
@@ -58,10 +64,6 @@ namespace KxVFS
 
 		public:
 			bool IsOK() const;
-			const ServiceHandle& GetDriverService() const
-			{
-				return m_DriverService;
-			}
 			bool InitService(KxDynamicStringRefW name);
 			
 			KxDynamicStringRefW GetServiceName() const;

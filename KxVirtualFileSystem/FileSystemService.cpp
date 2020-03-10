@@ -14,14 +14,12 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include <exception>
 #pragma comment(lib, "Dokan2.lib")
 
-namespace
+namespace KxVFS
 {
-	KxVFS::FileSystemService* g_FileSystemServiceInstance = nullptr;
+	FileSystemService* g_FileSystemServiceInstance = nullptr;
 
 	bool InitDokany(Dokany2::DOKAN_LOG_CALLBACKS* logCallbacks = nullptr)
 	{
-		using namespace KxVFS;
-
 		return DokanyFileSystem::SafelyCallDokanyFunction([logCallbacks]()
 		{
 			Dokany2::DokanInit(nullptr, logCallbacks);
@@ -29,8 +27,6 @@ namespace
 	}
 	bool UninitDokany()
 	{
-		using namespace KxVFS;
-
 		return DokanyFileSystem::SafelyCallDokanyFunction([]()
 		{
 			Dokany2::DokanShutdown();
@@ -41,10 +37,8 @@ namespace
 	{
 		return left.HighPart == right.HighPart && left.LowPart == right.LowPart;
 	}
-	KxVFS::KxDynamicStringW ProcessDokanyLogString(KxVFS::KxDynamicStringRefW logString)
+	KxDynamicStringW ProcessDokanyLogString(KxVFS::KxDynamicStringRefW logString)
 	{
-		using namespace KxVFS;
-
 		KxDynamicStringW temp = logString;
 		temp.trim_linebreak_chars();
 		temp.trim_space_chars();
@@ -54,6 +48,24 @@ namespace
 		fullLogString.trim_space_chars();
 
 		return fullLogString;
+	}
+
+	ServiceHandle OpenNamedService(ServiceManager& manager, KxDynamicStringRefW serviceName, ServiceAccess serviceAccess)
+	{
+		if (!serviceName.empty())
+		{
+			if (!manager && !manager.Open(ServiceManagerAccess::Connect))
+			{
+				return {};
+			}
+
+			ServiceHandle service;
+			if (service.Open(manager, serviceName, serviceAccess))
+			{
+				return service;
+			}
+		}
+		return {};
 	}
 }
 
@@ -90,19 +102,20 @@ namespace KxVFS
 	}
 	bool FileSystemService::IsDokanyDefaultInstallPresent()
 	{
-		ServiceManager serviceManager(ServiceAccess::QueryStatus);
-		if (serviceManager)
+		ServiceManager manager;
+		if (OpenNamedService(manager, GetDokanyDefaultServiceName(), ServiceAccess::QueryStatus))
 		{
-			ServiceHandle dokanyService;
-			if (dokanyService.Open(serviceManager, GetDokanyDefaultServiceName(), ServiceAccess::QueryStatus))
-			{
-				KxDynamicStringW driverPath = GetDokanyDefaultDriverPath();
+			KxDynamicStringW driverPath = GetDokanyDefaultDriverPath();
 
-				Wow64RedirectionDisabler disable;
-				return Utility::IsFileExist(driverPath);
-			}
+			Wow64RedirectionDisabler disable;
+			return Utility::IsFileExist(driverPath);
 		}
 		return false;
+	}
+
+	ServiceHandle FileSystemService::OpenService(ServiceManager& manager, ServiceAccess serviceAccess) const
+	{
+		return OpenNamedService(manager, m_ServiceName, serviceAccess);
 	}
 
 	bool FileSystemService::AddSeSecurityNamePrivilege()
@@ -181,32 +194,34 @@ namespace KxVFS
 	}
 	bool FileSystemService::InitDriver()
 	{
-		if (m_DriverService.Open(m_ServiceManager, m_ServiceName, ServiceAccess::All, AccessRights::Delete))
+		if (IsInstalled())
 		{
-			if (!m_IsFSInitialized)
+			if (m_IsFSInitialized)
 			{
-				if (Setup::EnableLog)
-				{
-					Dokany2::DOKAN_LOG_CALLBACKS logCallbacks = {};
-					logCallbacks.DbgPrint = [](const char* logString)
-					{
-						KxDynamicStringW logStringW = KxDynamicStringA::to_utf16(logString, KxDynamicStringA::npos, CP_ACP);
-						KxDynamicStringW fullLogString = ProcessDokanyLogString(logStringW);
+				return true;
+			}
 
-						g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, fullLogString);
-					};
-					logCallbacks.DbgPrintW = [](const wchar_t* logString)
-					{
-						KxDynamicStringW fullLogString = ProcessDokanyLogString(logString);
-						g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, logString);
-					};
-
-					m_IsFSInitialized = InitDokany(&logCallbacks);
-				}
-				else
+			if constexpr(Setup::EnableLog)
+			{
+				Dokany2::DOKAN_LOG_CALLBACKS logCallbacks = {};
+				logCallbacks.DbgPrint = [](const char* logString)
 				{
-					m_IsFSInitialized = InitDokany();
-				}
+					KxDynamicStringW logStringW = KxDynamicStringA::to_utf16(logString, KxDynamicStringA::npos, CP_ACP);
+					KxDynamicStringW fullLogString = ProcessDokanyLogString(logStringW);
+
+					g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, fullLogString);
+				};
+				logCallbacks.DbgPrintW = [](const wchar_t* logString)
+				{
+					KxDynamicStringW fullLogString = ProcessDokanyLogString(logString);
+					g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, logString);
+				};
+
+				m_IsFSInitialized = InitDokany(&logCallbacks);
+			}
+			else
+			{
+				m_IsFSInitialized = InitDokany();
 			}
 			return m_IsFSInitialized;
 		}
@@ -214,9 +229,7 @@ namespace KxVFS
 	}
 
 	FileSystemService::FileSystemService(KxDynamicStringRefW serviceName)
-		:m_ServiceName(serviceName),
-		m_ServiceManager(ServiceAccess::Start|ServiceAccess::Stop|ServiceAccess::QueryStatus|ServiceAccess::ChangeConfig),
-		m_HasSeSecurityNamePrivilege(AddSeSecurityNamePrivilege())
+		:m_ServiceName(serviceName), m_ServiceManager(ServiceManagerAccess::Connect), m_HasSeSecurityNamePrivilege(AddSeSecurityNamePrivilege())
 	{
 		// Init instance pointer
 		if (g_FileSystemServiceInstance)
@@ -251,7 +264,7 @@ namespace KxVFS
 
 	bool FileSystemService::IsOK() const
 	{
-		return m_ServiceManager.IsOK();
+		return OpenService(ServiceAccess::QueryStatus);
 	}
 	bool FileSystemService::InitService(KxDynamicStringRefW name)
 	{
@@ -269,20 +282,20 @@ namespace KxVFS
 	}
 	bool FileSystemService::IsInstalled() const
 	{
-		return IsOK() && m_DriverService.IsValid();
+		return IsOK();
 	}
 	bool FileSystemService::IsStarted() const
 	{
-		return m_DriverService.GetStatus() == ServiceStatus::Running;
+		return OpenService(ServiceAccess::QueryStatus).GetStatus() == ServiceStatus::Running;
 	}
 
 	bool FileSystemService::Start()
 	{
-		return m_DriverService.Start();
+		return OpenService(ServiceAccess::Start).Start();
 	}
 	bool FileSystemService::Stop()
 	{
-		return m_DriverService.Stop();
+		return OpenService(ServiceAccess::Stop).Stop();
 	}
 	bool FileSystemService::Install(KxDynamicStringRefW binaryPath, KxDynamicStringRefW displayName, KxDynamicStringRefW description)
 	{
@@ -291,31 +304,39 @@ namespace KxVFS
 			// Create new service or reconfigure existing
 			constexpr ServiceStartMode startMode = ServiceStartMode::OnDemand;
 
-			if (m_DriverService.IsValid())
+			if (OpenService(ServiceAccess::QueryStatus))
 			{
-				if (m_DriverService.SetConfig(m_ServiceManager, binaryPath, ServiceType::FileSystemDriver, startMode, ServiceErrorControl::Ignore))
+				if (ServiceHandle service = OpenService(ServiceAccess::ChangeConfig))
 				{
-					m_DriverService.SetDescription(description);
-					return true;
+					if (service.SetConfig(m_ServiceManager, binaryPath, ServiceType::FileSystemDriver, startMode, ServiceErrorControl::Ignore))
+					{
+						service.SetDescription(description);
+						return true;
+					}
 				}
 				return false;
 			}
 			else
 			{
-				return m_DriverService.Create(m_ServiceManager,
-											  startMode,
-											  binaryPath,
-											  m_ServiceName,
-											  !displayName.empty() ? displayName : m_ServiceName,
-											  description
-				);
+				ServiceManager manager(ServiceManagerAccess::CreateService);
+				if (manager)
+				{
+					ServiceHandle service;
+					return service.Create(manager,
+										  startMode,
+										  binaryPath,
+										  m_ServiceName,
+										  !displayName.empty() ? displayName : m_ServiceName,
+										  description
+					);
+				}
 			}
 		}
 		return false;
 	}
 	bool FileSystemService::Uninstall()
 	{
-		return m_DriverService.Delete();
+		return OpenService(ServiceAccess::Delete).Delete();
 	}
 
 	bool FileSystemService::UseDefaultDokanyInstallation()
@@ -330,7 +351,7 @@ namespace KxVFS
 	}
 	bool FileSystemService::IsUsingDefaultDokanyInstallation() const
 	{
-		auto config = m_DriverService.GetConfig();
+		auto config = OpenService(ServiceAccess::QueryConfig).GetConfig();
 		return config && config->DisplayName == GetDokanyDefaultServiceName();
 	}
 
