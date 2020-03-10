@@ -52,8 +52,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,1,1,0
- PRODUCTVERSION 2,1,1,0
+ FILEVERSION 2,1,2,0
+ PRODUCTVERSION 2,1,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -70,12 +70,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Kerber"
             VALUE "FileDescription", "A Dokany2-based user mode Virtual File System implementation"
-            VALUE "FileVersion", "2.1.1.0"
+            VALUE "FileVersion", "2.1.2.0"
             VALUE "InternalName", "KxVirtualFileSystem.dll"
             VALUE "LegalCopyright", "Copyright (C) 2017-2020"
             VALUE "OriginalFilename", "KxVirtualFileSystem.dll"
             VALUE "ProductName", "KxVirtualFileSystem"
-            VALUE "ProductVersion", "2.1.1.0"
+            VALUE "ProductVersion", "2.1.2.0"
         END
     END
     BLOCK "VarFileInfo"

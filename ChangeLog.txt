@@ -1,3 +1,6 @@
+Version 2.1.2 - 11.03.2020
+- Revamped file system service code to be able to run VFS without administrator rights.
+
 Version 2.1.1 - 02.03.2020
 - Fixed moving files to a different location when target directory tree doesn't exist.
 
