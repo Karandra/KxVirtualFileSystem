@@ -302,7 +302,7 @@ namespace KxVFS
 		if (Utility::IsFileExist(binaryPath))
 		{
 			// Create new service or reconfigure existing
-			constexpr ServiceStartMode startMode = ServiceStartMode::OnDemand;
+			constexpr ServiceStartMode startMode = ServiceStartMode::Auto;
 
 			if (OpenService(ServiceAccess::QueryStatus))
 			{
