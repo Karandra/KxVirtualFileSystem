@@ -11,6 +11,8 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace Dokany2
 {
+	#define DOKAN_STATIC_LINK 1
+
 	#include "Dokan/dokan.h"
 	#include "Dokan/dokanc.h"
 	#include "Dokan/dokani.h"

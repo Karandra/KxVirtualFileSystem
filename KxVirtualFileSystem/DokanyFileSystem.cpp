@@ -11,6 +11,46 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
+	// Implementation taken from 'mount.c' since the original version is inaccessible from here
+	bool DeleteMountPoint(KxDynamicStringRefW mountPoint)
+	{
+		FileHandle handle(mountPoint, AccessRights::GenericWrite, FileShare::None, CreationDisposition::OpenExisting, FileAttributes::FlagOpenReparsePoint|FileAttributes::FlagBackupSemantics);
+		if (handle)
+		{
+			REPARSE_GUID_DATA_BUFFER reparseData = {};
+			reparseData.ReparseTag = IO_REPARSE_TAG_MOUNT_POINT;
+
+			ULONG resultLength = 0;
+			const bool success = ::DeviceIoControl(handle,
+												   FSCTL_DELETE_REPARSE_POINT,
+												   &reparseData,
+												   REPARSE_GUID_DATA_BUFFER_HEADER_SIZE,
+												   nullptr,
+												   0,
+												   &resultLength,
+												   nullptr);
+			if (success)
+			{
+				KxVFS_Log(LogLevel::Info, L"DeleteMountPoint '%1' success\n", mountPoint);
+			}
+			else
+			{
+				const uint32_t errorCode = ::GetLastError();
+				KxDynamicStringRefW errorMessage = Utility::GetErrorMessage(errorCode);
+				KxVFS_Log(LogLevel::Error, L"DeleteMountPoint '%1' failed: (%2) %3", mountPoint, errorCode, errorMessage);
+			}
+			return success;
+		}
+		else
+		{
+			KxVFS_Log(LogLevel::Error, L"CreateFile failed for '%1' (%2)", mountPoint, ::GetLastError());
+		}
+		return false;
+	}
+}
+
+namespace KxVFS
+{
 	void DokanyFileSystem::LogDokanyException(uint32_t exceptionCode)
 	{
 		if (FileSystemService::GetInstance())
@@ -233,6 +273,11 @@ namespace KxVFS
 			if (!m_IsDestructing)
 			{
 				statusCode = OnUnMount(eventInfo);
+
+				// AsyncIO branch uses 'DeleteVolumeMountPoint' which can not be used without
+				// administrator privileges: https://github.com/dokan-dev/dokany/issues/399
+				// This function can reset directory to a normal state without elevation.
+				DeleteMountPoint(m_MountPoint);
 			}
 			else
 			{

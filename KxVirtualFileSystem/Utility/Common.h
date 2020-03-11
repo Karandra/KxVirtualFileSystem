@@ -22,7 +22,8 @@ namespace KxVFS::Utility
 	KxDynamicStringW FormatMessage(uint32_t flags, const void* source, uint32_t messageID, uint16_t langID = 0);
 	KxDynamicStringW GetErrorMessage(uint32_t code = ::GetLastError(), uint16_t langID = 0);
 
-	template<class T1, class T2> static bool SetIfNotNull(T1* pointer, T2&& value)
+	template<class T1, class T2>
+	static bool SetIfNotNull(T1* pointer, T2&& value)
 	{
 		if (pointer)
 		{
@@ -32,7 +33,8 @@ namespace KxVFS::Utility
 		return false;
 	}
 
-	template<class TFlag, class TFlagValue> static TFlag ModFlag(TFlag flag, TFlagValue value, bool set)
+	template<class TFlag, class TFlagValue>
+	static TFlag ModFlag(TFlag flag, TFlagValue value, bool set)
 	{
 		if (set)
 		{
@@ -44,11 +46,15 @@ namespace KxVFS::Utility
 		}
 		return flag;
 	}
-	template<class TFlag, class TFlagValue> static void ModFlagRef(TFlag& flag, TFlagValue value, bool set)
+	
+	template<class TFlag, class TFlagValue>
+	static void ModFlagRef(TFlag& flag, TFlagValue value, bool set)
 	{
 		flag = ModFlag(flag, value, set);
 	}
-	template<class TFlag, class TFlagValue> static bool HasFlag(TFlag flag, TFlagValue value)
+	
+	template<class TFlag, class TFlagValue>
+	static bool HasFlag(TFlag flag, TFlagValue value)
 	{
 		return flag & value;
 	}
@@ -105,12 +111,15 @@ namespace KxVFS::Utility
 		return std::hash<KxDynamicStringRefW>()(string);
 	}
 
-	template<class T> void MoveValue(T& left, T& right, T resetTo = {})
+	template<class T>
+	void MoveValue(T& left, T& right, T resetTo = {})
 	{
 		left = right;
 		right = resetTo;
 	}
-	template<class T> void CopyMemory(T* destination, const T* source, size_t length)
+	
+	template<class T>
+	void CopyMemory(T* destination, const T* source, size_t length)
 	{
 		memcpy(destination, source, length * sizeof(T));
 	}
@@ -133,7 +142,8 @@ namespace KxVFS::Utility
 
 namespace KxVFS::Utility
 {
-	template<class TInt64> void LowHighToInt64(TInt64& value, uint32_t low, int32_t high)
+	template<class TInt64>
+	void LowHighToInt64(TInt64& value, uint32_t low, int32_t high)
 	{
 		static_assert(sizeof(TInt64) == sizeof(uint64_t), "Value must be 64-bit integer");
 
@@ -142,13 +152,16 @@ namespace KxVFS::Utility
 		largeInt.HighPart = high;
 		value = largeInt.QuadPart;
 	}
+	
 	inline int64_t LowHighToInt64(uint32_t low, int32_t high)
 	{
 		int64_t value = 0;
 		LowHighToInt64(value, low, high);
 		return value;
 	}
-	template<class L, class H> void Int64ToLowHigh(int64_t value, L& low, H& high)
+	
+	template<class L, class H>
+	void Int64ToLowHigh(int64_t value, L& low, H& high)
 	{
 		static_assert(sizeof(L) == sizeof(int32_t) && sizeof(H) == sizeof(int32_t), "Components must be 32-bit integers");
 
@@ -163,10 +176,13 @@ namespace KxVFS::Utility
 	{
 		return LowHighToInt64(overlapped.Offset, overlapped.OffsetHigh);
 	}
-	template<class TInt64> void OverlappedOffsetToInt64(const OVERLAPPED& overlapped, TInt64& offset)
+	
+	template<class TInt64>
+	void OverlappedOffsetToInt64(const OVERLAPPED& overlapped, TInt64& offset)
 	{
 		LowHighToInt64(offset, overlapped.Offset, overlapped.OffsetHigh);
 	}
+	
 	inline void Int64ToOverlappedOffset(int64_t offset, OVERLAPPED& overlapped)
 	{
 		Int64ToLowHigh(offset, overlapped.Offset, overlapped.OffsetHigh);
