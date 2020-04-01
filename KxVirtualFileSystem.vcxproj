@@ -65,7 +65,6 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\TokenHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\WinKernelConstants.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\Wow64RedirectionDisabler.h" />
-    <ClInclude Include="Resource.h" />
     <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h" />
     <ClInclude Include="KxVirtualFileSystem\FileSystemService.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility.h" />
@@ -77,6 +76,7 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\FileHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ServiceManager.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\Common.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\Common\BranchLocker.cpp" />

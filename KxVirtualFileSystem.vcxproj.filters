@@ -65,9 +65,6 @@
     <ClInclude Include="KxVirtualFileSystem\Utility\KxDynamicString\KxDynamicString.h">
       <Filter>Code\Utility\KxDynamicString</Filter>
     </ClInclude>
-    <ClInclude Include="Resource.h">
-      <Filter>Resources</Filter>
-    </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\Utility\HandleWrapper.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
@@ -214,6 +211,9 @@
     </ClInclude>
     <ClInclude Include="KxVirtualFileSystem\Utility.h">
       <Filter>Code</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
