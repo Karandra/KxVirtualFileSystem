@@ -1,10 +1,4 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
@@ -13,9 +7,9 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	DWORD ExtendedSecurity::GetParentSecurity(KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const
+	DWORD ExtendedSecurity::GetParentSecurity(DynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const
 	{
-		KxDynamicStringW parentPath = filePath;
+		DynamicStringW parentPath = filePath;
 		parentPath = parentPath.before_last(L'\\');
 
 		if (!parentPath.empty())
@@ -28,7 +22,7 @@ namespace KxVFS
 		}
 		return ERROR_PATH_NOT_FOUND;
 	}
-	DWORD ExtendedSecurity::CreateNewSecurity(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const
+	DWORD ExtendedSecurity::CreateNewSecurity(EvtCreateFile& eventInfo, DynamicStringRefW filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const
 	{
 		if (filePath.empty() || requestedSecurity == nullptr || newSecurity == nullptr)
 		{
@@ -36,7 +30,7 @@ namespace KxVFS
 		}
 
 		PSECURITY_DESCRIPTOR parentDescriptor = nullptr;
-		KxCallAtScopeExit atExit([&parentDescriptor]()
+		Utility::CallAtScopeExit atExit([&parentDescriptor]()
 		{
 			::LocalFree(parentDescriptor);
 		});
@@ -74,7 +68,7 @@ namespace KxVFS
 		}
 		return errorCode;
 	}
-	SecurityObject ExtendedSecurity::CreateSecurity(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, CreationDisposition creationDisposition)
+	SecurityObject ExtendedSecurity::CreateSecurity(EvtCreateFile& eventInfo, DynamicStringRefW filePath, CreationDisposition creationDisposition)
 	{
 		// We only need security information if there's a possibility a new file could be created
 		if (!FileNode::IsRequestToRootNode(filePath) && creationDisposition != CreationDisposition::OpenExisting && creationDisposition != CreationDisposition::TruncateExisting)

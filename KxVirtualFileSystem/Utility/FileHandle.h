@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
 #include "NtStatusConstants.h"
 #include "Win32Constants.h"
@@ -33,7 +27,7 @@ namespace KxVFS
 				:GenericHandle(fileHandle)
 			{
 			}
-			FileHandle(KxDynamicStringRefW path,
+			FileHandle(DynamicStringRefW path,
 					   AccessRights access,
 					   FileShare share,
 					   CreationDisposition disposition,
@@ -44,7 +38,7 @@ namespace KxVFS
 			}
 
 		public:
-			bool Create(KxDynamicStringRefW path,
+			bool Create(DynamicStringRefW path,
 						AccessRights access,
 						FileShare share,
 						CreationDisposition disposition,
@@ -92,8 +86,8 @@ namespace KxVFS
 			}
 
 			bool SetDeleteOnClose(bool deleteOnClose);
-			KxDynamicStringW GetPath() const;
-			NtStatus SetPath(KxDynamicStringRefW path, bool replaceIfExist);
+			DynamicStringW GetPath() const;
+			NtStatus SetPath(DynamicStringRefW path, bool replaceIfExist);
 
 			int64_t GetPosition() const
 			{

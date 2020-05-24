@@ -1,23 +1,19 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxVirtualFileSystem/Utility/KxDynamicString/KxDynamicString.h"
+#include "KxVirtualFileSystem/Common.hpp"
+#include "KxVirtualFileSystem/Utility/DynamicString/DynamicString.h"
 
 namespace KxVFS
 {
-	template<class Type> class KxFormatTypeTraits
+	template<class Type>
+	class FormatterTraits
 	{
 		public:
 			using TInitial = typename Type;
 			using TDecayed = typename std::decay<TInitial>::type;
 
 		protected:
-			template<class T, class... Args> constexpr static bool IsConvertibleToAnyOf()
+			template<class T, class... Args>
+			constexpr static bool IsConvertibleToAnyOf()
 			{
 				return std::disjunction_v<std::is_convertible<T, Args>...>;
 			}
@@ -86,11 +82,11 @@ namespace KxVFS
 
 			constexpr static bool IsDynamicString()
 			{
-				return std::is_same_v<TDecayed, KxDynamicStringW>;
+				return std::is_same_v<TDecayed, DynamicStringW>;
 			}
 			constexpr static bool IsDynamicStringRef()
 			{
-				return std::is_same_v<TDecayed, KxDynamicStringRefW>;
+				return std::is_same_v<TDecayed, DynamicStringRefW>;
 			}
 			constexpr static bool IsStdWString()
 			{
@@ -98,7 +94,7 @@ namespace KxVFS
 			}
 			constexpr static bool IsConstructibleToDynamicString()
 			{
-				return std::is_constructible_v<KxDynamicStringW, TInitial>;
+				return std::is_constructible_v<DynamicStringW, TInitial>;
 			}
 			constexpr static bool IsConstructibleToWChar()
 			{
@@ -154,7 +150,7 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	class KxFormatTraits
+	class FormatterDefaultTraits
 	{
 		public:
 			constexpr static int StringFiledWidth()

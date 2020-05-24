@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem.h"
+#include "Common.hpp"
 #include "Misc/IncludeWindows.h"
 #include "Logger/ChainLogger.h"
 #include "Logger/ConsoleLogger.h"
@@ -25,11 +19,11 @@ namespace KxVFS
 		public:
 			static FileSystemService* GetInstance();
 
-			static KxDynamicStringW GetLibraryVersion();
-			static KxDynamicStringW GetDokanyVersion();
+			static DynamicStringW GetLibraryVersion();
+			static DynamicStringW GetDokanyVersion();
 
-			static KxDynamicStringW GetDokanyDefaultServiceName();
-			static KxDynamicStringW GetDokanyDefaultDriverPath();
+			static DynamicStringW GetDokanyDefaultServiceName();
+			static DynamicStringW GetDokanyDefaultDriverPath();
 			static bool IsDokanyDefaultInstallPresent();
 
 		public:
@@ -39,7 +33,7 @@ namespace KxVFS
 			TActiveFileSystems m_ActiveFileSystems;
 
 			mutable ServiceManager m_ServiceManager;
-			KxDynamicStringW m_ServiceName;
+			DynamicStringW m_ServiceName;
 
 			const bool m_HasSeSecurityNamePrivilege = false;
 			bool m_IsFSInitialized = false;
@@ -59,14 +53,14 @@ namespace KxVFS
 			bool InitDriver();
 
 		public:
-			FileSystemService(KxDynamicStringRefW serviceName = {});
+			FileSystemService(DynamicStringRefW serviceName = {});
 			virtual ~FileSystemService();
 
 		public:
 			bool IsOK() const;
-			bool InitService(KxDynamicStringRefW name);
+			bool InitService(DynamicStringRefW name);
 			
-			KxDynamicStringRefW GetServiceName() const;
+			DynamicStringRefW GetServiceName() const;
 			bool IsInstalled() const;
 			bool IsStarted() const;
 			bool HasSeSecurityNamePrivilege() const
@@ -76,7 +70,7 @@ namespace KxVFS
 
 			bool Start();
 			bool Stop();
-			bool Install(KxDynamicStringRefW binaryPath, KxDynamicStringRefW displayName = {}, KxDynamicStringRefW description = {});
+			bool Install(DynamicStringRefW binaryPath, DynamicStringRefW displayName = {}, DynamicStringRefW description = {});
 			bool Uninstall();
 			
 			bool IsUsingDefaultDokanyInstallation() const;

@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Common/CallerUserImpersonation.h"
 #include "KxVirtualFileSystem/Common/ExtendedSecurity.h"
 #include "KxVirtualFileSystem/DokanyFileSystem.h"
@@ -20,20 +14,20 @@ namespace KxVFS
 		public IRequestDispatcher
 	{
 		private:
-			KxDynamicStringW m_Source;
+			DynamicStringW m_Source;
 
 		protected:
-			bool CheckDeleteOnClose(Dokany2::PDOKAN_FILE_INFO fileInfo, KxDynamicStringRefW filePath) const;
-			NtStatus CanDeleteDirectory(KxDynamicStringRefW directoryPath) const;
+			bool CheckDeleteOnClose(Dokany2::PDOKAN_FILE_INFO fileInfo, DynamicStringRefW filePath) const;
+			NtStatus CanDeleteDirectory(DynamicStringRefW directoryPath) const;
 
-			KxDynamicStringW DispatchLocationRequest(KxDynamicStringRefW requestedPath) override;
-
-		public:
-			MirrorFS(FileSystemService& service, KxDynamicStringRefW mountPoint = {}, KxDynamicStringRefW source = {}, FSFlags flags = FSFlags::None);
+			DynamicStringW DispatchLocationRequest(DynamicStringRefW requestedPath) override;
 
 		public:
-			KxDynamicStringRefW GetSource() const;
-			void SetSource(KxDynamicStringRefW source);
+			MirrorFS(FileSystemService& service, DynamicStringRefW mountPoint = {}, DynamicStringRefW source = {}, FSFlags flags = FSFlags::None);
+
+		public:
+			DynamicStringRefW GetSource() const;
+			void SetSource(DynamicStringRefW source);
 
 			NtStatus GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize) override;
 
@@ -66,7 +60,7 @@ namespace KxVFS
 			NtStatus OnGetFileInfo(EvtGetFileInfo& eventInfo) override;
 			NtStatus OnSetBasicFileInfo(EvtSetBasicFileInfo& eventInfo) override;
 
-			NtStatus OnFindFiles(KxDynamicStringRefW path, KxDynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2);
+			NtStatus OnFindFiles(DynamicStringRefW path, DynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2);
 			NtStatus OnFindFiles(EvtFindFiles& eventInfo) override;
 			NtStatus OnFindFilesWithPattern(EvtFindFilesWithPattern& eventInfo) override;
 			NtStatus OnFindStreams(EvtFindStreams& eventInfo) override;

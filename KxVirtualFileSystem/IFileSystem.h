@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem.h"
+#include "Common.hpp"
 #include "Utility.h"
 #include "Misc/IncludeDokan.h"
 #include "Common/FSError.h"
@@ -38,11 +32,11 @@ namespace KxVFS
 			static NtStatus GetNtStatusByWin32LastErrorCode();
 			static std::tuple<FileAttributes, CreationDisposition, AccessRights> MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo);
 
-			static bool UnMountDirectory(KxDynamicStringRefW mountPoint);
+			static bool UnMountDirectory(DynamicStringRefW mountPoint);
 
 		protected:
 			bool IsWriteRequest(bool isExist, AccessRights desiredAccess, CreationDisposition createDisposition) const;
-			bool IsWriteRequest(KxDynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const;
+			bool IsWriteRequest(DynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const;
 			bool IsWriteRequest(const FileNode* node, AccessRights desiredAccess, CreationDisposition createDisposition) const
 			{
 				return IsWriteRequest(node != nullptr, desiredAccess, createDisposition);
@@ -66,11 +60,11 @@ namespace KxVFS
 			virtual FSError Mount() = 0;
 			virtual bool UnMount() = 0;
 
-			virtual KxDynamicStringW GetMountPoint() const = 0;
-			virtual void SetMountPoint(KxDynamicStringRefW mountPoint) = 0;
+			virtual DynamicStringW GetMountPoint() const = 0;
+			virtual void SetMountPoint(DynamicStringRefW mountPoint) = 0;
 
-			virtual KxDynamicStringW GetVolumeLabel() const = 0;
-			virtual KxDynamicStringW GetVolumeFileSystem() const = 0;
+			virtual DynamicStringW GetVolumeLabel() const = 0;
+			virtual DynamicStringW GetVolumeFileSystem() const = 0;
 			virtual uint32_t GetVolumeSerialNumber() const = 0;
 			virtual NtStatus GetVolumeSizeInfo(int64_t& freeBytes, int64_t& totalSize) = 0;
 

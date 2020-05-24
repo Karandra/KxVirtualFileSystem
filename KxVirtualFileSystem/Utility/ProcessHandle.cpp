@@ -1,10 +1,4 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "ProcessHandle.h"
@@ -44,9 +38,9 @@ namespace KxVFS
 		}
 		return {};
 	}
-	KxDynamicStringW ProcessHandle::GetImagePath() const
+	DynamicStringW ProcessHandle::GetImagePath() const
 	{
-		KxDynamicStringW path;
+		DynamicStringW path;
 
 		// Try using short static storage
 		DWORD length = static_cast<DWORD>(path.max_size_static()) - 1;

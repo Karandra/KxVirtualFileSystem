@@ -1,25 +1,19 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxVirtualFileSystem/Utility/SearchHandle.h"
-#include "KxIFileFinder.h"
-#include "KxFileItem.h"
+#include "IFileFinder.h"
+#include "FileItem.h"
 
 namespace KxVFS
 {
-	class KxVFS_API KxFileFinder: public KxIFileFinder
+	class KxVFS_API FileFinder: public IFileFinder
 	{
 		public:
-			static bool IsDirectoryEmpty(KxDynamicStringRefW directoryPath);
+			static bool IsDirectoryEmpty(DynamicStringRefW directoryPath);
 
 		private:
-			KxDynamicStringW m_SearchQuery;
+			DynamicStringW m_SearchQuery;
 			bool m_IsCanceled = false;
 			bool m_CaseSensitive = false;
 			bool m_QueryShortNames = false;
@@ -28,13 +22,13 @@ namespace KxVFS
 			WIN32_FIND_DATAW m_FindData = {0};
 
 		protected:
-			bool OnFound(const KxFileItem& foundItem) override;
+			bool OnFound(const FileItem& foundItem) override;
 			bool OnFound(const WIN32_FIND_DATAW& fileInfo);
 
 		public:
-			KxFileFinder(KxDynamicStringRefW searchQuery);
-			KxFileFinder(KxDynamicStringRefW source, KxDynamicStringRefW filter);
-			virtual ~KxFileFinder() = default;
+			FileFinder(DynamicStringRefW searchQuery);
+			FileFinder(DynamicStringRefW source, DynamicStringRefW filter);
+			virtual ~FileFinder() = default;
 
 		public:
 			bool IsOK() const override;
@@ -62,13 +56,13 @@ namespace KxVFS
 			}
 
 			bool Run() override;
-			KxFileItem FindNext() override;
-			void NotifyFound(const KxFileItem& foundItem)
+			FileItem FindNext() override;
+			void NotifyFound(const FileItem& foundItem)
 			{
 				m_IsCanceled = !OnFound(foundItem);
 			}
 
-			KxDynamicStringW GetSource() const
+			DynamicStringW GetSource() const
 			{
 				return ExtrctSourceFromSearchQuery(m_SearchQuery);
 			}

@@ -1,10 +1,4 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "FSError.h"
@@ -111,7 +105,7 @@ namespace KxVFS
 		};
 		return std::nullopt;
 	}
-	KxDynamicStringW FSError::GetMessage() const
+	DynamicStringW FSError::GetMessage() const
 	{
 		switch (m_Code)
 		{
@@ -161,6 +155,6 @@ namespace KxVFS
 				return L"Failed to initialize IO manager";
 			}
 		};
-		return KxDynamicStringW();
+		return DynamicStringW();
 	}
 }

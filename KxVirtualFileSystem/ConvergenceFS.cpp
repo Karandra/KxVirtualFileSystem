@@ -1,25 +1,19 @@
-/*
-Copyright © 2020 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "ConvergenceFS.h"
 
 namespace KxVFS
 {
-	KxDynamicStringW ConvergenceFS::MakeFilePath(KxDynamicStringRefW baseDirectory, KxDynamicStringRefW requestedPath, bool addNamespace) const
+	DynamicStringW ConvergenceFS::MakeFilePath(DynamicStringRefW baseDirectory, DynamicStringRefW requestedPath, bool addNamespace) const
 	{
-		KxDynamicStringW outPath = addNamespace ? Utility::GetLongPathPrefix() : KxNullDynamicStringW;
+		DynamicStringW outPath = addNamespace ? Utility::GetLongPathPrefix() : NullDynamicStringW;
 		outPath += baseDirectory;
 		outPath += requestedPath;
 
 		return outPath;
 	}
-	std::tuple<KxDynamicStringW, KxDynamicStringRefW> ConvergenceFS::GetTargetPath(const FileNode* node, KxDynamicStringRefW requestedPath, bool addNamespace) const
+	std::tuple<DynamicStringW, DynamicStringRefW> ConvergenceFS::GetTargetPath(const FileNode* node, DynamicStringRefW requestedPath, bool addNamespace) const
 	{
 		if (node && !node->IsRootNode())
 		{
@@ -32,7 +26,7 @@ namespace KxVFS
 			return {MakeFilePath(GetWriteTarget(), requestedPath, addNamespace), GetWriteTarget()};
 		}
 	}
-	KxDynamicStringW ConvergenceFS::DispatchLocationRequest(KxDynamicStringRefW requestedPath)
+	DynamicStringW ConvergenceFS::DispatchLocationRequest(DynamicStringRefW requestedPath)
 	{
 		return std::get<0>(GetTargetPath(m_VirtualTree.NavigateToAny(requestedPath), requestedPath, true));
 	}
@@ -45,7 +39,7 @@ namespace KxVFS
 			if (auto parentLock = fileNode.GetParent()->LockExclusive(); true)
 			{
 				bool success = false;
-				KxDynamicStringW fullPath = fileNode.GetFullPathWithNS();
+				DynamicStringW fullPath = fileNode.GetFullPathWithNS();
 				if (fileNode.IsDirectory())
 				{
 					success = ::RemoveDirectoryW(fullPath);
@@ -72,7 +66,7 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	ConvergenceFS::ConvergenceFS(FileSystemService& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW writeTarget, FSFlags flags)
+	ConvergenceFS::ConvergenceFS(FileSystemService& service, DynamicStringRefW mountPoint, DynamicStringRefW writeTarget, FSFlags flags)
 		:MirrorFS(service, mountPoint, writeTarget, flags)
 	{
 	}
@@ -101,7 +95,7 @@ namespace KxVFS
 		return MirrorFS::UnMount();
 	}
 
-	void ConvergenceFS::AddVirtualFolder(KxDynamicStringRefW path)
+	void ConvergenceFS::AddVirtualFolder(DynamicStringRefW path)
 	{
 		m_VirtualFolders.emplace_back(Utility::NormalizeFilePath(path));
 	}
@@ -120,7 +114,7 @@ namespace KxVFS
 
 		// Create individual virtual trees
 		Utility::Comparator::UnorderedMapNoCase<std::unique_ptr<FileNode>> virtualNodes;
-		for (const KxDynamicStringW& path: m_VirtualFolders)
+		for (const DynamicStringW& path: m_VirtualFolders)
 		{
 			// Paths references here belong to 'm_VirtualFolders' vector
 			auto[it, _] = virtualNodes.emplace(path, std::make_unique<FileNode>(path.get_view()));
@@ -136,12 +130,12 @@ namespace KxVFS
 		{
 			Utility::Comparator::UnorderedSetNoCase hash;
 			hash.reserve(m_VirtualFolders.size());
-			const KxDynamicStringW rootPath = rootNode.GetRelativePath();
+			const DynamicStringW rootPath = rootNode.GetRelativePath();
 
 			for (auto it = m_VirtualFolders.rbegin(); it != m_VirtualFolders.rend(); ++it)
 			{
 				auto nodeIt = virtualNodes.find(*it);
-				const KxDynamicStringW& folderPath = nodeIt->first;
+				const DynamicStringW& folderPath = nodeIt->first;
 				FileNode& folderNode = *nodeIt->second;
 
 				// If we have root node, look for files in real file tree, otherwise use mod's tree root
@@ -170,7 +164,7 @@ namespace KxVFS
 
 		// Temporarily add write target to build tree with it and remove when we are done.
 		m_VirtualFolders.push_back(GetWriteTarget());
-		KxCallAtScopeExit atExit([this]()
+		Utility::CallAtScopeExit atExit([this]()
 		{
 			m_VirtualFolders.pop_back();
 		});
@@ -326,7 +320,7 @@ namespace KxVFS
 			KxVFS_Log(LogLevel::Info, L"Attempt to create a file in non-existent directory tree in write target: %1", eventInfo.FileName);
 
 			::SetLastError(ERROR_SUCCESS);
-			KxDynamicStringW folderPath = KxDynamicStringW(eventInfo.FileName).before_last(L'\\');
+			DynamicStringW folderPath = DynamicStringW(eventInfo.FileName).before_last(L'\\');
 			KxVFS_Log(LogLevel::Info, L"Creating directory tree in write target: %1", folderPath);
 
 			Utility::CreateDirectoryTreeEx(virtualDirectory, folderPath);
@@ -427,7 +421,7 @@ namespace KxVFS
 			ImpersonateLoggedOnUserIfEnabled(userTokenHandle);
 
 			NtStatus statusCode = NtStatus::Success;
-			KxCallAtScopeExit atExit([this, &userTokenHandle, &statusCode]()
+			Utility::CallAtScopeExit atExit([this, &userTokenHandle, &statusCode]()
 			{
 				CleanupImpersonateCallerUserIfEnabled(userTokenHandle, statusCode);
 			});
@@ -723,15 +717,15 @@ namespace KxVFS
 				{
 					// We don't have target file, but source node parent is the same as supposed 
 					// target parent. So this is actually renaming.
-					const KxDynamicStringW newName = KxDynamicStringW(eventInfo.NewFileName).after_last(L'\\');
+					const DynamicStringW newName = DynamicStringW(eventInfo.NewFileName).after_last(L'\\');
 					KxVFS_Log(LogLevel::Info, L"New file name: \"%1\"", newName);
 
 					if (auto originalLock = sourceNode->LockExclusive(); !newName.empty())
 					{
 						// Set name to temporary item to construct a new path
-						const KxDynamicStringW newPath = [sourceNode, &newName]()
+						const DynamicStringW newPath = [sourceNode, &newName]()
 						{
-							KxFileItem item;
+							FileItem item;
 							item.SetName(newName);
 							item.SetSource(sourceNode->GetSource());
 
@@ -855,10 +849,10 @@ namespace KxVFS
 				auto lock = fileNode->LockShared();
 
 				size_t foundCount = 0;
-				KxDynamicStringW pattern = Utility::StringToLower(eventInfo.SearchPattern);
+				DynamicStringW pattern = Utility::StringToLower(eventInfo.SearchPattern);
 				fileNode->WalkChildren([&eventInfo, &pattern, &foundCount](const FileNode& node)
 				{
-					const KxDynamicStringRefW name = node.GetNameLC();
+					const DynamicStringRefW name = node.GetNameLC();
 					if (Dokany2::DokanIsNameInExpression(pattern.data(), name.data(), FALSE))
 					{
 						OnFileFound(eventInfo, node.GetItem().AsWIN32_FIND_DATA());

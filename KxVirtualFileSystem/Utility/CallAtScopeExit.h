@@ -1,42 +1,37 @@
-/*
-Copyright © 2018 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
 #include <utility>
 #include <functional>
 #include <optional>
 
-namespace KxVFS
+namespace KxVFS::Utility
 {
-	template<class T> class KxCallAtScopeExit
+	template<class T>
+	class CallAtScopeExit
 	{
 		private:
 			std::optional<T> m_Functor;
 
 		public:
-			KxCallAtScopeExit(T&& functor)
+			CallAtScopeExit(T&& functor)
 				:m_Functor(std::move(functor))
 			{
 			}
-			KxCallAtScopeExit(const T& functor)
+			CallAtScopeExit(const T& functor)
 				:m_Functor(functor)
 			{
 			}
 			
-			KxCallAtScopeExit(KxCallAtScopeExit&& other)
+			CallAtScopeExit(CallAtScopeExit&& other)
 				:m_Functor(std::move(other.m_Functor))
 			{
 				other.m_Functor.reset();
 			}
-			KxCallAtScopeExit(const KxCallAtScopeExit& other)
+			CallAtScopeExit(const CallAtScopeExit& other)
 				:m_Functor(other.m_Functor)
 			{
 			}
 			
-			~KxCallAtScopeExit()
+			~CallAtScopeExit()
 			{
 				if (m_Functor)
 				{
@@ -45,14 +40,14 @@ namespace KxVFS
 			}
 			
 		public:
-			KxCallAtScopeExit& operator=(KxCallAtScopeExit&& other)
+			CallAtScopeExit& operator=(CallAtScopeExit&& other)
 			{
 				m_Functor = std::move(other.m_Functor);
 				other.m_Functor.reset();
 
 				return *this;
 			}
-			KxCallAtScopeExit& operator=(const KxCallAtScopeExit& other)
+			CallAtScopeExit& operator=(const CallAtScopeExit& other)
 			{
 				m_Functor = other.m_Functor;
 				return *this;

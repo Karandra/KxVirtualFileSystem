@@ -1,17 +1,11 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "FileHandle.h"
 
 namespace KxVFS
 {
-	bool FileHandle::Create(KxDynamicStringRefW path,
+	bool FileHandle::Create(DynamicStringRefW path,
 							AccessRights access,
 							FileShare share,
 							CreationDisposition disposition,
@@ -39,9 +33,9 @@ namespace KxVFS
 
 		return SetInfo(FileDispositionInfo, fileDispositionInfo);
 	}
-	KxDynamicStringW FileHandle::GetPath() const
+	DynamicStringW FileHandle::GetPath() const
 	{
-		KxDynamicStringW path;
+		DynamicStringW path;
 		const DWORD flags = VOLUME_NAME_DOS|FILE_NAME_NORMALIZED;
 		const DWORD length = ::GetFinalPathNameByHandleW(m_Handle, nullptr, 0, flags);
 		if (length != 0)
@@ -53,7 +47,7 @@ namespace KxVFS
 		}
 		return path;
 	}
-	NtStatus FileHandle::SetPath(KxDynamicStringRefW path, bool replaceIfExist)
+	NtStatus FileHandle::SetPath(DynamicStringRefW path, bool replaceIfExist)
 	{
 		// Allocate buffer for rename info
 		FILE_RENAME_INFO* renameInfo = nullptr;

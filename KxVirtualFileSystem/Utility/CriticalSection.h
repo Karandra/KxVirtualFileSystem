@@ -1,9 +1,3 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
 
@@ -80,7 +74,8 @@ namespace KxVFS
 
 namespace KxVFS::Utility
 {
-	template<bool t_IsMoveable, bool t_TryLock> class BasicCriticalSectionLocker final
+	template<bool t_IsMoveable, bool t_TryLock>
+	class BasicCriticalSectionLocker final
 	{
 		public:
 			constexpr static bool IsMoveable() noexcept

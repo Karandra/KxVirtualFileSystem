@@ -1,9 +1,3 @@
-/*
-Copyright © 2018 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
 
 // Common utilities
@@ -14,16 +8,16 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Utility/EnumClassOperations.h"
 
 // KxDynamicString
-#include "Utility/KxDynamicString/KxDynamicString.h"
+#include "Utility/DynamicString/DynamicString.h"
 
 // Ported from KxFramework
-#include "Utility/KxCallAtScopeExit.h"
-#include "Utility/KxComparator.h"
-#include "Utility/KxStringUtility.h"
+#include "Utility/CallAtScopeExit.h"
+#include "Utility/Comparator.h"
+#include "Utility/String.h"
 
-#include "Utility/KxFileSystem/KxIFileFinder.h"
-#include "Utility/KxFileSystem/KxFileFinder.h"
-#include "Utility/KxFileSystem/KxFileItem.h"
+#include "Utility/FileSystem/IFileFinder.h"
+#include "Utility/FileSystem/FileFinder.h"
+#include "Utility/FileSystem/FileItem.h"
 
 // Own classes
 #include "Utility/HandleWrapper.h"
@@ -37,4 +31,3 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 #include "Utility/ProcessHandle.h"
 #include "Utility/CriticalSection.h"
 #include "Utility/SRWLock.h"
-#include "Utility/RawPtr.h"

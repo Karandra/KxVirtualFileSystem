@@ -1,5 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F79583B3-ED13-48F1-BC7F-AFAC9756FD7C}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>DokanVFS</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>KxVirtualFileSystem</ProjectName>
+    <OverrideVcpkgTriplet>false</OverrideVcpkgTriplet>
+    <OverrideVcpkgTripletName>none</OverrideVcpkgTripletName>
+  </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -44,39 +53,39 @@
     <ClInclude Include="KxVirtualFileSystem\Misc\Setup.h" />
     <ClInclude Include="KxVirtualFileSystem\Misc\UndefWindows.h" />
     <ClInclude Include="KxVirtualFileSystem\ConvergenceFS.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\DynamicString\BasicDynamicString.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\DynamicString\DynamicString.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\EnumClassOperations.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\FileSystem\FileFinder.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\FileSystem\FileItem.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\FileSystem\IFileFinder.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\Formatter\Formatter.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\Formatter\FormatterTraits.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\GenericHandle.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxFormat\KxFormat.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxFormat\KxFormatTraits.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\NtStatusConstants.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ProcessHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ServiceConstants.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ServiceHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\Win32Constants.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\HandleWrapper.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileFinder.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxStringUtility.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\RawPtr.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\String.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\SearchHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\SecurityObject.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\SRWLock.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\TokenHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\WinKernelConstants.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\Wow64RedirectionDisabler.h" />
-    <ClInclude Include="KxVirtualFileSystem\KxVirtualFileSystem.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\DisableWOW64FSRedirection.h" />
+    <ClInclude Include="KxVirtualFileSystem\Common.hpp" />
     <ClInclude Include="KxVirtualFileSystem\FileSystemService.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxCallAtScopeExit.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxComparator.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxDynamicString\KxBasicDynamicString.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\KxDynamicString\KxDynamicString.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\CallAtScopeExit.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\Comparator.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\CriticalSection.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\FileHandle.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\ServiceManager.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\Common.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="KxVirtualFileSystem\Common\BranchLocker.cpp" />
@@ -102,39 +111,35 @@
     <ClCompile Include="KxVirtualFileSystem\Logger\ILogger.cpp" />
     <ClCompile Include="KxVirtualFileSystem\MirrorFS.cpp" />
     <ClCompile Include="KxVirtualFileSystem\FileSystemService.cpp" />
-    <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystem.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-      </ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-      </ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="KxVirtualFileSystem\ConvergenceFS.cpp" />
-    <ClCompile Include="KxVirtualFileSystem\Utility\KxDynamicString\KxDynamicString.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\DynamicString\DynamicString.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\FileHandle.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\Common.cpp" />
-    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileFinder.cpp" />
-    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.cpp" />
-    <ClCompile Include="KxVirtualFileSystem\Utility\KxFileSystem\KxIFileFinder.cpp" />
-    <ClCompile Include="KxVirtualFileSystem\Utility\KxFormat\KxFormat.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\FileSystem\FileFinder.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\FileSystem\FileItem.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\FileSystem\IFileFinder.cpp" />
+    <ClCompile Include="KxVirtualFileSystem\Utility\Formatter\Formatter.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\ProcessHandle.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\ServiceHandle.cpp" />
     <ClCompile Include="KxVirtualFileSystem\Utility\ServiceManager.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdafx.h</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdafx.h</PrecompiledHeaderFile>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="KxVirtualFileSystem.rc" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="KxVirtualFileSystem\Common\FileNode.natvis" />
-    <Natvis Include="KxVirtualFileSystem\Utility\KxDynamicString\KxBasicDynamicString.natvis" />
-    <Natvis Include="KxVirtualFileSystem\Utility\KxFileSystem\KxFileItem.natvis" />
+    <Natvis Include="KxVirtualFileSystem\Utility\DynamicString\BasicDynamicString.natvis" />
+    <Natvis Include="KxVirtualFileSystem\Utility\FileSystem\FileItem.natvis" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ChangeLog.txt" />
@@ -142,13 +147,6 @@
   <ItemGroup>
     <None Include="README.md" />
   </ItemGroup>
-  <PropertyGroup Label="Globals">
-    <ProjectGuid>{F79583B3-ED13-48F1-BC7F-AFAC9756FD7C}</ProjectGuid>
-    <Keyword>Win32Proj</Keyword>
-    <RootNamespace>DokanVFS</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>KxVirtualFileSystem</ProjectName>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -197,39 +195,39 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>
     </LinkIncremental>
-    <IntDir>$(ProjectDir)Junk\$(Configuration) $(PlatformShortName)\</IntDir>
+    <IntDir>$(ProjectDir)Junk\$(Configuration) $(Platform)\</IntDir>
     <LibraryPath>$(ProjectDir)LibsD;$(LibraryPath)</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)Build\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)$(Configuration)\$(Platform)\</OutDir>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>
     </LinkIncremental>
-    <IntDir>$(ProjectDir)Junk\$(Configuration) $(PlatformShortName)\</IntDir>
+    <IntDir>$(ProjectDir)Junk\$(Configuration) $(Platform)\</IntDir>
     <LibraryPath>$(ProjectDir)Libs64D;$(LibraryPath)</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)Build\$(Configuration)\</OutDir>
-    <TargetName>$(ProjectName) x64</TargetName>
+    <OutDir>$(ProjectDir)$(Configuration)\$(Platform)\</OutDir>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>
     </LinkIncremental>
-    <IntDir>$(ProjectDir)Junk\$(Configuration) $(PlatformShortName)\</IntDir>
+    <IntDir>$(ProjectDir)Junk\$(Configuration) $(Platform)\</IntDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)Build\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)$(Configuration)\$(Platform)\</OutDir>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>
     </LinkIncremental>
-    <IntDir>$(ProjectDir)Junk\$(Configuration) $(PlatformShortName)\</IntDir>
+    <IntDir>$(ProjectDir)Junk\$(Configuration) $(Platform)\</IntDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IncludePath>$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)Build\$(Configuration)\</OutDir>
-    <TargetName>$(ProjectName) x64</TargetName>
+    <OutDir>$(ProjectDir)$(Configuration)\$(Platform)\</OutDir>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -237,10 +235,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
-      <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ForcedUsingFiles>
+      </ForcedUsingFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -264,10 +264,12 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
-      <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <ForcedUsingFiles>
+      </ForcedUsingFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -295,8 +297,10 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
-      <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <ForcedUsingFiles>
+      </ForcedUsingFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -322,9 +326,11 @@ copy /Y "$(TargetPath)" "$(ProjectDir)Bin\$(Configuration)\$(TargetName)$(Target
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;KxVFS_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)..\Dokany\;$(SolutionDir)..\Dokany\sys\</AdditionalIncludeDirectories>
-      <PrecompiledHeaderFile>KxVirtualFileSystem/KxVirtualFileSystem.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <ForcedUsingFiles>
+      </ForcedUsingFiles>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

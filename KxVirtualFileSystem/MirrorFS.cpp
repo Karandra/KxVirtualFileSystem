@@ -1,10 +1,4 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "MirrorFS.h"
@@ -13,7 +7,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace KxVFS
 {
-	bool MirrorFS::CheckDeleteOnClose(Dokany2::PDOKAN_FILE_INFO fileInfo, KxDynamicStringRefW filePath) const
+	bool MirrorFS::CheckDeleteOnClose(Dokany2::PDOKAN_FILE_INFO fileInfo, DynamicStringRefW filePath) const
 	{
 		if (fileInfo->DeleteOnClose)
 		{
@@ -32,11 +26,11 @@ namespace KxVFS
 		}
 		return false;
 	}
-	NtStatus MirrorFS::CanDeleteDirectory(KxDynamicStringRefW directoryPath) const
+	NtStatus MirrorFS::CanDeleteDirectory(DynamicStringRefW directoryPath) const
 	{
 		if (!directoryPath.empty())
 		{
-			if (KxFileFinder::IsDirectoryEmpty(directoryPath))
+			if (FileFinder::IsDirectoryEmpty(directoryPath))
 			{
 				return NtStatus::Success;
 			}
@@ -48,9 +42,9 @@ namespace KxVFS
 		return NtStatus::ObjectPathInvalid;
 	}
 
-	KxDynamicStringW MirrorFS::DispatchLocationRequest(KxDynamicStringRefW requestedPath)
+	DynamicStringW MirrorFS::DispatchLocationRequest(DynamicStringRefW requestedPath)
 	{
-		KxDynamicStringW targetPath = Utility::GetLongPathPrefix();
+		DynamicStringW targetPath = Utility::GetLongPathPrefix();
 		targetPath += m_Source;
 		targetPath += requestedPath;
 
@@ -60,16 +54,16 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	MirrorFS::MirrorFS(FileSystemService& service, KxDynamicStringRefW mountPoint, KxDynamicStringRefW source, FSFlags flags)
+	MirrorFS::MirrorFS(FileSystemService& service, DynamicStringRefW mountPoint, DynamicStringRefW source, FSFlags flags)
 		:DokanyFileSystem(service, mountPoint, flags), ExtendedSecurity(this), CallerUserImpersonation(this), m_Source(source)
 	{
 	}
 
-	KxDynamicStringRefW MirrorFS::GetSource() const
+	DynamicStringRefW MirrorFS::GetSource() const
 	{
 		return m_Source;
 	}
-	void MirrorFS::SetSource(KxDynamicStringRefW source)
+	void MirrorFS::SetSource(DynamicStringRefW source)
 	{
 		m_Source = source;
 	}
@@ -133,7 +127,7 @@ namespace KxVFS
 		eventInfo.VolumeInfo->VolumeSerialNumber = GetVolumeSerialNumber();
 		eventInfo.VolumeInfo->SupportsObjects = FALSE;
 
-		const KxDynamicStringW volumeLabel = GetVolumeLabel();
+		const DynamicStringW volumeLabel = GetVolumeLabel();
 		const size_t labelLength = std::min<size_t>(volumeLabel.length(), eventInfo.MaxLabelLengthInChars);
 		eventInfo.VolumeInfo->VolumeLabelLength = Utility::WriteString(volumeLabel.data(), eventInfo.VolumeInfo->VolumeLabel, labelLength);
 
@@ -171,7 +165,7 @@ namespace KxVFS
 
 		DWORD errorCode = 0;
 		NtStatus statusCode = NtStatus::Success;
-		KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
+		DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
 		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
 		auto[requestAttributes, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
@@ -356,7 +350,7 @@ namespace KxVFS
 				{
 					fileContext->CloseHandle();
 
-					KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
+					DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 					OnFileClosed(eventInfo, *fileContext);
 
 					if (CheckDeleteOnClose(eventInfo.DokanFileInfo, targetPath))
@@ -394,7 +388,7 @@ namespace KxVFS
 				fileContext->CloseHandle();
 				fileContext->MarkCleanedUp();
 
-				KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
+				DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 				OnFileCleanedUp(eventInfo, *fileContext);
 
 				if (CheckDeleteOnClose(eventInfo.DokanFileInfo, targetPath))
@@ -411,7 +405,7 @@ namespace KxVFS
 	{
 		if (FileContext* fileContext = GetFileContext(eventInfo))
 		{
-			KxDynamicStringW targetPathNew = DispatchLocationRequest(eventInfo.NewFileName);
+			DynamicStringW targetPathNew = DispatchLocationRequest(eventInfo.NewFileName);
 			return fileContext->GetHandle().SetPath(targetPathNew, eventInfo.ReplaceIfExists);
 		}
 		return NtStatus::FileClosed;
@@ -432,7 +426,7 @@ namespace KxVFS
 
 			if (eventInfo.DokanFileInfo->IsDirectory)
 			{
-				KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
+				DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 				return CanDeleteDirectory(targetPath);
 			}
 			return NtStatus::Success;
@@ -542,7 +536,7 @@ namespace KxVFS
 			}
 			if (isCleanedUp)
 			{
-				KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
+				DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
 				FileHandle tempHandle(targetPath, AccessRights::GenericRead, FileShare::All, CreationDisposition::OpenExisting);
 				if (tempHandle.IsValid())
@@ -578,7 +572,7 @@ namespace KxVFS
 			}
 			if (isCleanedUp)
 			{
-				KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
+				DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
 				FileHandle tempHandle(targetPath, AccessRights::GenericWrite, FileShare::All, CreationDisposition::OpenExisting);
 				if (tempHandle.IsValid())
@@ -670,7 +664,7 @@ namespace KxVFS
 		{
 			if (!fileContext->GetHandle().GetInfo(eventInfo.FileHandleInfo))
 			{
-				KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
+				DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 				KxVFS_Log(LogLevel::Info, L"Couldn't get file info by handle, trying by file name: %1", targetPath);
 
 				// FileName is a root directory, in this case, 'FindFirstFile' can't get directory information.
@@ -731,12 +725,12 @@ namespace KxVFS
 		return NtStatus::FileClosed;
 	}
 
-	NtStatus MirrorFS::OnFindFiles(KxDynamicStringRefW path, KxDynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2)
+	NtStatus MirrorFS::OnFindFiles(DynamicStringRefW path, DynamicStringRefW pattern, EvtFindFiles* event1, EvtFindFilesWithPattern* event2)
 	{
-		KxDynamicStringW targetPath = DispatchLocationRequest(path);
+		DynamicStringW targetPath = DispatchLocationRequest(path);
 		size_t targetPathLength = targetPath.length();
 
-		auto AppendAsterix = [pattern](KxDynamicStringW& path)
+		auto AppendAsterix = [pattern](DynamicStringW& path)
 		{
 			if (!path.empty())
 			{
@@ -794,7 +788,7 @@ namespace KxVFS
 	}
 	NtStatus MirrorFS::OnFindStreams(EvtFindStreams& eventInfo)
 	{
-		KxDynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
+		DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
 		WIN32_FIND_STREAM_DATA findData = {0};
 		SearchHandle findHandle = ::FindFirstStreamW(targetPath, FindStreamInfoStandard, &findData, 0);

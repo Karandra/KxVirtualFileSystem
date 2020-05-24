@@ -1,16 +1,10 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
-#include "KxFormatTraits.h"
+#include "KxVirtualFileSystem/Common.hpp"
+#include "FormatterTraits.h"
 
 namespace KxVFS
 {
-	class KxVFS_API KxFormatBase
+	class KxVFS_API FormatterBase
 	{
 		private:
 			std::wstring m_String;
@@ -27,17 +21,17 @@ namespace KxVFS
 				return m_String;
 			}
 
-			void ReplaceNext(KxDynamicStringRefW string);
-			void ReplaceAnchor(KxDynamicStringRefW string, size_t index, size_t startAt = 0);
-			bool DoReplace(KxDynamicStringRefW string, KxDynamicStringRefW index, size_t startAt, size_t& next);
+			void ReplaceNext(DynamicStringRefW string);
+			void ReplaceAnchor(DynamicStringRefW string, size_t index, size_t startAt = 0);
+			bool DoReplace(DynamicStringRefW string, DynamicStringRefW index, size_t startAt, size_t& next);
 
-			void FormatString(KxDynamicStringRefW arg, int fieldWidth, wchar_t fillChar);
+			void FormatString(DynamicStringRefW arg, int fieldWidth, wchar_t fillChar);
 			void FormatChar(wchar_t arg, int fieldWidth, wchar_t fillChar);
 			void FormatBool(bool arg, int fieldWidth, wchar_t fillChar);
 			void FormatDouble(double arg, int precision, int fieldWidth, wchar_t format, wchar_t fillChar);
 			void FormatPointer(const void* arg, int fieldWidth, wchar_t fillChar);
 
-			template<class T> static KxDynamicStringW FormatIntWithBase(T value, int base = 10, bool upper = false)
+			template<class T> static DynamicStringW FormatIntWithBase(T value, int base = 10, bool upper = false)
 			{
 				static_assert(std::is_integral_v<T>);
 
@@ -56,7 +50,7 @@ namespace KxVFS
 					}
 				}
 
-				KxDynamicStringW result;
+				DynamicStringW result;
 				if (base >= 2 && base <= 36)
 				{
 					do
@@ -76,20 +70,20 @@ namespace KxVFS
 			};
 
 		public:
-			KxFormatBase(const KxDynamicStringW& format)
+			FormatterBase(const DynamicStringW& format)
 				:m_String(format)
 			{
 			}
-			virtual ~KxFormatBase() = default;
+			virtual ~FormatterBase() = default;
 
 		public:
-			KxDynamicStringW ToString() const
+			DynamicStringW ToString() const
 			{
-				return KxDynamicStringRefW(m_String);
+				return DynamicStringRefW(m_String);
 			}
-			operator KxDynamicStringW() const
+			operator DynamicStringW() const
 			{
-				return KxDynamicStringRefW(m_String);
+				return DynamicStringRefW(m_String);
 			}
 
 			size_t GetCurrentArgumentIndex() const
@@ -105,23 +99,26 @@ namespace KxVFS
 			{
 				return m_IsUpperCase;
 			}
-			KxFormatBase& UpperCase(bool value = true)
+			FormatterBase& UpperCase(bool value = true)
 			{
 				m_IsUpperCase = value;
 				return *this;
 			}
-			KxFormatBase& LowerCase(bool value = true)
+			FormatterBase& LowerCase(bool value = true)
 			{
 				m_IsUpperCase = !value;
 				return *this;
 			}
 	};
 
-	template<class FmtTraits = KxFormatTraits> class KxFormat: public KxFormatBase
+	template<class FmtTraits = FormatterDefaultTraits>
+	class Formatter: public FormatterBase
 	{
 		public:
 			using FormatTraits = typename FmtTraits;
-			template<class T> using TypeTraits = KxFormatTypeTraits<T>;
+			
+			template<class T>
+			using TypeTraits = FormatterTraits<T>;
 
 		protected:
 			template<class T> void FormatInt(T&& arg, int fieldWidth, int base, wchar_t fillChar)
@@ -130,25 +127,25 @@ namespace KxVFS
 			}
 
 		public:
-			KxFormat(const KxDynamicStringW& format)
-				:KxFormatBase(format)
+			Formatter(const DynamicStringW& format)
+				:FormatterBase(format)
 			{
 			}
 
 		public:
-			KxFormat& UpperCase(bool value = true)
+			Formatter& UpperCase(bool value = true)
 			{
-				KxFormatBase::UpperCase(value);
+				FormatterBase::UpperCase(value);
 				return *this;
 			}
-			KxFormat& LowerCase(bool value = true)
+			Formatter& LowerCase(bool value = true)
 			{
-				KxFormatBase::LowerCase(value);
+				FormatterBase::LowerCase(value);
 				return *this;
 			}
 
 		public:
-			template<class T> typename std::enable_if<TypeTraits<T>::FmtString(), KxFormat&>::type
+			template<class T> typename std::enable_if<TypeTraits<T>::FmtString(), Formatter&>::type
 			operator()(const T& arg,
 					   int fieldWidth = FormatTraits::StringFiledWidth(),
 					   wchar_t fillChar = FormatTraits::StringFillChar())
@@ -168,16 +165,16 @@ namespace KxVFS
 				}
 				else if constexpr(trait.IsDynamicStringRef() || trait.IsStdWString())
 				{
-					FormatString(KxDynamicStringRefW(arg.data(), arg.size()), fieldWidth, fillChar);
+					FormatString(DynamicStringRefW(arg.data(), arg.size()), fieldWidth, fillChar);
 				}
 				else
 				{
-					static_assert(false, "KxFormat: unsupported type for string formatting");
+					static_assert(false, "Formatter: unsupported type for string formatting");
 				}
 				return *this;
 			}
 		
-			template<class T> typename std::enable_if<TypeTraits<T>::FmtInteger(), KxFormat&>::type
+			template<class T> typename std::enable_if<TypeTraits<T>::FmtInteger(), Formatter&>::type
 			operator()(T arg,
 					   int fieldWidth = FormatTraits::IntFiledWidth(),
 					   int base = FormatTraits::IntBase(),
@@ -194,7 +191,7 @@ namespace KxVFS
 				return *this;
 			}
 
-			template<class T> typename std::enable_if<TypeTraits<T>::FmtPointer(), KxFormat&>::type
+			template<class T> typename std::enable_if<TypeTraits<T>::FmtPointer(), Formatter&>::type
 			operator()(T arg,
 					   int fieldWidth = FormatTraits::PtrFiledWidth(),
 					   wchar_t fillChar = FormatTraits::PtrFillChar())
@@ -203,7 +200,7 @@ namespace KxVFS
 				return *this;
 			}
 
-			template<class T> typename std::enable_if<TypeTraits<T>::FmtFloat(), KxFormat&>::type
+			template<class T> typename std::enable_if<TypeTraits<T>::FmtFloat(), Formatter&>::type
 			operator()(T arg,
 					   int precision = FormatTraits::FloatPrecision(),
 					   int fieldWidth = FormatTraits::FloatFiledWidth(),

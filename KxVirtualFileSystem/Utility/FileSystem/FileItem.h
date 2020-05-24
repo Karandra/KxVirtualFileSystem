@@ -1,17 +1,11 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
 #include "KxVirtualFileSystem/Utility.h"
 
 namespace KxVFS
 {
-	class KxVFS_API KxFileFinder;
+	class KxVFS_API FileFinder;
 }
 
 namespace KxVFS
@@ -19,7 +13,7 @@ namespace KxVFS
 	struct alignas(WIN32_FIND_DATAW) Win32FindData final
 	{
 		private:
-			template<class T> static void AssignName(T& name, KxDynamicStringRefW fileName) noexcept
+			template<class T> static void AssignName(T& name, DynamicStringRefW fileName) noexcept
 			{
 				const size_t length = std::min(std::size(name), fileName.length());
 				Utility::CopyMemory(name, fileName.data(), length);
@@ -40,7 +34,7 @@ namespace KxVFS
 
 		public:
 			Win32FindData() = default;
-			Win32FindData(KxDynamicStringRefW fileName) noexcept
+			Win32FindData(DynamicStringRefW fileName) noexcept
 			{
 				static_assert(sizeof(Win32FindData) == sizeof(WIN32_FIND_DATAW));
 				static_assert(alignof(Win32FindData) == alignof(WIN32_FIND_DATAW));
@@ -51,11 +45,11 @@ namespace KxVFS
 			}
 
 		public:
-			void SetName(KxDynamicStringRefW fileName) noexcept
+			void SetName(DynamicStringRefW fileName) noexcept
 			{
 				AssignName(m_Name, fileName);
 			}
-			void SetShortName(KxDynamicStringRefW fileName) noexcept
+			void SetShortName(DynamicStringRefW fileName) noexcept
 			{
 				AssignName(m_ShortName, fileName);
 			}
@@ -73,12 +67,12 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	class KxVFS_API KxFileItem final
+	class KxVFS_API FileItem final
 	{
-		friend class KxFileFinder;
+		friend class FileFinder;
 
 		public:
-			static void ExtractSourceAndName(KxDynamicStringRefW fullPath, KxDynamicStringW& source, KxDynamicStringW& name);
+			static void ExtractSourceAndName(DynamicStringRefW fullPath, DynamicStringW& source, DynamicStringW& name);
 
 		protected:
 			union
@@ -86,45 +80,47 @@ namespace KxVFS
 				Win32FindData m_Data;
 				WIN32_FIND_DATAW m_NativeData;
 			};
-			KxDynamicStringW m_Source;
+			DynamicStringW m_Source;
 
 		protected:
 			static FILETIME FileTimeFromLARGE_INTEGER(const LARGE_INTEGER& value) noexcept
 			{
 				return *reinterpret_cast<const FILETIME*>(&value);
 			}
-			static KxDynamicStringRefW TrimNamespace(KxDynamicStringRefW path) noexcept;
+			static DynamicStringRefW TrimNamespace(DynamicStringRefW path) noexcept;
 
-			void OnChange() { }
+			void OnChange()
+			{
+			}
 
 		public:
-			KxFileItem()
+			FileItem()
 				:m_Data()
 			{
 			}
-			KxFileItem(const Win32FindData& findData) noexcept
+			FileItem(const Win32FindData& findData) noexcept
 				:m_Data(findData)
 			{
 			}
-			KxFileItem(const WIN32_FIND_DATAW& findData) noexcept
+			FileItem(const WIN32_FIND_DATAW& findData) noexcept
 				:m_NativeData(findData)
 			{
 			}
-			KxFileItem(KxDynamicStringRefW fullPath)
-				:KxFileItem()
+			FileItem(DynamicStringRefW fullPath)
+				:FileItem()
 			{
 				SetFullPath(fullPath);
 				UpdateInfo(fullPath);
 			}
-			KxFileItem(KxDynamicStringRefW path, KxDynamicStringRefW fileName) noexcept
+			FileItem(DynamicStringRefW path, DynamicStringRefW fileName) noexcept
 				:m_Data(fileName), m_Source(path)
 			{
 				UpdateInfo();
 			}
 
 		private:
-			KxFileItem(const KxFileFinder& finder, const Win32FindData& findData);
-			KxFileItem(const KxFileFinder& finder, const WIN32_FIND_DATAW& findData);
+			FileItem(const FileFinder& finder, const Win32FindData& findData);
+			FileItem(const FileFinder& finder, const WIN32_FIND_DATAW& findData);
 
 		public:
 			bool IsOK() const noexcept
@@ -132,10 +128,10 @@ namespace KxVFS
 				return m_Data.m_Attributes != FileAttributes::Invalid;
 			}
 			void MakeNull(bool attribuesOnly = false) noexcept;
-			bool UpdateInfo(KxDynamicStringRefW fullPath, bool queryShortName = false);
+			bool UpdateInfo(DynamicStringRefW fullPath, bool queryShortName = false);
 			bool UpdateInfo(bool queryShortName = false)
 			{
-				const KxDynamicStringW fullPath = GetFullPath();
+				const DynamicStringW fullPath = GetFullPath();
 				return UpdateInfo(fullPath, queryShortName);
 			}
 			bool IsDirectoryEmpty() const;
@@ -146,10 +142,10 @@ namespace KxVFS
 			}
 			bool IsCurrentOrParent() const noexcept
 			{
-				constexpr KxDynamicStringRefW dot = L".";
-				constexpr KxDynamicStringRefW dotDot = L"..";
+				constexpr DynamicStringRefW dot = L".";
+				constexpr DynamicStringRefW dotDot = L"..";
 
-				const KxDynamicStringRefW name = GetName();
+				const DynamicStringRefW name = GetName();
 				return name == dot || name == dotDot;
 			}
 			bool IsReparsePoint() const noexcept
@@ -161,7 +157,7 @@ namespace KxVFS
 			{
 				return m_Data.m_Attributes & FileAttributes::Directory;
 			}
-			KxFileItem& SetDirectory() noexcept
+			FileItem& SetDirectory() noexcept
 			{
 				Utility::ModFlagRef(m_Data.m_Attributes, FileAttributes::Directory, true);
 				OnChange();
@@ -172,7 +168,7 @@ namespace KxVFS
 			{
 				return !IsDirectory();
 			}
-			KxFileItem& SetFile() noexcept
+			FileItem& SetFile() noexcept
 			{
 				Utility::ModFlagRef(m_Data.m_Attributes, FileAttributes::Directory, false);
 				OnChange();
@@ -183,7 +179,7 @@ namespace KxVFS
 			{
 				return m_Data.m_Attributes & FileAttributes::ReadOnly;
 			}
-			KxFileItem& SetReadOnly(bool value = true) noexcept
+			FileItem& SetReadOnly(bool value = true) noexcept
 			{
 				Utility::ModFlagRef(m_Data.m_Attributes, FileAttributes::ReadOnly, value);
 				OnChange();
@@ -276,57 +272,57 @@ namespace KxVFS
 				}
 			}
 
-			KxDynamicStringRefW GetName() const noexcept
+			DynamicStringRefW GetName() const noexcept
 			{
 				return m_Data.m_Name;
 			}
-			void SetName(KxDynamicStringRefW name) noexcept
+			void SetName(DynamicStringRefW name) noexcept
 			{
 				m_Data.SetName(name);
 				OnChange();
 			}
 			
-			KxDynamicStringRefW GetShortName() const noexcept
+			DynamicStringRefW GetShortName() const noexcept
 			{
 				return m_Data.m_ShortName;
 			}
-			void SetShortName(KxDynamicStringRefW name) noexcept
+			void SetShortName(DynamicStringRefW name) noexcept
 			{
 				m_Data.SetShortName(name);
 				OnChange();
 			}
 
-			KxDynamicStringW GetFileExtension() const noexcept;
-			void SetFileExtension(KxDynamicStringRefW ext);
+			DynamicStringW GetFileExtension() const noexcept;
+			void SetFileExtension(DynamicStringRefW ext);
 
-			KxDynamicStringRefW GetSource() const
+			DynamicStringRefW GetSource() const
 			{
 				return m_Source;
 			}
-			void SetSource(KxDynamicStringRefW source)
+			void SetSource(DynamicStringRefW source)
 			{
 				m_Source = TrimNamespace(source);
 				OnChange();
 			}
 
-			KxDynamicStringW GetFullPath() const
+			DynamicStringW GetFullPath() const
 			{
-				KxDynamicStringW fullPath = m_Source;
+				DynamicStringW fullPath = m_Source;
 				fullPath += L'\\';
 				fullPath += m_Data.m_Name;
 				return fullPath;
 			}
-			KxDynamicStringW GetFullPathWithNS() const
+			DynamicStringW GetFullPathWithNS() const
 			{
-				KxDynamicStringW fullPath = Utility::GetLongPathPrefix();
+				DynamicStringW fullPath = Utility::GetLongPathPrefix();
 				fullPath += m_Source;
 				fullPath += L'\\';
 				fullPath += m_Data.m_Name;
 				return fullPath;
 			}
-			void SetFullPath(KxDynamicStringRefW fullPath)
+			void SetFullPath(DynamicStringRefW fullPath)
 			{
-				KxDynamicStringW name;
+				DynamicStringW name;
 				ExtractSourceAndName(fullPath, m_Source, name);
 				m_Data.SetName(name);
 

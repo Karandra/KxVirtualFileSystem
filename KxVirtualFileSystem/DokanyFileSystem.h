@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "IFileSystem.h"
 #include "Utility.h"
 #include "Misc/IncludeDokan.h"
@@ -58,7 +52,7 @@ namespace KxVFS
 			IOManager m_IOManager;
 			FileContextManager m_FileContextManager;
 
-			KxDynamicStringW m_MountPoint;
+			DynamicStringW m_MountPoint;
 			CriticalSection m_UnmountCS;
 			FSFlags m_Flags = FSFlags::None;
 			bool m_IsMounted = false;
@@ -69,7 +63,7 @@ namespace KxVFS
 			bool DoUnMount();
 
 		public:
-			DokanyFileSystem(FileSystemService& service, KxDynamicStringRefW mountPoint, FSFlags flags = FSFlags::None);
+			DokanyFileSystem(FileSystemService& service, DynamicStringRefW mountPoint, FSFlags flags = FSFlags::None);
 			virtual ~DokanyFileSystem();
 
 		public:
@@ -80,8 +74,8 @@ namespace KxVFS
 			FSError Mount() override;
 			bool UnMount() override;
 
-			KxDynamicStringW GetVolumeLabel() const override;
-			KxDynamicStringW GetVolumeFileSystem() const override;
+			DynamicStringW GetVolumeLabel() const override;
+			DynamicStringW GetVolumeFileSystem() const override;
 			uint32_t GetVolumeSerialNumber() const override;
 
 			FileSystemService& GetService() override
@@ -97,11 +91,11 @@ namespace KxVFS
 				return m_IOManager;
 			}
 
-			KxDynamicStringW GetMountPoint() const override
+			DynamicStringW GetMountPoint() const override
 			{
 				return m_MountPoint;
 			}
-			void SetMountPoint(KxDynamicStringRefW mountPoint) override
+			void SetMountPoint(DynamicStringRefW mountPoint) override
 			{
 				m_MountPoint = mountPoint;
 			}

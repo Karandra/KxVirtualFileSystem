@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 
 namespace KxVFS
 {
@@ -21,11 +15,11 @@ namespace KxVFS
 			bool m_Enabled = false;
 
 		protected:
-			DWORD GetParentSecurity(KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const;
-			DWORD CreateNewSecurity(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const;
+			DWORD GetParentSecurity(DynamicStringRefW filePath, PSECURITY_DESCRIPTOR* parentSecurity) const;
+			DWORD CreateNewSecurity(EvtCreateFile& eventInfo, DynamicStringRefW filePath, PSECURITY_DESCRIPTOR requestedSecurity, PSECURITY_DESCRIPTOR* newSecurity) const;
 			
-			SecurityObject CreateSecurity(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, CreationDisposition creationDisposition);
-			SecurityObject CreateSecurityIfEnabled(EvtCreateFile& eventInfo, KxDynamicStringRefW filePath, CreationDisposition creationDisposition)
+			SecurityObject CreateSecurity(EvtCreateFile& eventInfo, DynamicStringRefW filePath, CreationDisposition creationDisposition);
+			SecurityObject CreateSecurityIfEnabled(EvtCreateFile& eventInfo, DynamicStringRefW filePath, CreationDisposition creationDisposition)
 			{
 				return m_Enabled ? CreateSecurity(eventInfo, filePath, creationDisposition) : nullptr;
 			}

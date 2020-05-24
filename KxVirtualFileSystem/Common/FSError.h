@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Misc/UndefWindows.h"
 #include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 #include "KxVirtualFileSystem/Utility.h"
@@ -54,7 +48,7 @@ namespace KxVFS
 			bool IsKnownError() const;
 			FSErrorCode GetCode() const;
 			std::optional<int> GetDokanyCode() const;
-			KxDynamicStringW GetMessage() const;
+			DynamicStringW GetMessage() const;
 			
 			bool IsSuccess() const
 			{

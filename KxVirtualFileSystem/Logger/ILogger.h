@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Utility.h"
 
 namespace KxVFS
@@ -31,7 +25,7 @@ namespace KxVFS::Logger
 	class InfoPack final
 	{
 		public:
-			KxDynamicStringW String;
+			DynamicStringW String;
 			const IFileSystem* FileSystem = nullptr;
 			const FileNode* FileNode = nullptr;
 			const uint32_t ThreadID = 0;
@@ -40,7 +34,7 @@ namespace KxVFS::Logger
 		public:
 			InfoPack() = default;
 			InfoPack(KxVFS::LogLevel level,
-					 KxVFS::KxDynamicStringW text,
+					 KxVFS::DynamicStringW text,
 					 const KxVFS::IFileSystem* fileSystem = nullptr,
 					 const KxVFS::FileNode* fileNode = nullptr
 			)
@@ -65,8 +59,8 @@ namespace KxVFS
 			static void EnableLog(bool value = true);
 
 		protected:
-			KxDynamicStringRefW GetLogLevelName(LogLevel level) const;
-			KxDynamicStringW FormatInfoPack(const Logger::InfoPack& infoPack) const;
+			DynamicStringRefW GetLogLevelName(LogLevel level) const;
+			DynamicStringW FormatInfoPack(const Logger::InfoPack& infoPack) const;
 
 		public:
 			virtual ~ILogger() = default;

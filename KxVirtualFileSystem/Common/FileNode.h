@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "BranchLocker.h"
@@ -31,7 +25,7 @@ namespace KxVFS
 		friend class BranchExclusiveLocker;
 
 		public:
-			using Map = std::map<KxDynamicStringW, std::unique_ptr<FileNode>>;
+			using Map = std::map<DynamicStringW, std::unique_ptr<FileNode>>;
 			using RefVector = std::vector<FileNode*>;
 			using CRefVector = std::vector<const FileNode*>;
 
@@ -46,7 +40,7 @@ namespace KxVFS
 			};
 			
 		private:
-			static FileNode* NavigateToElement(FileNode& rootNode, KxDynamicStringRefW relativePath, NavigateTo type, FileNode*& lastScanned);
+			static FileNode* NavigateToElement(FileNode& rootNode, DynamicStringRefW relativePath, NavigateTo type, FileNode*& lastScanned);
 			
 			template<class T> static T* FindRootNode(T* thisNode)
 			{
@@ -86,16 +80,16 @@ namespace KxVFS
 			}
 
 		public:
-			static bool IsRequestToRootNode(KxDynamicStringRefW relativePath);
-			static size_t HashFileName(KxDynamicStringRefW name);
+			static bool IsRequestToRootNode(DynamicStringRefW relativePath);
+			static size_t HashFileName(DynamicStringRefW name);
 
 		private:
 			Map m_Children;
-			KxFileItem m_Item;
-			KxDynamicStringW m_NameLC;
-			KxDynamicStringW m_FullPath;
-			KxDynamicStringW m_RelativePath;
-			KxDynamicStringRefW m_VirtualDirectory;
+			FileItem m_Item;
+			DynamicStringW m_NameLC;
+			DynamicStringW m_FullPath;
+			DynamicStringW m_RelativePath;
+			DynamicStringRefW m_VirtualDirectory;
 			FileNode* m_Parent = nullptr;
 			SRWLock m_Lock;
 
@@ -113,27 +107,27 @@ namespace KxVFS
 				m_Parent = parent;
 			}
 			void UpdatePaths();
-			bool RenameThisNode(KxDynamicStringRefW newName);
+			bool RenameThisNode(DynamicStringRefW newName);
 
 			SRWLock& GetLock()
 			{
 				return m_Lock;
 			}
-			KxDynamicStringW ConstructPath(PathParts options) const;
+			DynamicStringW ConstructPath(PathParts options) const;
 
 		public:
 			FileNode() = default;
-			FileNode(const KxFileItem& item, FileNode* parent = nullptr)
+			FileNode(const FileItem& item, FileNode* parent = nullptr)
 				:m_Item(item), m_Parent(parent)
 			{
 				Init(parent);
 			}
-			FileNode(KxFileItem&& item, FileNode* parent = nullptr)
+			FileNode(FileItem&& item, FileNode* parent = nullptr)
 				:m_Item(std::move(item)), m_Parent(parent)
 			{
 				Init(parent);
 			}
-			FileNode(KxDynamicStringRefW fullPath, FileNode* parent = nullptr)
+			FileNode(DynamicStringRefW fullPath, FileNode* parent = nullptr)
 				:m_Item(fullPath), m_Parent(parent)
 			{
 				Init(parent);
@@ -150,35 +144,35 @@ namespace KxVFS
 				m_VirtualDirectory = other.m_VirtualDirectory;
 				UpdatePaths();
 			}
-			void UpdateFileTree(KxDynamicStringRefW searchPath, bool queryShortNames = false);
+			void UpdateFileTree(DynamicStringRefW searchPath, bool queryShortNames = false);
 			void MakeNull();
 
-			FileNode* NavigateToFolder(KxDynamicStringRefW relativePath)
+			FileNode* NavigateToFolder(DynamicStringRefW relativePath)
 			{
 				FileNode* lastScanned = nullptr;
 				return NavigateToElement(*this, relativePath, NavigateTo::Folder, lastScanned);
 			}
-			FileNode* NavigateToFolder(KxDynamicStringRefW relativePath, FileNode*& lastScanned)
+			FileNode* NavigateToFolder(DynamicStringRefW relativePath, FileNode*& lastScanned)
 			{
 				return NavigateToElement(*this, relativePath, NavigateTo::Folder, lastScanned);
 			}
 
-			FileNode* NavigateToFile(KxDynamicStringRefW relativePath)
+			FileNode* NavigateToFile(DynamicStringRefW relativePath)
 			{
 				FileNode* lastScanned = nullptr;
 				return NavigateToElement(*this, relativePath, NavigateTo::File, lastScanned);
 			}
-			FileNode* NavigateToFile(KxDynamicStringRefW relativePath, FileNode*& lastScanned)
+			FileNode* NavigateToFile(DynamicStringRefW relativePath, FileNode*& lastScanned)
 			{
 				return NavigateToElement(*this, relativePath, NavigateTo::File, lastScanned);
 			}
 
-			FileNode* NavigateToAny(KxDynamicStringRefW relativePath)
+			FileNode* NavigateToAny(DynamicStringRefW relativePath)
 			{
 				FileNode* lastScanned = nullptr;
 				return NavigateToElement(*this, relativePath, NavigateTo::Any, lastScanned);
 			}
-			FileNode* NavigateToAny(KxDynamicStringRefW relativePath, FileNode*& lastScanned)
+			FileNode* NavigateToAny(DynamicStringRefW relativePath, FileNode*& lastScanned)
 			{
 				return NavigateToElement(*this, relativePath, NavigateTo::Any, lastScanned);
 			}
@@ -233,7 +227,7 @@ namespace KxVFS
 				}
 			}
 			FileNode& AddChild(std::unique_ptr<FileNode> node);
-			FileNode& AddChild(std::unique_ptr<FileNode> node, KxDynamicStringRefW virtualDirectory)
+			FileNode& AddChild(std::unique_ptr<FileNode> node, DynamicStringRefW virtualDirectory)
 			{
 				FileNode& ref = AddChild(std::move(node));
 				ref.SetVirtualDirectory(virtualDirectory);
@@ -262,15 +256,15 @@ namespace KxVFS
 				return FindRootNode(this);
 			}
 
-			KxDynamicStringRefW GetNameLC() const
+			DynamicStringRefW GetNameLC() const
 			{
 				return m_NameLC;
 			}
-			KxDynamicStringRefW GetName() const
+			DynamicStringRefW GetName() const
 			{
 				return m_Item.GetName();
 			}
-			bool SetName(KxDynamicStringRefW name)
+			bool SetName(DynamicStringRefW name)
 			{
 				if (!HasParent() || RenameThisNode(name))
 				{
@@ -280,34 +274,34 @@ namespace KxVFS
 				}
 				return false;
 			}
-			KxDynamicStringW GetFileExtension() const
+			DynamicStringW GetFileExtension() const
 			{
 				return m_Item.GetFileExtension();
 			}
 
-			KxDynamicStringRefW GetSource() const
+			DynamicStringRefW GetSource() const
 			{
 				return m_Item.GetSource();
 			}
-			KxDynamicStringW GetSourceWithNS() const
+			DynamicStringW GetSourceWithNS() const
 			{
-				KxDynamicStringW path = Utility::GetLongPathPrefix();
+				DynamicStringW path = Utility::GetLongPathPrefix();
 				path += m_Item.GetSource();
 				return path;
 			}
 
-			KxDynamicStringRefW GetFullPath() const
+			DynamicStringRefW GetFullPath() const
 			{
 				return m_FullPath;
 			}
-			KxDynamicStringW GetFullPathWithNS() const
+			DynamicStringW GetFullPathWithNS() const
 			{
-				KxDynamicStringW path = Utility::GetLongPathPrefix();
+				DynamicStringW path = Utility::GetLongPathPrefix();
 				path += m_FullPath;
 				return path;
 			}
 			
-			KxDynamicStringRefW GetRelativePath() const
+			DynamicStringRefW GetRelativePath() const
 			{
 				if (!m_VirtualDirectory.empty())
 				{
@@ -315,36 +309,36 @@ namespace KxVFS
 				}
 				return {};
 			}
-			KxDynamicStringRefW GetVirtualDirectory() const
+			DynamicStringRefW GetVirtualDirectory() const
 			{
 				return m_VirtualDirectory;
 			}
-			void SetVirtualDirectory(KxDynamicStringRefW path)
+			void SetVirtualDirectory(DynamicStringRefW path)
 			{
 				m_VirtualDirectory = path;
 				UpdatePaths();
 			}
 
-			const KxFileItem& GetItem() const
+			const FileItem& GetItem() const
 			{
 				return m_Item;
 			}
-			const KxFileItem& CopyItem(const FileNode& other)
+			const FileItem& CopyItem(const FileNode& other)
 			{
 				m_Item = other.m_Item;
 				return m_Item;
 			}
-			const KxFileItem& TakeItem(FileNode&& other)
+			const FileItem& TakeItem(FileNode&& other)
 			{
 				m_Item = std::move(other.m_Item);
 				return m_Item;
 			}
-			const KxFileItem& UpdateItemInfo(bool queryShortName = false)
+			const FileItem& UpdateItemInfo(bool queryShortName = false)
 			{
 				m_Item.UpdateInfo(m_FullPath, queryShortName);
 				return m_Item;
 			}
-			const KxFileItem& UpdateItemInfo(KxDynamicStringRefW fullPath, bool queryShortName = false)
+			const FileItem& UpdateItemInfo(DynamicStringRefW fullPath, bool queryShortName = false)
 			{
 				m_Item.UpdateInfo(fullPath, queryShortName);
 				return m_Item;

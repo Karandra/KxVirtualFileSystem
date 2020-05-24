@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
 #include "ServiceConstants.h"
 #include "HandleWrapper.h"
@@ -19,11 +13,11 @@ namespace KxVFS
 {
 	struct ServiceConfig
 	{
-		KxDynamicStringW BinaryPath;
-		KxDynamicStringW LoadOrderGroup;
-		KxDynamicStringW DisplayName;
-		KxDynamicStringW Description;
-		KxDynamicStringW StartName;
+		DynamicStringW BinaryPath;
+		DynamicStringW LoadOrderGroup;
+		DynamicStringW DisplayName;
+		DynamicStringW Description;
+		DynamicStringW StartName;
 		ServiceType Type = ServiceType::None;
 		ServiceStartMode StartMode = ServiceStartMode::None;
 		ServiceErrorControl ErrorControl = ServiceErrorControl::Ignore;
@@ -49,27 +43,27 @@ namespace KxVFS
 		public:
 			bool Create(ServiceManager& serviceManger,
 						ServiceStartMode startType,
-						KxDynamicStringRefW binaryPath,
-						KxDynamicStringRefW serviceName,
-						KxDynamicStringRefW displayName = {},
-						KxDynamicStringRefW description = {}
+						DynamicStringRefW binaryPath,
+						DynamicStringRefW serviceName,
+						DynamicStringRefW displayName = {},
+						DynamicStringRefW description = {}
 			);
 			bool Open(ServiceManager& serviceManger,
-					  KxDynamicStringRefW serviceName,
+					  DynamicStringRefW serviceName,
 					  ServiceAccess serviceAccess,
 					  AccessRights otherRights = AccessRights::None
 			);
 
 			std::optional<ServiceConfig> GetConfig() const;
 			bool SetConfig(ServiceManager& serviceManger,
-							 KxDynamicStringRefW binaryPath,
+							 DynamicStringRefW binaryPath,
 							 ServiceType type,
 							 ServiceStartMode startMode,
 							 ServiceErrorControl errorControl
 			);
 			
-			KxDynamicStringW GetDescription() const;
-			bool SetDescription(KxDynamicStringRefW description);
+			DynamicStringW GetDescription() const;
+			bool SetDescription(DynamicStringRefW description);
 			ServiceStatus GetStatus() const;
 
 			bool Start();

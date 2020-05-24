@@ -1,20 +1,14 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/Utility.h"
-#include "KxIFileFinder.h"
-#include "KxFileFinder.h"
-#include "KxFileItem.h"
+#include "IFileFinder.h"
+#include "FileFinder.h"
+#include "FileItem.h"
 
 namespace
 {
 	using namespace KxVFS;
 
-	SearchHandle BeginSearch(KxDynamicStringRefW query, WIN32_FIND_DATAW& fileInfo, bool isCaseSensitive, bool queryShortNames)
+	SearchHandle BeginSearch(DynamicStringRefW query, WIN32_FIND_DATAW& fileInfo, bool isCaseSensitive, bool queryShortNames)
 	{
 		const DWORD searchFlags = FIND_FIRST_EX_LARGE_FETCH|(isCaseSensitive ? FIND_FIRST_EX_CASE_SENSITIVE : 0);
 		const FINDEX_INFO_LEVELS infoLevel = queryShortNames ? FindExInfoStandard : FindExInfoBasic;
@@ -28,11 +22,11 @@ namespace
 
 namespace KxVFS
 {
-	bool KxFileFinder::IsDirectoryEmpty(KxDynamicStringRefW directoryPath)
+	bool FileFinder::IsDirectoryEmpty(DynamicStringRefW directoryPath)
 	{
-		KxFileFinder finder(directoryPath, L"*");
+		FileFinder finder(directoryPath, L"*");
 
-		KxFileItem item = finder.FindNext();
+		FileItem item = finder.FindNext();
 		if (!item.IsOK())
 		{
 			// No files at all, folder is empty.
@@ -51,34 +45,34 @@ namespace KxVFS
 		return false;
 	}
 
-	bool KxFileFinder::OnFound(const WIN32_FIND_DATAW& fileInfo)
+	bool FileFinder::OnFound(const WIN32_FIND_DATAW& fileInfo)
 	{
-		KxFileItem foundItem(*this, fileInfo);
+		FileItem foundItem(*this, fileInfo);
 		if (!foundItem.IsCurrentOrParent())
 		{
 			return OnFound(foundItem);
 		}
 		return true;
 	}
-	bool KxFileFinder::OnFound(const KxFileItem& foundItem)
+	bool FileFinder::OnFound(const FileItem& foundItem)
 	{
 		return true;
 	}
 
-	KxFileFinder::KxFileFinder(KxDynamicStringRefW searchQuery)
+	FileFinder::FileFinder(DynamicStringRefW searchQuery)
 		:m_SearchQuery(Normalize(searchQuery, true, true))
 	{
 	}
-	KxFileFinder::KxFileFinder(KxDynamicStringRefW source, KxDynamicStringRefW filter)
+	FileFinder::FileFinder(DynamicStringRefW source, DynamicStringRefW filter)
 		:m_SearchQuery(Normalize(ConstructSearchQuery(source, filter), true, true))
 	{
 	}
 
-	bool KxFileFinder::IsOK() const
+	bool FileFinder::IsOK() const
 	{
 		return m_Handle.IsValid() && !m_Handle.IsNull();
 	}
-	bool KxFileFinder::Run()
+	bool FileFinder::Run()
 	{
 		WIN32_FIND_DATAW fileInfo = {0};
 		SearchHandle searchHandle = BeginSearch(m_SearchQuery, fileInfo, m_CaseSensitive, m_QueryShortNames);
@@ -94,7 +88,7 @@ namespace KxVFS
 		}
 		return false;
 	}
-	KxFileItem KxFileFinder::FindNext()
+	FileItem FileFinder::FindNext()
 	{
 		if (!m_Handle.IsValid())
 		{
@@ -103,7 +97,7 @@ namespace KxVFS
 			if (m_Handle)
 			{
 				m_IsCanceled = false;
-				return KxFileItem(*this, m_FindData);
+				return FileItem(*this, m_FindData);
 			}
 		}
 		else
@@ -111,13 +105,13 @@ namespace KxVFS
 			// We have handle, find next file.
 			if (ContinueSearch(m_Handle, m_FindData))
 			{
-				return KxFileItem(*this, m_FindData);
+				return FileItem(*this, m_FindData);
 			}
 
 			// No files left, close search handle
 			m_Handle.Close();
 			m_IsCanceled = false;
 		}
-		return KxFileItem();
+		return FileItem();
 	}
 }

@@ -1,22 +1,84 @@
-/*
-Copyright © 2018 Kerber. All rights reserved.
+// No include guard, we need to include this file multiple times
+#include <utility>
 
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#undef CreateService
-#undef StartService
-#undef GetFileAttributes
-#undef CreateFile
+// Macro to make quick template function to resolve A/W functions
+#ifndef Kx_MakeWinUnicodeCallWrapper
+#ifdef UNICODE
+#define Kx_MakeWinUnicodeCallWrapper(funcName)	\
+			template<class... Args>	\
+			auto funcName(Args&&... arg)	\
+			{	\
+				return ::funcName##W(std::forward<Args>(arg)...);	\
+			}
+#else
+#define Kx_MakeWinUnicodeCallWrapper(funcName)	\
+					template<class... Args>	\
+					auto funcName(Args&&... arg)	\
+					{	\
+						return ::funcName##A(std::forward<Args>(arg)...);	\
+					}
+#endif
+#endif
+
+// Undefine Unicode wrapper macros
+#undef min
+#undef max
+#undef GetObject
+#undef SetCurrentDirectory
+#undef CopyFile
+#undef MoveFile
 #undef DeleteFile
-#undef CreateDirectory
+#undef GetBinaryType
+#undef MessageBox
+#undef GetFreeSpace
+#undef PlaySound
+#undef RegisterClass
+#undef CreateEvent
+#undef GetFirstChild
+#undef GetNextSibling
+#undef GetPrevSibling
+#undef GetWindowStyle
+#undef GetShortPathName
+#undef GetLongPathName
+#undef GetFullPathName
+#undef GetFileAttributes
+#undef EnumResourceTypes
+#undef LoadImage
+#undef UpdateResource
+#undef BeginUpdateResource
+#undef EndUpdateResource
+#undef EnumResourceLanguages
 #undef FormatMessage
-#undef GetMessage
-#undef ExpandEnvironmentStrings
-#undef MoveMemory
-#undef CopyMemory
-#undef FillMemory
-#undef ZeroMemory
-#undef WriteConsole
+#undef GetCommandLine
 #undef CreateProcess
-#undef OpenService
+#undef GetUserName
+#undef FindFirstFile
+#undef FindNextFile
+#undef GetEnvironmentVariable
+#undef SetEnvironmentVariable
+#undef ExitWindows
+#undef GetCompressedFileSize
+#undef GetTempPath
+#undef CreateDirectory
+#undef CompareString
+#undef EnumDisplayDevices
+#undef ExpandEnvironmentStrings
+#undef EnumResourceNames
+#undef GetMessage
+#undef CopyMemory
+
+#ifdef ZeroMemory
+#undef ZeroMemory
+inline void* ZeroMemory(void* ptr, size_t size) noexcept
+{
+	return std::memset(ptr, 0, size);
+}
+#endif
+
+#ifdef SecureZeroMemory
+#undef SecureZeroMemory
+inline void* SecureZeroMemory(void* ptr, size_t size) noexcept
+{
+	return ::RtlSecureZeroMemory(ptr, size);
+}
+#endif

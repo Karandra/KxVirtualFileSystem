@@ -1,10 +1,4 @@
 #pragma once
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 #pragma warning(disable: 4005) // Macro redefinition
@@ -13,10 +7,10 @@ namespace Dokany2
 {
 	#define DOKAN_STATIC_LINK 1
 
-	#include "Dokan/dokan.h"
-	#include "Dokan/dokanc.h"
-	#include "Dokan/dokani.h"
-	#include "Dokan/fileinfo.h"
+	#include <dokan/dokan.h>
+	#include <dokan/dokanc.h>
+	#include <dokan/dokani.h>
+	#include <dokan/fileinfo.h>
 }
 
 namespace KxVFS

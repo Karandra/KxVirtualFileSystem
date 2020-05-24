@@ -1,14 +1,8 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/DokanyFileSystem.h"
-#include "KxVirtualFileSystem/Utility/Wow64RedirectionDisabler.h"
+#include "KxVirtualFileSystem/Utility/DisableWOW64FSRedirection.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
 #include <exception>
@@ -37,20 +31,20 @@ namespace KxVFS
 	{
 		return left.HighPart == right.HighPart && left.LowPart == right.LowPart;
 	}
-	KxDynamicStringW ProcessDokanyLogString(KxVFS::KxDynamicStringRefW logString)
+	DynamicStringW ProcessDokanyLogString(KxVFS::DynamicStringRefW logString)
 	{
-		KxDynamicStringW temp = logString;
+		DynamicStringW temp = logString;
 		temp.trim_linebreak_chars();
 		temp.trim_space_chars();
 
-		KxDynamicStringW fullLogString = L"<Dokany> ";
+		DynamicStringW fullLogString = L"<Dokany> ";
 		fullLogString += temp;
 		fullLogString.trim_space_chars();
 
 		return fullLogString;
 	}
 
-	ServiceHandle OpenNamedService(ServiceManager& manager, KxDynamicStringRefW serviceName, ServiceAccess serviceAccess)
+	ServiceHandle OpenNamedService(ServiceManager& manager, DynamicStringRefW serviceName, ServiceAccess serviceAccess)
 	{
 		if (!serviceName.empty())
 		{
@@ -76,26 +70,26 @@ namespace KxVFS
 		return g_FileSystemServiceInstance;
 	}
 
-	KxDynamicStringW FileSystemService::GetLibraryVersion()
+	DynamicStringW FileSystemService::GetLibraryVersion()
 	{
 		return L"2.1.1";
 	}
-	KxDynamicStringW FileSystemService::GetDokanyVersion()
+	DynamicStringW FileSystemService::GetDokanyVersion()
 	{
 		// Return 2.0 for now because this is the version of Dokany used in KxVFS.
 		// It seems that 'DOKAN_VERSION' constant hasn't updated (maybe because 2.x still beta).
 		#undef DOKAN_VERSION
 		#define DOKAN_VERSION 200
 
-		const KxDynamicStringW temp = Utility::FormatString(L"%1", DOKAN_VERSION);
+		const DynamicStringW temp = Utility::FormatString(L"%1", DOKAN_VERSION);
 		return Utility::FormatString(L"%1.%2.%3", temp[0], temp[1], temp[2]);
 	}
 
-	KxDynamicStringW FileSystemService::GetDokanyDefaultServiceName()
+	DynamicStringW FileSystemService::GetDokanyDefaultServiceName()
 	{
 		return DOKAN_DRIVER_SERVICE;
 	}
-	KxDynamicStringW FileSystemService::GetDokanyDefaultDriverPath()
+	DynamicStringW FileSystemService::GetDokanyDefaultDriverPath()
 	{
 		// There's a 'DOKAN_DRIVER_FULL_PATH' constant in Dokany control app, but it's defined in the .cpp file
 		return Utility::ExpandEnvironmentStrings(L"%SystemRoot%\\System32\\Drivers\\Dokan" DOKAN_MAJOR_API_VERSION L".sys");
@@ -105,9 +99,9 @@ namespace KxVFS
 		ServiceManager manager;
 		if (OpenNamedService(manager, GetDokanyDefaultServiceName(), ServiceAccess::QueryStatus))
 		{
-			KxDynamicStringW driverPath = GetDokanyDefaultDriverPath();
+			DynamicStringW driverPath = GetDokanyDefaultDriverPath();
 
-			Wow64RedirectionDisabler disable;
+			DisableWOW64FSRedirection disable;
 			return Utility::IsFileExist(driverPath);
 		}
 		return false;
@@ -206,14 +200,14 @@ namespace KxVFS
 				Dokany2::DOKAN_LOG_CALLBACKS logCallbacks = {};
 				logCallbacks.DbgPrint = [](const char* logString)
 				{
-					KxDynamicStringW logStringW = KxDynamicStringA::to_utf16(logString, KxDynamicStringA::npos, CP_ACP);
-					KxDynamicStringW fullLogString = ProcessDokanyLogString(logStringW);
+					DynamicStringW logStringW = DynamicStringA::to_utf16(logString, DynamicStringA::npos, CP_ACP);
+					DynamicStringW fullLogString = ProcessDokanyLogString(logStringW);
 
 					g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, fullLogString);
 				};
 				logCallbacks.DbgPrintW = [](const wchar_t* logString)
 				{
-					KxDynamicStringW fullLogString = ProcessDokanyLogString(logString);
+					DynamicStringW fullLogString = ProcessDokanyLogString(logString);
 					g_FileSystemServiceInstance->GetLogger().Log(LogLevel::Info, logString);
 				};
 
@@ -228,7 +222,7 @@ namespace KxVFS
 		return false;
 	}
 
-	FileSystemService::FileSystemService(KxDynamicStringRefW serviceName)
+	FileSystemService::FileSystemService(DynamicStringRefW serviceName)
 		:m_ServiceName(serviceName), m_ServiceManager(ServiceManagerAccess::Connect), m_HasSeSecurityNamePrivilege(AddSeSecurityNamePrivilege())
 	{
 		// Init instance pointer
@@ -266,7 +260,7 @@ namespace KxVFS
 	{
 		return OpenService(ServiceAccess::QueryStatus);
 	}
-	bool FileSystemService::InitService(KxDynamicStringRefW name)
+	bool FileSystemService::InitService(DynamicStringRefW name)
 	{
 		if (m_ServiceName.empty())
 		{
@@ -276,7 +270,7 @@ namespace KxVFS
 		return false;
 	}
 	
-	KxDynamicStringRefW FileSystemService::GetServiceName() const
+	DynamicStringRefW FileSystemService::GetServiceName() const
 	{
 		return m_ServiceName;
 	}
@@ -297,7 +291,7 @@ namespace KxVFS
 	{
 		return OpenService(ServiceAccess::Stop).Stop();
 	}
-	bool FileSystemService::Install(KxDynamicStringRefW binaryPath, KxDynamicStringRefW displayName, KxDynamicStringRefW description)
+	bool FileSystemService::Install(DynamicStringRefW binaryPath, DynamicStringRefW displayName, DynamicStringRefW description)
 	{
 		if (Utility::IsFileExist(binaryPath))
 		{
@@ -341,8 +335,8 @@ namespace KxVFS
 
 	bool FileSystemService::UseDefaultDokanyInstallation()
 	{
-		KxDynamicStringW binaryPath = GetDokanyDefaultDriverPath();
-		if (Wow64RedirectionDisabler disable; Utility::IsFileExist(binaryPath))
+		DynamicStringW binaryPath = GetDokanyDefaultDriverPath();
+		if (DisableWOW64FSRedirection disable; Utility::IsFileExist(binaryPath))
 		{
 			m_ServiceName = GetDokanyDefaultServiceName();
 			return InitDriver();

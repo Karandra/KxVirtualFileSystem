@@ -1,48 +1,42 @@
-/*
-Copyright © 2018 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "Common.h"
 
 namespace KxVFS::Utility
 {
-	uint16_t LocaleIDToLangID(uint16_t localeID)
+	uint16_t LocaleIDToLangID(uint16_t localeID) noexcept
 	{
 		return MAKELANGID(PRIMARYLANGID(localeID), SUBLANGID(localeID));
 	}
-	KxDynamicStringW FormatMessage(uint32_t flags, const void* source, uint32_t messageID, uint16_t langID)
+	DynamicStringW FormatMessage(uint32_t flags, const void* source, uint32_t messageID, uint16_t langID)
 	{
 		LPWSTR formattedMessage = nullptr;
 		DWORD length = ::FormatMessageW(flags|FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_IGNORE_INSERTS, source, messageID, LocaleIDToLangID(langID), (LPWSTR)&formattedMessage, 0, nullptr);
 		if (length != 0 && formattedMessage != nullptr)
 		{
-			KxDynamicStringW message(formattedMessage, length);
+			DynamicStringW message(formattedMessage, length);
 			::LocalFree(formattedMessage);
 			return message;
 		}
 		return L"";
 	}
-	KxDynamicStringW GetErrorMessage(uint32_t code, uint16_t langID)
+	DynamicStringW GetErrorMessage(uint32_t code, uint16_t langID)
 	{
-		KxDynamicStringW message = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_MAX_WIDTH_MASK, nullptr, code, langID);
+		DynamicStringW message = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_MAX_WIDTH_MASK, nullptr, code, langID);
 		return FormatString(L"[%1] %2", code, message);
 	}
 
-	bool CreateDirectoryTree(KxDynamicStringRefW pathW, bool skipLastPart, SECURITY_ATTRIBUTES* securityAttributes, DWORD* errorCodeOut)
+	bool CreateDirectoryTree(DynamicStringRefW pathW, bool skipLastPart, SECURITY_ATTRIBUTES* securityAttributes, DWORD* errorCodeOut)
 	{
 		::SetLastError(ERROR_SUCCESS);
 
 		if (!IsFolderExist(pathW))
 		{
-			KxDynamicStringW path = pathW;
-			std::vector<KxDynamicStringW> folderArray;
+			DynamicStringW path = pathW;
+			std::vector<DynamicStringW> folderArray;
 
 			// Construct array
-			const auto stdNOT_FOUND = KxDynamicStringRefW::npos;
+			const auto stdNOT_FOUND = DynamicStringRefW::npos;
 
 			size_t folderStart = path.find(L':');
 			if (folderStart != stdNOT_FOUND)
@@ -68,7 +62,7 @@ namespace KxVFS::Utility
 
 			// Create folder
 			bool ret = false;
-			KxDynamicStringW fullPath = GetLongPathPrefix();
+			DynamicStringW fullPath = GetLongPathPrefix();
 			fullPath += GetDriveFromPath(pathW);
 
 			for (size_t i = 0; i < folderArray.size(); i++)
@@ -93,13 +87,13 @@ namespace KxVFS::Utility
 		SetIfNotNull(errorCodeOut, 0);
 		return true;
 	}
-	bool CreateDirectoryTreeEx(KxDynamicStringRefW baseDirectory, KxDynamicStringRefW path, SECURITY_ATTRIBUTES* securityAttributes)
+	bool CreateDirectoryTreeEx(DynamicStringRefW baseDirectory, DynamicStringRefW path, SECURITY_ATTRIBUTES* securityAttributes)
 	{
 		::SetLastError(ERROR_SUCCESS);
 
 		bool isSuccess = true;
-		KxDynamicStringW fullPath = baseDirectory;
-		String::SplitBySeparator(path, L'\\', [&fullPath, &isSuccess, securityAttributes](KxDynamicStringRefW directoryName)
+		DynamicStringW fullPath = baseDirectory;
+		String::SplitBySeparator(path, L'\\', [&fullPath, &isSuccess, securityAttributes](DynamicStringRefW directoryName)
 		{
 			fullPath += L'\\';
 			fullPath += directoryName;
@@ -115,14 +109,14 @@ namespace KxVFS::Utility
 		return isSuccess;
 	}
 
-	KxDynamicStringW GetDriveFromPath(KxDynamicStringRefW path)
+	DynamicStringW GetDriveFromPath(DynamicStringRefW path) noexcept
 	{
 		if (!path.empty())
 		{
 			size_t index = path.find(L':');
-			if (index != KxDynamicStringRefW::npos && index >= 1)
+			if (index != DynamicStringRefW::npos && index >= 1)
 			{
-				WCHAR volumeRoot[4] = {0};
+				wchar_t volumeRoot[4] = {0};
 				volumeRoot[0] = path[index - 1];
 				volumeRoot[1] = L':';
 				volumeRoot[2] = L'\\';
@@ -132,10 +126,10 @@ namespace KxVFS::Utility
 		}
 		return L"";
 	}
-	KxDynamicStringRefW NormalizeFilePath(KxDynamicStringRefW path)
+	DynamicStringRefW NormalizeFilePath(DynamicStringRefW path)
 	{
 		// See if path starts with '\' and remove it. Don't touch '\\?\'.
-		auto ExtractPrefix = [](KxDynamicStringRefW& path)
+		auto ExtractPrefix = [](DynamicStringRefW& path)
 		{
 			return path.substr(0, Utility::GetLongPathPrefix().size());
 		};
@@ -173,12 +167,12 @@ namespace KxVFS::Utility
 		path.remove_suffix(count);
 		return path;
 	}
-	KxDynamicStringW ExpandEnvironmentStrings(KxDynamicStringRefW variables)
+	DynamicStringW ExpandEnvironmentStrings(DynamicStringRefW variables)
 	{
 		DWORD requiredLength = ::ExpandEnvironmentStringsW(variables.data(), nullptr, 0);
 		if (requiredLength != 0)
 		{
-			KxDynamicStringW expandedString;
+			DynamicStringW expandedString;
 			expandedString.resize(requiredLength - 1);
 			::ExpandEnvironmentStringsW(variables.data(), expandedString.data(), requiredLength);
 
@@ -187,7 +181,7 @@ namespace KxVFS::Utility
 		return {};
 	}
 	
-	size_t WriteString(KxDynamicStringRefW source, wchar_t* destination, const size_t maxDstLength)
+	size_t WriteString(DynamicStringRefW source, wchar_t* destination, const size_t maxDstLength) noexcept
 	{
 		const size_t dstBytesLength = maxDstLength * sizeof(wchar_t);
 		const size_t srcBytesLength = std::min(dstBytesLength, source.length() * sizeof(wchar_t));
@@ -195,7 +189,7 @@ namespace KxVFS::Utility
 		memcpy_s(destination, dstBytesLength, source.data(), srcBytesLength);
 		return srcBytesLength / sizeof(wchar_t);
 	}
-	KxDynamicStringRefW ExceptionCodeToString(uint32_t code)
+	DynamicStringRefW ExceptionCodeToString(uint32_t code)
 	{
 		switch (code)
 		{

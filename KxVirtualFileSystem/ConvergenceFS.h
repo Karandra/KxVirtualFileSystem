@@ -1,11 +1,5 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/DokanyFileSystem.h"
 #include "KxVirtualFileSystem/MirrorFS.h"
 #include "KxVirtualFileSystem/Utility.h"
@@ -15,16 +9,16 @@ namespace KxVFS
 	class KxVFS_API ConvergenceFS: public MirrorFS
 	{
 		private:
-			using TVirtualFoldersVector = std::vector<KxDynamicStringW>;
+			using TVirtualFoldersVector = std::vector<DynamicStringW>;
 
 		private:
 			TVirtualFoldersVector m_VirtualFolders;
 			mutable FileNode m_VirtualTree;
 
 		protected:
-			KxDynamicStringW MakeFilePath(KxDynamicStringRefW baseDirectory, KxDynamicStringRefW requestedPath, bool addNamespace = false) const;
-			std::tuple<KxDynamicStringW, KxDynamicStringRefW> GetTargetPath(const FileNode* node, KxDynamicStringRefW requestedPath, bool addNamespace = false) const;
-			KxDynamicStringW DispatchLocationRequest(KxDynamicStringRefW requestedPath) override;
+			DynamicStringW MakeFilePath(DynamicStringRefW baseDirectory, DynamicStringRefW requestedPath, bool addNamespace = false) const;
+			std::tuple<DynamicStringW, DynamicStringRefW> GetTargetPath(const FileNode* node, DynamicStringRefW requestedPath, bool addNamespace = false) const;
+			DynamicStringW DispatchLocationRequest(DynamicStringRefW requestedPath) override;
 
 			bool ProcessDeleteOnClose(Dokany2::DOKAN_FILE_INFO& fileInfo, FileNode& fileNode) const;
 			bool IsWriteTargetNode(const FileNode& fileNode) const;
@@ -39,26 +33,26 @@ namespace KxVFS
 			}
 
 		public:
-			ConvergenceFS(FileSystemService& service, KxDynamicStringRefW mountPoint = {}, KxDynamicStringRefW writeTarget = {}, FSFlags flags = FSFlags::None);
+			ConvergenceFS(FileSystemService& service, DynamicStringRefW mountPoint = {}, DynamicStringRefW writeTarget = {}, FSFlags flags = FSFlags::None);
 
 		public:
 			FSError Mount() override;
 			bool UnMount() override;
 
 		public:
-			KxDynamicStringRefW GetSource() const = delete;
-			void SetSource(KxDynamicStringRefW source) = delete;
+			DynamicStringRefW GetSource() const = delete;
+			void SetSource(DynamicStringRefW source) = delete;
 
-			KxDynamicStringRefW GetWriteTarget() const
+			DynamicStringRefW GetWriteTarget() const
 			{
 				return MirrorFS::GetSource();
 			}
-			void SetWriteTarget(KxDynamicStringRefW writeTarget)
+			void SetWriteTarget(DynamicStringRefW writeTarget)
 			{
 				MirrorFS::SetSource(writeTarget);
 			}
 			
-			void AddVirtualFolder(KxDynamicStringRefW path);
+			void AddVirtualFolder(DynamicStringRefW path);
 			void ClearVirtualFolders();
 			size_t BuildFileTree();
 

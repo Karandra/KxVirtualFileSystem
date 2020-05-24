@@ -1,16 +1,10 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "FileNode.h"
 
 namespace KxVFS
 {
-	FileNode* FileNode::NavigateToElement(FileNode& rootNode, KxDynamicStringRefW relativePath, NavigateTo type, FileNode*& lastScanned)
+	FileNode* FileNode::NavigateToElement(FileNode& rootNode, DynamicStringRefW relativePath, NavigateTo type, FileNode*& lastScanned)
 	{
 		if ((type == NavigateTo::Folder || type == NavigateTo::Any) && IsRequestToRootNode(relativePath))
 		{
@@ -20,7 +14,7 @@ namespace KxVFS
 		lastScanned = &rootNode;
 		if (rootNode.HasChildren())
 		{
-			auto ScanChildren = [&lastScanned](FileNode& scannedNode, KxDynamicStringRefW folderName) -> FileNode*
+			auto ScanChildren = [&lastScanned](FileNode& scannedNode, DynamicStringRefW folderName) -> FileNode*
 			{
 				auto it = scannedNode.m_Children.find(folderName);
 				if (it != scannedNode.m_Children.end())
@@ -30,7 +24,7 @@ namespace KxVFS
 				}
 				return nullptr;
 			};
-			auto StripQuotes = [](KxDynamicStringRefW folderName)
+			auto StripQuotes = [](DynamicStringRefW folderName)
 			{
 				if (!folderName.empty() && folderName.front() == L'"')
 				{
@@ -44,8 +38,8 @@ namespace KxVFS
 			};
 
 			FileNode* finalNode = nullptr;
-			KxDynamicStringW relativePathLC = Utility::StringToLower(relativePath);
-			Utility::String::SplitBySeparator(relativePathLC, L'\\', [&ScanChildren, &StripQuotes, &finalNode, &rootNode](KxDynamicStringRefW folderName)
+			DynamicStringW relativePathLC = Utility::StringToLower(relativePath);
+			Utility::String::SplitBySeparator(relativePathLC, L'\\', [&ScanChildren, &StripQuotes, &finalNode, &rootNode](DynamicStringRefW folderName)
 			{
 				finalNode = ScanChildren(finalNode ? *finalNode : rootNode, StripQuotes(folderName));
 				return finalNode != nullptr;
@@ -64,11 +58,11 @@ namespace KxVFS
 		return nullptr;
 	}
 
-	bool FileNode::IsRequestToRootNode(KxDynamicStringRefW relativePath)
+	bool FileNode::IsRequestToRootNode(DynamicStringRefW relativePath)
 	{
 		return relativePath.empty() || relativePath == L"\\" || relativePath == L"/";
 	}
-	size_t FileNode::HashFileName(KxDynamicStringRefW name)
+	size_t FileNode::HashFileName(DynamicStringRefW name)
 	{
 		return Utility::Comparator::StringHashNoCase()(name);
 	}
@@ -89,7 +83,7 @@ namespace KxVFS
 		}
 		m_NameLC = Utility::StringToLower(m_Item.GetName());
 	}
-	bool FileNode::RenameThisNode(KxDynamicStringRefW newName)
+	bool FileNode::RenameThisNode(DynamicStringRefW newName)
 	{
 		// Rename this node in parent's children
 		Map& parentItems = m_Parent->m_Children;
@@ -105,9 +99,9 @@ namespace KxVFS
 		}
 		return false;
 	}
-	KxDynamicStringW FileNode::ConstructPath(PathParts options) const
+	DynamicStringW FileNode::ConstructPath(PathParts options) const
 	{
-		KxDynamicStringW fullPath = options & PathParts::Namespace ? Utility::GetLongPathPrefix() : KxNullDynamicStringW;
+		DynamicStringW fullPath = options & PathParts::Namespace ? Utility::GetLongPathPrefix() : NullDynamicStringW;
 		if (options & PathParts::BaseDirectory)
 		{
 			fullPath += m_VirtualDirectory;
@@ -116,12 +110,12 @@ namespace KxVFS
 
 		if (options & PathParts::RelativePath)
 		{
-			KxDynamicStringW relativePath;
+			DynamicStringW relativePath;
 			WalkToRoot([this, &relativePath](const FileNode& node)
 			{
 				if (&node != this)
 				{
-					KxDynamicStringW name = node.GetName();
+					DynamicStringW name = node.GetName();
 					name += L'\\';
 					name += relativePath;
 					relativePath = name;
@@ -142,17 +136,17 @@ namespace KxVFS
 		}
 		return fullPath;
 	}
-	void FileNode::UpdateFileTree(KxDynamicStringRefW searchPath, bool queryShortNames)
+	void FileNode::UpdateFileTree(DynamicStringRefW searchPath, bool queryShortNames)
 	{
 		m_VirtualDirectory = searchPath;
 		UpdatePaths();
 		ClearChildren();
 
-		auto BuildTreeBranch = [this, queryShortNames](FileNode::RefVector& directories, KxDynamicStringRefW path, FileNode& treeNode, FileNode* parentNode)
+		auto BuildTreeBranch = [this, queryShortNames](FileNode::RefVector& directories, DynamicStringRefW path, FileNode& treeNode, FileNode* parentNode)
 		{
-			KxFileFinder finder(path, L"*");
+			FileFinder finder(path, L"*");
 			finder.QueryShortNames(queryShortNames);
-			for (KxFileItem item = finder.FindNext(); item.IsOK(); item = finder.FindNext())
+			for (FileItem item = finder.FindNext(); item.IsOK(); item = finder.FindNext())
 			{
 				if (item.IsNormalItem())
 				{
@@ -227,7 +221,7 @@ namespace KxVFS
 	}
 	FileNode& FileNode::AddChild(std::unique_ptr<FileNode> node)
 	{
-		KxDynamicStringW name = node->GetNameLC();
+		DynamicStringW name = node->GetNameLC();
 		auto [it, inserted] = m_Children.insert_or_assign(std::move(name), std::move(node));
 		return *it->second;
 	}

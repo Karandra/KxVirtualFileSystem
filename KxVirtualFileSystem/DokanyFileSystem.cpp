@@ -1,10 +1,4 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/DokanyFileSystem.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/Utility.h"
@@ -12,7 +6,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 namespace KxVFS
 {
 	// Implementation taken from 'mount.c' since the original version is inaccessible from here
-	bool DeleteMountPoint(KxDynamicStringRefW mountPoint)
+	bool DeleteMountPoint(DynamicStringRefW mountPoint)
 	{
 		FileHandle handle(mountPoint, AccessRights::GenericWrite, FileShare::None, CreationDisposition::OpenExisting, FileAttributes::FlagOpenReparsePoint|FileAttributes::FlagBackupSemantics);
 		if (handle)
@@ -36,7 +30,7 @@ namespace KxVFS
 			else
 			{
 				const uint32_t errorCode = ::GetLastError();
-				KxDynamicStringRefW errorMessage = Utility::GetErrorMessage(errorCode);
+				DynamicStringRefW errorMessage = Utility::GetErrorMessage(errorCode);
 				KxVFS_Log(LogLevel::Error, L"DeleteMountPoint '%1' failed: (%2) %3", mountPoint, errorCode, errorMessage);
 			}
 			return success;
@@ -55,7 +49,7 @@ namespace KxVFS
 	{
 		if (FileSystemService::GetInstance())
 		{
-			const KxDynamicStringRefW exceptionMessage = Utility::ExceptionCodeToString(exceptionCode);
+			const DynamicStringRefW exceptionMessage = Utility::ExceptionCodeToString(exceptionCode);
 			KxVFS_Log(LogLevel::Fatal, L"Fatal exception '%1 (%2)' occurred while initializing Dokany", exceptionMessage, exceptionCode);
 		}
 	}
@@ -92,7 +86,7 @@ namespace KxVFS
 			}
 
 			// Allow mount to empty folders
-			if (KxFileFinder::IsDirectoryEmpty(m_MountPoint))
+			if (FileFinder::IsDirectoryEmpty(m_MountPoint))
 			{
 				// Update options
 				m_Options.ThreadCount = 0; // Dokany 2.x uses system threadpool, so this does nothing
@@ -142,7 +136,7 @@ namespace KxVFS
 		return false;
 	}
 
-	DokanyFileSystem::DokanyFileSystem(FileSystemService& service, KxDynamicStringRefW mountPoint, FSFlags flags)
+	DokanyFileSystem::DokanyFileSystem(FileSystemService& service, DynamicStringRefW mountPoint, FSFlags flags)
 		:m_FileContextManager(*this), m_IOManager(*this), m_Service(service), m_MountPoint(mountPoint), m_Flags(flags)
 	{
 		// Options
@@ -206,11 +200,11 @@ namespace KxVFS
 		return DoUnMount();
 	}
 
-	KxDynamicStringW DokanyFileSystem::GetVolumeLabel() const
+	DynamicStringW DokanyFileSystem::GetVolumeLabel() const
 	{
 		return m_Service.GetServiceName();
 	}
-	KxDynamicStringW DokanyFileSystem::GetVolumeFileSystem() const
+	DynamicStringW DokanyFileSystem::GetVolumeFileSystem() const
 	{
 		// File system name could be anything up to 10 characters.
 		// But Windows check few feature availability based on file system name.
@@ -237,7 +231,7 @@ namespace KxVFS
 				constexpr size_t prefixLength = 7;
 				const size_t deviceNameLength = std::char_traits<wchar_t>::length(m_Instance->DeviceName);
 
-				KxDynamicStringW path = process.GetImagePath();
+				DynamicStringW path = process.GetImagePath();
 
 				// 'DeviceName' string starts with '\Volume' but image name start with '\Device\Volume'
 				path.erase(0, prefixLength);

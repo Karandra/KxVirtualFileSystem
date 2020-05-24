@@ -1,10 +1,4 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "Misc/IncludeDokan.h"
@@ -35,7 +29,7 @@ namespace KxVFS
 		};
 	}
 
-	bool IFileSystem::UnMountDirectory(KxDynamicStringRefW mountPoint)
+	bool IFileSystem::UnMountDirectory(DynamicStringRefW mountPoint)
 	{
 		return Dokany2::DokanRemoveMountPoint(mountPoint.data());
 	}
@@ -62,7 +56,7 @@ namespace KxVFS
 			(createDisposition == CreationDisposition::TruncateExisting && isExist)
 			);
 	}
-	bool IFileSystem::IsWriteRequest(KxDynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const
+	bool IFileSystem::IsWriteRequest(DynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const
 	{
 		return IsWriteRequest(Utility::IsAnyExist(filePath), desiredAccess, createDisposition);
 	}

@@ -1,9 +1,3 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
 #include <utility>
@@ -79,7 +73,8 @@ namespace KxVFS
 		Exclusive,
 	};
 
-	template<SRWLockerType t_LockerType, bool t_IsMoveable> class BasicSRWLocker final
+	template<SRWLockerType t_LockerType, bool t_IsMoveable>
+	class BasicSRWLocker final
 	{
 		public:
 			constexpr static bool IsShared() noexcept

@@ -1,27 +1,21 @@
-/*
-Copyright © 2020 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
 #pragma once
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Utility.h"
 
 namespace KxVFS::Utility::String
 {
 	template<class... Args>
-	KxDynamicStringW Concat(Args&&... arg)
+	DynamicStringW Concat(Args&&... arg)
 	{
-		return (KxDynamicStringW(arg) + ...);
+		return (DynamicStringW(arg) + ...);
 	}
 	
 	template<class... Args>
-	KxDynamicStringW ConcatWithSeparator(KxDynamicStringRefW sep, Args&&... arg)
+	DynamicStringW ConcatWithSeparator(DynamicStringRefW sep, Args&&... arg)
 	{
 		if (!sep.empty())
 		{
-			KxDynamicStringW value = ((KxDynamicStringW(arg) + sep) + ...);
+			DynamicStringW value = ((DynamicStringW(arg) + sep) + ...);
 			value.erase(value.length() - sep.length() - 1, sep.length());
 			return value;
 		}
@@ -29,10 +23,10 @@ namespace KxVFS::Utility::String
 	}
 
 	template<class TFunctor>
-	size_t SplitBySeparator(KxDynamicStringRefW string, wchar_t sep, TFunctor&& func)
+	size_t SplitBySeparator(DynamicStringRefW string, wchar_t sep, TFunctor&& func)
 	{
 		size_t separatorPos = string.find(sep);
-		if (separatorPos == KxDynamicStringRefW::npos)
+		if (separatorPos == DynamicStringRefW::npos)
 		{
 			func(string);
 			return 1;
@@ -42,7 +36,7 @@ namespace KxVFS::Utility::String
 		size_t count = 0;
 		while (pos < string.length() && separatorPos <= string.length())
 		{
-			KxDynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
+			DynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
 			const size_t stringPieceLength = stringPiece.length();
 
 			if (!stringPiece.empty())
@@ -58,7 +52,7 @@ namespace KxVFS::Utility::String
 			separatorPos = string.find(sep, pos);
 
 			// No separator found, but this is not the last element
-			if (separatorPos == KxDynamicStringRefW::npos && pos < string.length())
+			if (separatorPos == DynamicStringRefW::npos && pos < string.length())
 			{
 				separatorPos = string.length();
 			}
@@ -67,7 +61,7 @@ namespace KxVFS::Utility::String
 	}
 	
 	template<class TFunctor>
-	size_t SplitBySeparator(KxDynamicStringRefW string, KxDynamicStringRefW sep, TFunctor&& func)
+	size_t SplitBySeparator(DynamicStringRefW string, DynamicStringRefW sep, TFunctor&& func)
 	{
 		if (sep.empty() && !string.empty())
 		{
@@ -76,7 +70,7 @@ namespace KxVFS::Utility::String
 		}
 
 		size_t separatorPos = string.find(sep);
-		if (separatorPos == KxDynamicStringRefW::npos)
+		if (separatorPos == DynamicStringRefW::npos)
 		{
 			func(string);
 			return 1;
@@ -86,7 +80,7 @@ namespace KxVFS::Utility::String
 		size_t count = 0;
 		while (pos < string.length() && separatorPos <= string.length())
 		{
-			KxDynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
+			DynamicStringRefW stringPiece = string.substr(pos, separatorPos - pos);
 			const size_t stringPieceLength = stringPiece.length();
 
 			if (!stringPiece.empty())
@@ -102,7 +96,7 @@ namespace KxVFS::Utility::String
 			separatorPos = string.find(sep, pos);
 
 			// No separator found, but this is not the last element
-			if (separatorPos == KxDynamicStringRefW::npos && pos < string.length())
+			if (separatorPos == DynamicStringRefW::npos && pos < string.length())
 			{
 				separatorPos = string.length();
 			}
@@ -111,7 +105,7 @@ namespace KxVFS::Utility::String
 	}
 
 	template<class TFunctor>
-	size_t SplitByLength(KxDynamicStringRefW string, size_t length, TFunctor&& func)
+	size_t SplitByLength(DynamicStringRefW string, size_t length, TFunctor&& func)
 	{
 		const size_t stringLength = string.length();
 
@@ -120,7 +114,7 @@ namespace KxVFS::Utility::String
 			size_t count = 0;
 			for (size_t i = 0; i < stringLength; i += length)
 			{
-				KxDynamicStringRefW stringPiece = string.substr(i, length);
+				DynamicStringRefW stringPiece = string.substr(i, length);
 				if (!stringPiece.empty())
 				{
 					count++;

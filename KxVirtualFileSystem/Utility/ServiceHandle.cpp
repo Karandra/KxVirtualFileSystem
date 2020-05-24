@@ -1,10 +1,4 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include "ServiceHandle.h"
 #include "ServiceManager.h"
@@ -18,10 +12,10 @@ namespace KxVFS
 
 	bool ServiceHandle::Create(ServiceManager& serviceManger,
 							   ServiceStartMode startType,
-							   KxDynamicStringRefW binaryPath,
-							   KxDynamicStringRefW serviceName,
-							   KxDynamicStringRefW displayName,
-							   KxDynamicStringRefW description
+							   DynamicStringRefW binaryPath,
+							   DynamicStringRefW serviceName,
+							   DynamicStringRefW displayName,
+							   DynamicStringRefW description
 	)
 	{
 		Assign(::CreateServiceW
@@ -47,7 +41,7 @@ namespace KxVFS
 		return false;
 	}
 	bool ServiceHandle::Open(ServiceManager& serviceManger,
-							 KxDynamicStringRefW serviceName,
+							 DynamicStringRefW serviceName,
 							 ServiceAccess serviceAccess,
 							 AccessRights otherRights
 	)
@@ -87,7 +81,7 @@ namespace KxVFS
 		return std::nullopt;
 	}
 	bool ServiceHandle::SetConfig(ServiceManager& serviceManger,
-									KxDynamicStringRefW binaryPath,
+									DynamicStringRefW binaryPath,
 									ServiceType type,
 									ServiceStartMode startMode,
 									ServiceErrorControl errorControl
@@ -105,7 +99,7 @@ namespace KxVFS
 		return success;
 	}
 
-	KxDynamicStringW ServiceHandle::GetDescription() const
+	DynamicStringW ServiceHandle::GetDescription() const
 	{
 		DWORD reqSize = 0;
 		if (!::QueryServiceConfig2W(m_Handle, SERVICE_CONFIG_DESCRIPTION, nullptr, 0, &reqSize) && reqSize != 0)
@@ -119,7 +113,7 @@ namespace KxVFS
 		}
 		return {};
 	}
-	bool ServiceHandle::SetDescription(KxDynamicStringRefW description)
+	bool ServiceHandle::SetDescription(DynamicStringRefW description)
 	{
 		SERVICE_DESCRIPTION desc = {0};
 		desc.lpDescription = const_cast<LPWSTR>(description.data());

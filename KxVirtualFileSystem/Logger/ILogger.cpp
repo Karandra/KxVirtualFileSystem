@@ -1,10 +1,4 @@
-/*
-Copyright © 2019 Kerber. All rights reserved.
-
-You should have received a copy of the GNU LGPL v3
-along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.0.html.
-*/
-#include "KxVirtualFileSystem/KxVirtualFileSystem.h"
+#include "stdafx.h"
 #include "KxVirtualFileSystem/Common/FileNode.h"
 #include "KxVirtualFileSystem/IFileSystem.h"
 #include "KxVirtualFileSystem/FileSystemService.h"
@@ -12,7 +6,7 @@ along with KxVirtualFileSystem. If not, see https://www.gnu.org/licenses/lgpl-3.
 
 namespace
 {
-	static bool g_LogEnabled = false;
+	bool g_LogEnabled = false;
 }
 
 namespace KxVFS
@@ -35,7 +29,7 @@ namespace KxVFS
 		g_LogEnabled = value;
 	}
 
-	KxDynamicStringRefW ILogger::GetLogLevelName(LogLevel level) const
+	DynamicStringRefW ILogger::GetLogLevelName(LogLevel level) const
 	{
 		switch (level)
 		{
@@ -58,9 +52,9 @@ namespace KxVFS
 		};
 		return L"None";
 	}
-	KxDynamicStringW ILogger::FormatInfoPack(const Logger::InfoPack& infoPack) const
+	DynamicStringW ILogger::FormatInfoPack(const Logger::InfoPack& infoPack) const
 	{
-		KxDynamicStringW text = Utility::FormatString(L"[%1][Thread:%2] %3",
+		DynamicStringW text = Utility::FormatString(L"[%1][Thread:%2] %3",
 													  GetLogLevelName(infoPack.LogLevel),
 													  infoPack.ThreadID,
 													  infoPack.String
@@ -68,12 +62,12 @@ namespace KxVFS
 
 		if (infoPack.FileSystem)
 		{
-			KxDynamicStringW mountPoint = infoPack.FileSystem->GetMountPoint();
+			DynamicStringW mountPoint = infoPack.FileSystem->GetMountPoint();
 			text += Utility::FormatString(L"\r\n\t[File System]: %1", mountPoint.data());
 		}
 		if (infoPack.FileNode)
 		{
-			KxDynamicStringW fullPath = infoPack.FileNode->GetFullPath();
+			DynamicStringW fullPath = infoPack.FileNode->GetFullPath();
 			text += Utility::FormatString(L"\r\n\t[File Node]: %1", fullPath.data());
 		}
 		text += L"\r\n";
