@@ -23,7 +23,7 @@ namespace KxVFS::Utility::String
 	}
 
 	template<class TFunctor>
-	size_t SplitBySeparator(DynamicStringRefW string, wchar_t sep, TFunctor&& func)
+	size_t SplitBySeparator(DynamicStringRefW string, wchar_t sep, TFunctor&& func) noexcept
 	{
 		size_t separatorPos = string.find(sep);
 		if (separatorPos == DynamicStringRefW::npos)
@@ -61,7 +61,7 @@ namespace KxVFS::Utility::String
 	}
 	
 	template<class TFunctor>
-	size_t SplitBySeparator(DynamicStringRefW string, DynamicStringRefW sep, TFunctor&& func)
+	size_t SplitBySeparator(DynamicStringRefW string, DynamicStringRefW sep, TFunctor&& func) noexcept
 	{
 		if (sep.empty() && !string.empty())
 		{
@@ -105,7 +105,7 @@ namespace KxVFS::Utility::String
 	}
 
 	template<class TFunctor>
-	size_t SplitByLength(DynamicStringRefW string, size_t length, TFunctor&& func)
+	size_t SplitByLength(DynamicStringRefW string, size_t length, TFunctor&& func) noexcept
 	{
 		const size_t stringLength = string.length();
 

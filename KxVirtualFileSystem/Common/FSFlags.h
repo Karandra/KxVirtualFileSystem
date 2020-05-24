@@ -1,6 +1,5 @@
 #pragma once
 #include "KxVirtualFileSystem/Common.hpp"
-#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 namespace KxVFS
 {
@@ -16,5 +15,5 @@ namespace KxVFS
 		ForceSingleThreaded = 1 << 6,
 		CurrentSession = 1 << 7
 	};
-	KxVFS_AllowEnumBitwiseOp(FSFlags);
+	KxVFS_DeclareFlagSet(FSFlags);
 }

@@ -1,7 +1,6 @@
 #pragma once
 #include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Misc/UndefWindows.h"
-#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 #include "KxVirtualFileSystem/Utility.h"
 #include <optional>
 
@@ -26,39 +25,38 @@ namespace KxVFS
 		FileContextManagerInitFailed,
 		IOManagerInitFialed,
 	};
-	KxVFS_AllowEnumCastOp(FSErrorCode);
 }
 
 namespace KxVFS
 {
-	class KxVFS_API FSError
+	class KxVFS_API FSError final
 	{
 		private:
 			FSErrorCode m_Code = FSErrorCode::Unknown;
 
 		public:
-			FSError() = default;
-			FSError(int dokanyErrorCode);
-			FSError(FSErrorCode errorCode)
+			FSError() noexcept = default;
+			FSError(int dokanyErrorCode) noexcept;
+			FSError(FSErrorCode errorCode) noexcept
 				:m_Code(errorCode)
 			{
 			}
 
 		public:
-			bool IsKnownError() const;
-			FSErrorCode GetCode() const;
-			std::optional<int> GetDokanyCode() const;
+			bool IsKnownError() const noexcept;
+			FSErrorCode GetCode() const noexcept;
+			std::optional<int> GetDokanyCode() const noexcept;
 			DynamicStringW GetMessage() const;
 			
-			bool IsSuccess() const
+			bool IsSuccess() const noexcept
 			{
 				return m_Code == FSErrorCode::Success;
 			}
-			bool IsFail() const
+			bool IsFail() const noexcept
 			{
 				return !IsSuccess();
 			}
-			bool IsDokanyError() const
+			bool IsDokanyError() const noexcept
 			{
 				return GetDokanyCode().has_value();
 			}

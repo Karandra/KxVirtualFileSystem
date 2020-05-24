@@ -28,23 +28,23 @@ namespace KxVFS
 
 		public:
 			FileContextManager(FileContextManager&) = delete;
-			FileContextManager(IFileSystem& fileSystem);
+			FileContextManager(IFileSystem& fileSystem) noexcept;
 
 		public:
-			IFileSystem& GetFileSystem()
+			IFileSystem& GetFileSystem() noexcept
 			{
 				return m_FileSystem;
 			}
 			
-			bool IsInitialized() const
+			bool IsInitialized() const noexcept
 			{
 				return m_IsInitialized;
 			}
 			bool Init();
-			void Cleanup();
+			void Cleanup() noexcept;
 
-			void DeleteContext(FileContext* fileContext);
 			void PushContext(FileContext& fileContext);
-			FileContext* PopContext(FileHandle fileHandle);
+			void DeleteContext(FileContext* fileContext) noexcept;
+			FileContext* PopContext(FileHandle fileHandle) noexcept;
 	};
 }

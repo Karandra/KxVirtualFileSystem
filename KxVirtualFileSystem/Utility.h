@@ -2,10 +2,10 @@
 
 // Common utilities
 #include "Utility/Common.h"
+#include "Utility/FlagSet.h"
 #include "Utility/Win32Constants.h"
 #include "Utility/WinKernelConstants.h"
 #include "Utility/NtStatusConstants.h"
-#include "Utility/EnumClassOperations.h"
 
 // KxDynamicString
 #include "Utility/DynamicString/DynamicString.h"

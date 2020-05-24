@@ -4,7 +4,7 @@
 
 namespace KxVFS
 {
-	FileNode* FileNode::NavigateToElement(FileNode& rootNode, DynamicStringRefW relativePath, NavigateTo type, FileNode*& lastScanned)
+	FileNode* FileNode::NavigateToElement(FileNode& rootNode, DynamicStringRefW relativePath, NavigateTo type, FileNode*& lastScanned) noexcept
 	{
 		if ((type == NavigateTo::Folder || type == NavigateTo::Any) && IsRequestToRootNode(relativePath))
 		{
@@ -58,11 +58,11 @@ namespace KxVFS
 		return nullptr;
 	}
 
-	bool FileNode::IsRequestToRootNode(DynamicStringRefW relativePath)
+	bool FileNode::IsRequestToRootNode(DynamicStringRefW relativePath) noexcept
 	{
 		return relativePath.empty() || relativePath == L"\\" || relativePath == L"/";
 	}
-	size_t FileNode::HashFileName(DynamicStringRefW name)
+	size_t FileNode::HashFileName(DynamicStringRefW name) noexcept
 	{
 		return Utility::Comparator::StringHashNoCase()(name);
 	}
@@ -99,7 +99,7 @@ namespace KxVFS
 		}
 		return false;
 	}
-	DynamicStringW FileNode::ConstructPath(PathParts options) const
+	DynamicStringW FileNode::ConstructPath(FlagSet<PathParts> options) const
 	{
 		DynamicStringW fullPath = options & PathParts::Namespace ? Utility::GetLongPathPrefix() : NullDynamicStringW;
 		if (options & PathParts::BaseDirectory)
@@ -176,7 +176,7 @@ namespace KxVFS
 			directories = std::move(roundDirectories);
 		}
 	}
-	void FileNode::MakeNull()
+	void FileNode::MakeNull() noexcept
 	{
 		ClearChildren();
 		m_Item = {};
@@ -209,7 +209,7 @@ namespace KxVFS
 		return Recurse(m_Children);
 	}
 
-	bool FileNode::RemoveChild(FileNode& node)
+	bool FileNode::RemoveChild(FileNode& node) noexcept
 	{
 		auto it = m_Children.find(node.GetNameLC());
 		if (it != m_Children.end())

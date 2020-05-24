@@ -4,9 +4,9 @@
 
 namespace KxVFS
 {
-	bool ServiceManager::Open(ServiceManagerAccess accessMode)
+	bool ServiceManager::Open(FlagSet<ServiceManagerAccess> accessMode) noexcept
 	{
-		m_Handle = ::OpenSCManagerW(nullptr, nullptr, ToInt(accessMode));
+		m_Handle = ::OpenSCManagerW(nullptr, nullptr, accessMode.ToInt());
 		return IsOK();
 	}
 }

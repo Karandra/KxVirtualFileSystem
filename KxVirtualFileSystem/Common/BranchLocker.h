@@ -27,11 +27,13 @@ namespace KxVFS
 			{
 				m_LockedNodes.push_back(&node);
 			}
-			template<class TFunctor> void ForLockedNodes(TFunctor&& func) noexcept
+			
+			template<class TFunc>
+			void ForLockedNodes(TFunc&& func) noexcept
 			{
 				for (auto it = m_LockedNodes.rbegin(); it != m_LockedNodes.rend(); ++it)
 				{
-					func(**it);
+					std::invoke(func, **it);
 				}
 			}
 	};
@@ -72,7 +74,7 @@ namespace KxVFS
 
 		public:
 			BranchExclusiveLocker(FileNode& node);
-			BranchExclusiveLocker(BranchExclusiveLocker&& other)
+			BranchExclusiveLocker(BranchExclusiveLocker&& other) noexcept
 			{
 				*this = std::move(other);
 			}
@@ -81,7 +83,7 @@ namespace KxVFS
 			
 		public:
 			BranchExclusiveLocker& operator=(const BranchExclusiveLocker&) = delete;
-			BranchExclusiveLocker& operator=(BranchExclusiveLocker&& other)
+			BranchExclusiveLocker& operator=(BranchExclusiveLocker&& other) noexcept
 			{
 				m_LockData = std::move(other.m_LockData);
 				return *this;

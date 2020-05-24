@@ -7,6 +7,7 @@
 
 #include "Misc/Setup.h"
 #include "Misc/IncludeWindows.h"
+#include "Utility/FlagSet.h"
 #include "Utility/DynamicString/DynamicString.h"
 #pragma warning(disable: 4251) // DLL interface
 

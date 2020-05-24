@@ -23,7 +23,7 @@ namespace KxVFS
 		}
 		return false;
 	}
-	bool IOManager::InitializePendingAsyncIO()
+	bool IOManager::InitializePendingAsyncIO() noexcept
 	{
 		m_ThreadPool = Dokany2::DokanGetThreadPool();
 		if (!m_ThreadPool)
@@ -43,7 +43,7 @@ namespace KxVFS
 		return true;
 	}
 	
-	void IOManager::CleanupPendingAsyncIO()
+	void IOManager::CleanupPendingAsyncIO() noexcept
 	{
 		if (CriticalSectionLocker lock(m_ThreadPoolCS); m_ThreadPoolCleanupGroup)
 		{
@@ -54,7 +54,7 @@ namespace KxVFS
 			::DestroyThreadpoolEnvironment(&m_ThreadPoolEnvironment);
 		}
 	}
-	void IOManager::CleanupAsyncIO()
+	void IOManager::CleanupAsyncIO() noexcept
 	{
 		if (m_IsInitialized)
 		{
@@ -117,7 +117,7 @@ namespace KxVFS
 		fileSystemInstance.GetIOManager().PushContext(asyncContext);
 	}
 
-	void IOManager::OnDeleteFileContext(FileContext& fileContext)
+	void IOManager::OnDeleteFileContext(FileContext& fileContext) noexcept
 	{
 		if (m_IsAsyncIOEnabled && fileContext.IsThreadpoolIOCreated())
 		{
@@ -127,7 +127,7 @@ namespace KxVFS
 			}
 		}
 	}
-	void IOManager::OnPushFileContext(FileContext& fileContext)
+	void IOManager::OnPushFileContext(FileContext& fileContext) noexcept
 	{
 		if (m_IsAsyncIOEnabled && fileContext.IsThreadpoolIOCreated())
 		{
@@ -156,7 +156,7 @@ namespace KxVFS
 		return true;
 	}
 
-	IOManager::IOManager(IFileSystem& fileSystem)
+	IOManager::IOManager(IFileSystem& fileSystem) noexcept
 		:m_FileSystem(fileSystem), m_FileContextManager(fileSystem.GetFileContextManager())
 	{
 	}
@@ -169,7 +169,7 @@ namespace KxVFS
 		}
 		return false;
 	}
-	void IOManager::Cleanup()
+	void IOManager::Cleanup() noexcept
 	{
 		if (m_IsAsyncIOEnabled)
 		{
@@ -177,7 +177,7 @@ namespace KxVFS
 		}
 	}
 
-	void IOManager::DeleteContext(AsyncIOContext* asyncContext)
+	void IOManager::DeleteContext(AsyncIOContext* asyncContext) noexcept
 	{
 		delete asyncContext;
 	}
@@ -189,7 +189,7 @@ namespace KxVFS
 			m_AsyncContextPoolMaxSize = std::max(m_AsyncContextPoolMaxSize, m_AsyncContextPool.size());
 		}
 	}
-	AsyncIOContext* IOManager::PopContext(FileContext& fileContext)
+	AsyncIOContext* IOManager::PopContext(FileContext& fileContext) noexcept
 	{
 		AsyncIOContext* asyncContext = nullptr;
 		if (CriticalSectionLocker lock(m_AsyncContextPoolCS); !m_AsyncContextPool.empty())
@@ -213,7 +213,7 @@ namespace KxVFS
 		return asyncContext;
 	}
 
-	NtStatus IOManager::ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext) const
+	NtStatus IOManager::ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext) const noexcept
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileHandle.GetPath());
 
@@ -231,7 +231,7 @@ namespace KxVFS
 		}
 		return IFileSystem::GetNtStatusByWin32LastErrorCode();
 	}
-	NtStatus IOManager::WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext) const
+	NtStatus IOManager::WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext) const noexcept
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileHandle.GetPath());
 
@@ -301,7 +301,7 @@ namespace KxVFS
 		return IFileSystem::GetNtStatusByWin32LastErrorCode();
 	}
 
-	NtStatus IOManager::ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo)
+	NtStatus IOManager::ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo) noexcept
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileContext.GetHandle().GetPath());
 
@@ -324,7 +324,7 @@ namespace KxVFS
 		}
 		return NtStatus::Pending;
 	}
-	NtStatus IOManager::WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo)
+	NtStatus IOManager::WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo) noexcept
 	{
 		KxVFS_Log(LogLevel::Info, L"%1: %2", __FUNCTIONW__, fileContext.GetHandle().GetPath());
 

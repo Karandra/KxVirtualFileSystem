@@ -5,7 +5,7 @@
 
 namespace KxVFS
 {
-	void ServiceHandle::DoCloseHandle(THandle handle)
+	void ServiceHandle::DoCloseHandle(THandle handle) noexcept
 	{
 		::CloseServiceHandle(handle);
 	}
@@ -16,7 +16,7 @@ namespace KxVFS
 							   DynamicStringRefW serviceName,
 							   DynamicStringRefW displayName,
 							   DynamicStringRefW description
-	)
+	) noexcept
 	{
 		Assign(::CreateServiceW
 		(
@@ -42,11 +42,11 @@ namespace KxVFS
 	}
 	bool ServiceHandle::Open(ServiceManager& serviceManger,
 							 DynamicStringRefW serviceName,
-							 ServiceAccess serviceAccess,
-							 AccessRights otherRights
-	)
+							 FlagSet<ServiceAccess> serviceAccess,
+							 FlagSet<AccessRights> otherRights
+	) noexcept
 	{
-		Assign(::OpenServiceW(serviceManger, serviceName.data(), ToInt(serviceAccess)|ToInt(otherRights)));
+		Assign(::OpenServiceW(serviceManger, serviceName.data(), serviceAccess.ToInt()|otherRights.ToInt()));
 		return IsValid();
 	}
 	
@@ -85,7 +85,7 @@ namespace KxVFS
 									ServiceType type,
 									ServiceStartMode startMode,
 									ServiceErrorControl errorControl
-	)
+	) noexcept
 	{
 		const bool success = ChangeServiceConfigW
 		(
@@ -113,13 +113,13 @@ namespace KxVFS
 		}
 		return {};
 	}
-	bool ServiceHandle::SetDescription(DynamicStringRefW description)
+	bool ServiceHandle::SetDescription(DynamicStringRefW description) noexcept
 	{
-		SERVICE_DESCRIPTION desc = {0};
+		SERVICE_DESCRIPTION desc = {};
 		desc.lpDescription = const_cast<LPWSTR>(description.data());
 		return ::ChangeServiceConfig2W(m_Handle, SERVICE_CONFIG_DESCRIPTION, &desc);
 	}
-	ServiceStatus ServiceHandle::GetStatus() const
+	ServiceStatus ServiceHandle::GetStatus() const noexcept
 	{
 		DWORD reqSize = 0;
 		SERVICE_STATUS_PROCESS status = {0};
@@ -130,16 +130,16 @@ namespace KxVFS
 		return ServiceStatus::Unknown;
 	}
 
-	bool ServiceHandle::Start()
+	bool ServiceHandle::Start() noexcept
 	{
 		return ::StartServiceW(m_Handle, 0, nullptr);
 	}
-	bool ServiceHandle::Stop()
+	bool ServiceHandle::Stop() noexcept
 	{
 		SERVICE_STATUS status = {0};
 		return ::ControlService(m_Handle, SERVICE_STOP, &status);
 	}
-	bool ServiceHandle::Delete()
+	bool ServiceHandle::Delete() noexcept
 	{
 		return ::DeleteService(m_Handle);
 	}

@@ -1,5 +1,4 @@
 #pragma once
-#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 #pragma warning(disable: 4005) // Macro redefinition
 
@@ -54,9 +53,4 @@ namespace Dokany2
 		InitializationFailed = DOKAN_EXCEPTION_INITIALIZATION_FAILED,
 		ShutdownFailed = DOKAN_EXCEPTION_SHUTDOWN_FAILED
 	};
-}
-
-namespace KxVFS
-{
-	KxVFS_AllowEnumCastOp(Dokany2::ExceptionCode);
 }

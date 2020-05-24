@@ -53,10 +53,10 @@ namespace KxVFS
 			KxVFS_Log(LogLevel::Fatal, L"Fatal exception '%1 (%2)' occurred while initializing Dokany", exceptionMessage, exceptionCode);
 		}
 	}
-	uint32_t DokanyFileSystem::ConvertDokanyOptions(FSFlags flags)
+	uint32_t DokanyFileSystem::ConvertDokanyOptions(FlagSet<FSFlags> flags)
 	{
 		uint32_t dokanyOptions = 0;
-		auto TestAndSet = [&dokanyOptions, flags](uint32_t dokanyOption, FSFlags flag)
+		auto TestAndSet = [&](uint32_t dokanyOption, FSFlags flag)
 		{
 			Utility::ModFlagRef(dokanyOptions, dokanyOption, flags & flag);
 		};
@@ -136,7 +136,7 @@ namespace KxVFS
 		return false;
 	}
 
-	DokanyFileSystem::DokanyFileSystem(FileSystemService& service, DynamicStringRefW mountPoint, FSFlags flags)
+	DokanyFileSystem::DokanyFileSystem(FileSystemService& service, DynamicStringRefW mountPoint, FlagSet<FSFlags> flags)
 		:m_FileContextManager(*this), m_IOManager(*this), m_Service(service), m_MountPoint(mountPoint), m_Flags(flags)
 	{
 		// Options

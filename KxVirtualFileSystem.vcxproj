@@ -55,10 +55,10 @@
     <ClInclude Include="KxVirtualFileSystem\ConvergenceFS.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\DynamicString\BasicDynamicString.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\DynamicString\DynamicString.h" />
-    <ClInclude Include="KxVirtualFileSystem\Utility\EnumClassOperations.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\FileSystem\FileFinder.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\FileSystem\FileItem.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\FileSystem\IFileFinder.h" />
+    <ClInclude Include="KxVirtualFileSystem\Utility\FlagSet.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\Formatter\Formatter.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\Formatter\FormatterTraits.h" />
     <ClInclude Include="KxVirtualFileSystem\Utility\GenericHandle.h" />

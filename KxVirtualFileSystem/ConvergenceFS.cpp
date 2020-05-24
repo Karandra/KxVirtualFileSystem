@@ -212,7 +212,7 @@ namespace KxVFS
 		}
 
 		// Attributes and flags
-		const KernelFileOptions kernelOptions = FromInt<KernelFileOptions>(eventInfo.CreateOptions);
+		const FlagSet<KernelFileOptions> kernelOptions = FromInt<KernelFileOptions>(eventInfo.CreateOptions);
 
 		// Correct flags
 		if (targetNode)
@@ -267,8 +267,8 @@ namespace KxVFS
 		KxVFS_Log(LogLevel::Info, L"Trying to create/open file: %1", eventInfo.FileName);
 
 		// Flags and attributes
-		const FileAttributes fileAttributes = targetNode ? targetNode->GetAttributes() : FileAttributes::Invalid;
-		const FileShare fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
+		const FlagSet<FileAttributes> fileAttributes = targetNode ? targetNode->GetAttributes() : FileAttributes::Invalid;
+		const FlagSet<FileShare> fileShareOptions = FromInt<FileShare>(eventInfo.ShareAccess);
 		auto[requestAttributes, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
 		
 		const IOManager& ioManager = GetIOManager();
@@ -354,7 +354,7 @@ namespace KxVFS
 				targetNode->SetAttributes(requestAttributes|fileAttributes);
 
 				// Update file on disk
-				::SetFileAttributesW(targetPath, ToInt(requestAttributes|fileAttributes));
+				::SetFileAttributesW(targetPath, (requestAttributes|fileAttributes).ToInt());
 			}
 
 			FileContextManager& fileContextManager = GetFileContextManager();

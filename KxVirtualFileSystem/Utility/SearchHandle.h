@@ -10,13 +10,13 @@ namespace KxVFS
 		friend class TWrapper;
 
 		protected:
-			static void DoCloseHandle(THandle handle)
+			static void DoCloseHandle(THandle handle) noexcept
 			{
 				::FindClose(handle);
 			}
 
 		public:
-			SearchHandle(THandle fileHandle = GetInvalidHandle())
+			SearchHandle(THandle fileHandle = GetInvalidHandle()) noexcept
 				:HandleWrapper(fileHandle)
 			{
 			}

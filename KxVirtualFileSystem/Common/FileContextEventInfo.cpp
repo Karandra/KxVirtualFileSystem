@@ -5,7 +5,7 @@
 
 namespace KxVFS
 {
-	void FileContextEventInfo::Assign(const EvtCreateFile& eventInfo)
+	void FileContextEventInfo::Assign(const EvtCreateFile& eventInfo) noexcept
 	{
 		auto[requestAttributes, creationDisposition, genericDesiredAccess] = IFileSystem::MapKernelToUserCreateFileFlags(eventInfo);
 

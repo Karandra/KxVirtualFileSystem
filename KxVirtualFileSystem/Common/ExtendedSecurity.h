@@ -24,8 +24,8 @@ namespace KxVFS
 				return m_Enabled ? CreateSecurity(eventInfo, filePath, creationDisposition) : nullptr;
 			}
 
-			void OpenWithSecurityAccess(AccessRights& desiredAccess, bool isWriteRequest) const;
-			void OpenWithSecurityAccessIfEnabled(AccessRights& desiredAccess, bool isWriteRequest) const
+			void OpenWithSecurityAccess(FlagSet<AccessRights>& desiredAccess, bool isWriteRequest) const noexcept;
+			void OpenWithSecurityAccessIfEnabled(FlagSet<AccessRights>& desiredAccess, bool isWriteRequest) const noexcept
 			{
 				if (m_Enabled)
 				{
@@ -35,17 +35,17 @@ namespace KxVFS
 
 		public:
 			ExtendedSecurity(ExtendedSecurity&) = delete;
-			ExtendedSecurity(IFileSystem* fileSystem)
+			ExtendedSecurity(IFileSystem* fileSystem) noexcept
 				:m_FileSystem(*fileSystem)
 			{
 			}
 
 		public:
-			bool IsExtendedSecurityEnabled() const
+			bool IsExtendedSecurityEnabled() const noexcept
 			{
 				return m_Enabled;
 			}
-			void EnableExtendedSecurity(bool enabled = true)
+			void EnableExtendedSecurity(bool enabled = true) noexcept
 			{
 				m_Enabled = enabled;
 			}

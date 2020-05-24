@@ -18,7 +18,7 @@ namespace KxVFS
 		}
 		return false;
 	}
-	void FileContextManager::Cleanup()
+	void FileContextManager::Cleanup() noexcept
 	{
 		if (m_IsInitialized)
 		{
@@ -37,14 +37,6 @@ namespace KxVFS
 		}
 	}
 	
-	void FileContextManager::DeleteContext(FileContext* fileContext)
-	{
-		if (fileContext)
-		{
-			m_IOManager.OnDeleteFileContext(*fileContext);
-			delete fileContext;
-		}
-	}
 	void FileContextManager::PushContext(FileContext& fileContext)
 	{
 		m_IOManager.OnPushFileContext(fileContext);
@@ -54,7 +46,15 @@ namespace KxVFS
 			m_FileContextPoolMaxSize = std::max(m_FileContextPoolMaxSize, m_FileContextPool.size());
 		}
 	}
-	FileContext* FileContextManager::PopContext(FileHandle fileHandle)
+	void FileContextManager::DeleteContext(FileContext* fileContext) noexcept
+	{
+		if (fileContext)
+		{
+			m_IOManager.OnDeleteFileContext(*fileContext);
+			delete fileContext;
+		}
+	}
+	FileContext* FileContextManager::PopContext(FileHandle fileHandle) noexcept
 	{
 		if (fileHandle.IsNull() || !fileHandle.IsValid() || m_IsUnmounted)
 		{
@@ -88,7 +88,7 @@ namespace KxVFS
 		return fileContext;
 	}
 
-	FileContextManager::FileContextManager(IFileSystem& fileSystem)
+	FileContextManager::FileContextManager(IFileSystem& fileSystem) noexcept
 		:m_FileSystem(fileSystem), m_IOManager(fileSystem.GetIOManager())
 	{
 	}

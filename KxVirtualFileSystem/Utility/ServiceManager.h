@@ -13,20 +13,20 @@ namespace KxVFS
 
 		public:
 			ServiceManager() = default;
-			ServiceManager(ServiceManagerAccess accessMode)
+			ServiceManager(FlagSet<ServiceManagerAccess> accessMode) noexcept
 			{
 				Open(accessMode);
 			}
 
 		public:
-			bool IsOK() const
+			bool IsOK() const noexcept
 			{
 				return m_Handle.IsValid();
 			}
-			bool Open(ServiceManagerAccess accessMode);
+			bool Open(FlagSet<ServiceManagerAccess> accessMode) noexcept;
 
 		public:
-			operator SC_HANDLE() const
+			operator SC_HANDLE() const noexcept
 			{
 				return m_Handle;
 			}

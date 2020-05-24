@@ -6,7 +6,7 @@
 
 namespace
 {
-	HANDLE DuplicateProcessHandle(HANDLE handle, uint32_t access, bool inherit, uint32_t options)
+	HANDLE DuplicateProcessHandle(HANDLE handle, uint32_t access, bool inherit, uint32_t options) noexcept
 	{
 		const HANDLE current = ::GetCurrentProcess();
 
@@ -18,7 +18,7 @@ namespace
 
 namespace KxVFS
 {
-	std::vector<uint32_t> ProcessHandle::EnumActiveProcesses()
+	std::vector<uint32_t> ProcessHandle::EnumActiveProcesses() noexcept
 	{
 		DWORD processes[1024] = {};
 		DWORD retSize = 0;
@@ -63,12 +63,12 @@ namespace KxVFS
 		return path;
 	}
 
-	ProcessHandle ProcessHandle::Duplicate(bool inheritHandle) const
+	ProcessHandle ProcessHandle::Duplicate(bool inheritHandle) const noexcept
 	{
 		return DuplicateProcessHandle(m_Handle, 0, inheritHandle, 0);
 	}
-	ProcessHandle ProcessHandle::Duplicate(AccessRights access, bool inheritHandle) const
+	ProcessHandle ProcessHandle::Duplicate(FlagSet<AccessRights> access, bool inheritHandle) const noexcept
 	{
-		return DuplicateProcessHandle(m_Handle, ToInt(access), inheritHandle, 0);
+		return DuplicateProcessHandle(m_Handle, access.ToInt(), inheritHandle, 0);
 	}
 }

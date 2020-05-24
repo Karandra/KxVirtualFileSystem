@@ -28,53 +28,53 @@ namespace KxVFS
 			bool m_IsClosed = false;
 
 		public:
-			FileContext(IFileSystem& fileSystem)
+			FileContext(IFileSystem& fileSystem) noexcept
 				:m_FileSystem(fileSystem)
 			{
 			}
-			~FileContext()
+			~FileContext() noexcept
 			{
 				CloseHandle();
 				CloseThreadpoolIO();
 			}
 
 		public:
-			[[nodiscard]] MoveableSharedSRWLocker LockShared()
+			[[nodiscard]] MoveableSharedSRWLocker LockShared() noexcept
 			{
 				return m_Lock;
 			}
-			[[nodiscard]] MoveableExclusiveSRWLocker LockExclusive()
+			[[nodiscard]] MoveableExclusiveSRWLocker LockExclusive() noexcept
 			{
 				return m_Lock;
 			}
 
-			bool IsClosed() const
+			bool IsClosed() const noexcept
 			{
 				return m_IsClosed;
 			}
-			void MarkClosed()
+			void MarkClosed() noexcept
 			{
 				m_IsClosed = true;
 			}
-			void MarkOpen()
+			void MarkOpen() noexcept
 			{
 				m_IsClosed = false;
 			}
 
-			bool IsCleanedUp() const
+			bool IsCleanedUp() const noexcept
 			{
 				return m_IsCleanedUp;
 			}
-			void MarkCleanedUp()
+			void MarkCleanedUp() noexcept
 			{
 				m_IsCleanedUp = true;
 			}
-			void MarkActive()
+			void MarkActive() noexcept
 			{
 				m_IsCleanedUp = false;
 			}
 
-			void InterlockedGetState(bool& isClosed, bool& isCleanedUp) const
+			void InterlockedGetState(bool& isClosed, bool& isCleanedUp) const noexcept
 			{
 				if (SharedSRWLocker lock(m_Lock); true)
 				{
@@ -83,86 +83,86 @@ namespace KxVFS
 				}
 			}
 
-			IFileSystem& GetFileSystem() const
+			IFileSystem& GetFileSystem() const noexcept
 			{
 				return m_FileSystem;
 			}
 
-			FileNode* GetFileNode() const
+			FileNode* GetFileNode() const noexcept
 			{
 				return m_FileNode;
 			}
-			bool HasFileNode() const
+			bool HasFileNode() const noexcept
 			{
 				return m_FileNode != nullptr;
 			}
-			void AssignFileNode(FileNode& node)
+			void AssignFileNode(FileNode& node) noexcept
 			{
 				m_FileNode = &node;
 			}
-			void ResetFileNode()
+			void ResetFileNode() noexcept
 			{
 				m_FileNode = nullptr;
 			}
 
-			const FileHandle& GetHandle() const
+			const FileHandle& GetHandle() const noexcept
 			{
 				return m_Handle;
 			}
-			FileHandle& GetHandle()
+			FileHandle& GetHandle() noexcept
 			{
 				return m_Handle;
 			}
-			void AssignHandle(FileHandle handle)
+			void AssignHandle(FileHandle handle) noexcept
 			{
 				m_Handle = std::move(handle);
 			}
-			void CloseHandle()
+			void CloseHandle() noexcept
 			{
 				m_Handle.Close();
 			}
 
-			const FileContextEventInfo& GetEventInfo() const
+			const FileContextEventInfo& GetEventInfo() const noexcept
 			{
 				return m_EventInfo;
 			}
-			FileContextEventInfo& GetEventInfo()
+			FileContextEventInfo& GetEventInfo() noexcept
 			{
 				return m_EventInfo;
 			}
-			void ResetEventInfo()
+			void ResetEventInfo() noexcept
 			{
 				m_EventInfo.Reset();
 			}
 
-			bool IsThreadpoolIOCreated() const
+			bool IsThreadpoolIOCreated() const noexcept
 			{
 				return m_CompletionPort != nullptr;
 			}
-			bool IsThreadpoolIOActive() const
+			bool IsThreadpoolIOActive() const noexcept
 			{
 				return m_AsyncIOActive;
 			}
-			bool CreateThreadpoolIO(PTP_WIN32_IO_CALLBACK callback, TP_CALLBACK_ENVIRON& environment)
+			bool CreateThreadpoolIO(PTP_WIN32_IO_CALLBACK callback, TP_CALLBACK_ENVIRON& environment) noexcept
 			{
-				if (m_CompletionPort == nullptr)
+				if (!m_CompletionPort)
 				{
 					m_CompletionPort = ::CreateThreadpoolIo(m_Handle, callback, this, &environment);
 					return m_CompletionPort != nullptr;
 				}
 				return false;
 			}
-			void StartThreadpoolIO()
+			void StartThreadpoolIO() noexcept
 			{
 				::StartThreadpoolIo(m_CompletionPort);
 				m_AsyncIOActive = true;
 			}
-			void CancelThreadpoolIO()
+			void CancelThreadpoolIO() noexcept
 			{
 				::CancelThreadpoolIo(m_CompletionPort);
 				m_AsyncIOActive = false;
 			}
-			void CloseThreadpoolIO()
+			void CloseThreadpoolIO() noexcept
 			{
 				if (m_CompletionPort)
 				{

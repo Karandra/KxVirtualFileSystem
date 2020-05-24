@@ -5,7 +5,7 @@
 
 namespace
 {
-	KxVFS::FSErrorCode CheckErrorCode(int dokanyErrorCode)
+	constexpr KxVFS::FSErrorCode CheckErrorCode(int dokanyErrorCode) noexcept
 	{
 		using KxVFS::FSErrorCode;
 
@@ -50,20 +50,20 @@ namespace
 
 namespace KxVFS
 {
-	FSError::FSError(int dokanyErrorCode)
+	FSError::FSError(int dokanyErrorCode) noexcept
 		:m_Code(CheckErrorCode(dokanyErrorCode))
 	{
 	}
 
-	bool FSError::IsKnownError() const
+	bool FSError::IsKnownError() const noexcept
 	{
 		return m_Code != FSErrorCode::Unknown;
 	}
-	FSErrorCode FSError::GetCode() const
+	FSErrorCode FSError::GetCode() const noexcept
 	{
 		return m_Code;
 	}
-	std::optional<int> FSError::GetDokanyCode() const
+	std::optional<int> FSError::GetDokanyCode() const noexcept
 	{
 		switch (m_Code)
 		{
@@ -155,6 +155,6 @@ namespace KxVFS
 				return L"Failed to initialize IO manager";
 			}
 		};
-		return DynamicStringW();
+		return {};
 	}
 }

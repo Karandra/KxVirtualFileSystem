@@ -171,7 +171,7 @@ namespace KxVFS
 		auto[requestAttributes, creationDisposition, genericDesiredAccess] = MapKernelToUserCreateFileFlags(eventInfo);
 
 		// When filePath is a directory, needs to change the flag so that the file can be opened.
-		const FileAttributes fileAttributes = FromInt<FileAttributes>(::GetFileAttributesW(targetPath));
+		const FlagSet<FileAttributes> fileAttributes = FromInt<FileAttributes>(::GetFileAttributesW(targetPath));
 		if (fileAttributes != FileAttributes::Invalid)
 		{
 			if (fileAttributes & FileAttributes::Directory)
@@ -256,7 +256,7 @@ namespace KxVFS
 						statusCode = NtStatus::InternalError;
 					}
 
-					// Open succeed but we need to inform the driver that the dir open and not created by returning NtStatus::ObjectNameCollision
+					// Open succeed but we need to inform the driver that the directory open and not created by returning NtStatus::ObjectNameCollision
 					if (creationDisposition == CreationDisposition::OpenAlways && fileAttributes != FileAttributes::Invalid)
 					{
 						statusCode = NtStatus::ObjectNameCollision;
@@ -271,7 +271,7 @@ namespace KxVFS
 		else
 		{
 			// It is a create file request
-			if (!CheckAttributesToOverwriteFile(FromInt<FileAttributes>(fileAttributes), requestAttributes, creationDisposition))
+			if (!CheckAttributesToOverwriteFile(fileAttributes, requestAttributes, creationDisposition))
 			{
 				statusCode = NtStatus::AccessDenied;
 			}
@@ -308,7 +308,7 @@ namespace KxVFS
 					// Need to update FileAttributes with previous when Overwrite file
 					if (fileAttributes != FileAttributes::Invalid && creationDisposition == CreationDisposition::TruncateExisting)
 					{
-						::SetFileAttributesW(targetPath, ToInt(requestAttributes) | ToInt(fileAttributes));
+						::SetFileAttributesW(targetPath, (requestAttributes|fileAttributes).ToInt());
 					}
 
 					FileContextManager& fileContextManager = GetFileContextManager();

@@ -13,7 +13,8 @@ namespace KxVFS
 	struct alignas(WIN32_FIND_DATAW) Win32FindData final
 	{
 		private:
-			template<class T> static void AssignName(T& name, DynamicStringRefW fileName) noexcept
+			template<class T>
+			static void AssignName(T& name, DynamicStringRefW fileName) noexcept
 			{
 				const size_t length = std::min(std::size(name), fileName.length());
 				Utility::CopyMemory(name, fileName.data(), length);
@@ -21,19 +22,19 @@ namespace KxVFS
 			}
 
 		public:
-			FileAttributes m_Attributes = FileAttributes::Invalid;
+			FlagSet<FileAttributes> m_Attributes = FileAttributes::Invalid;
 			FILETIME m_CreationTime = {};
 			FILETIME m_LastAccessTime = {};
 			FILETIME m_ModificationTime = {};
 			uint32_t m_FileSizeHigh = 0;
 			uint32_t m_FileSizeLow = 0;
-			ReparsePointTags m_ReparsePointTags = ReparsePointTags::None;
+			FlagSet<ReparsePointTags> m_ReparsePointTags;
 			uint32_t m_Reserved1 = 0;
 			wchar_t m_Name[ARRAYSIZE(WIN32_FIND_DATAW::cFileName)];
 			wchar_t m_ShortName[ARRAYSIZE(WIN32_FIND_DATAW::cAlternateFileName)];
 
 		public:
-			Win32FindData() = default;
+			Win32FindData() noexcept = default;
 			Win32FindData(DynamicStringRefW fileName) noexcept
 			{
 				static_assert(sizeof(Win32FindData) == sizeof(WIN32_FIND_DATAW));
@@ -93,8 +94,12 @@ namespace KxVFS
 			{
 			}
 
+		private:
+			FileItem(const FileFinder& finder, const Win32FindData& findData);
+			FileItem(const FileFinder& finder, const WIN32_FIND_DATAW& findData);
+
 		public:
-			FileItem()
+			FileItem() noexcept
 				:m_Data()
 			{
 			}
@@ -117,10 +122,6 @@ namespace KxVFS
 			{
 				UpdateInfo();
 			}
-
-		private:
-			FileItem(const FileFinder& finder, const Win32FindData& findData);
-			FileItem(const FileFinder& finder, const WIN32_FIND_DATAW& findData);
 
 		public:
 			bool IsOK() const noexcept
@@ -186,11 +187,11 @@ namespace KxVFS
 				return *this;
 			}
 
-			FileAttributes GetAttributes() const noexcept
+			FlagSet<FileAttributes> GetAttributes() const noexcept
 			{
 				return m_Data.m_Attributes;
 			}
-			void SetAttributes(FileAttributes attributes) noexcept
+			void SetAttributes(FlagSet<FileAttributes> attributes) noexcept
 			{
 				m_Data.m_Attributes = attributes;
 				OnChange();
@@ -201,11 +202,11 @@ namespace KxVFS
 				OnChange();
 			}
 			
-			ReparsePointTags GetReparsePointTags() const noexcept
+			FlagSet<ReparsePointTags> GetReparsePointTags() const noexcept
 			{
 				return m_Data.m_ReparsePointTags;
 			}
-			void SetReparsePointTags(ReparsePointTags tags) noexcept
+			void SetReparsePointTags(FlagSet<ReparsePointTags> tags) noexcept
 			{
 				if (IsReparsePoint())
 				{
@@ -295,7 +296,7 @@ namespace KxVFS
 			DynamicStringW GetFileExtension() const noexcept;
 			void SetFileExtension(DynamicStringRefW ext);
 
-			DynamicStringRefW GetSource() const
+			DynamicStringRefW GetSource() const noexcept
 			{
 				return m_Source;
 			}

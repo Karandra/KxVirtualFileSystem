@@ -11,7 +11,7 @@ namespace KxVFS
 
 namespace KxVFS
 {
-	struct ServiceConfig
+	struct ServiceConfig final
 	{
 		DynamicStringW BinaryPath;
 		DynamicStringW LoadOrderGroup;
@@ -32,10 +32,10 @@ namespace KxVFS
 		friend class TWrapper;
 		
 		protected:
-			static void DoCloseHandle(THandle handle);
+			static void DoCloseHandle(THandle handle) noexcept;
 
 		public:
-			ServiceHandle(THandle fileHandle = GetInvalidHandle())
+			ServiceHandle(THandle fileHandle = GetInvalidHandle()) noexcept
 				:HandleWrapper(fileHandle)
 			{
 			}
@@ -47,27 +47,27 @@ namespace KxVFS
 						DynamicStringRefW serviceName,
 						DynamicStringRefW displayName = {},
 						DynamicStringRefW description = {}
-			);
+			) noexcept;
 			bool Open(ServiceManager& serviceManger,
 					  DynamicStringRefW serviceName,
-					  ServiceAccess serviceAccess,
-					  AccessRights otherRights = AccessRights::None
-			);
+					  FlagSet<ServiceAccess> serviceAccess,
+					  FlagSet<AccessRights> otherRights = {}
+			) noexcept;
 
 			std::optional<ServiceConfig> GetConfig() const;
 			bool SetConfig(ServiceManager& serviceManger,
-							 DynamicStringRefW binaryPath,
-							 ServiceType type,
-							 ServiceStartMode startMode,
-							 ServiceErrorControl errorControl
-			);
+						   DynamicStringRefW binaryPath,
+						   ServiceType type,
+						   ServiceStartMode startMode,
+						   ServiceErrorControl errorControl
+			) noexcept;
 			
 			DynamicStringW GetDescription() const;
-			bool SetDescription(DynamicStringRefW description);
-			ServiceStatus GetStatus() const;
+			bool SetDescription(DynamicStringRefW description) noexcept;
+			ServiceStatus GetStatus() const noexcept;
 
-			bool Start();
-			bool Stop();
-			bool Delete();
+			bool Start() noexcept;
+			bool Stop() noexcept;
+			bool Delete() noexcept;
 	};
 }

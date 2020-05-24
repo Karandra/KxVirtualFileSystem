@@ -1,7 +1,6 @@
 #pragma once
 #include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
-#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 namespace KxVFS
 {
@@ -15,8 +14,6 @@ namespace KxVFS
 		OnDemand = SERVICE_DEMAND_START,
 		Disabled = SERVICE_DISABLED,
 	};
-	KxVFS_AllowEnumBitwiseOp(ServiceStartMode);
-
 	enum class ServiceStatus: uint32_t
 	{
 		Unknown = 0,
@@ -30,7 +27,13 @@ namespace KxVFS
 		PendingPause = SERVICE_PAUSE_PENDING,
 		PendingContinue = SERVICE_CONTINUE_PENDING,
 	};
-	KxVFS_AllowEnumBitwiseOp(ServiceStatus);
+	enum class ServiceErrorControl: uint32_t
+	{
+		Ignore = SERVICE_ERROR_IGNORE,
+		Normal = SERVICE_ERROR_NORMAL,
+		Severe = SERVICE_ERROR_SEVERE,
+		Critical = SERVICE_ERROR_CRITICAL,
+	};
 
 	enum class ServiceAccess: uint32_t
 	{
@@ -50,7 +53,7 @@ namespace KxVFS
 
 		All = SERVICE_ALL_ACCESS,
 	};
-	KxVFS_AllowEnumBitwiseOp(ServiceAccess);
+	KxVFS_DeclareFlagSet(ServiceAccess);
 
 	enum class ServiceManagerAccess: uint32_t
 	{
@@ -64,7 +67,7 @@ namespace KxVFS
 		QueryLockStatus = SC_MANAGER_QUERY_LOCK_STATUS,
 		ChangeBootConfig = SC_MANAGER_MODIFY_BOOT_CONFIG,
 	};
-	KxVFS_AllowEnumBitwiseOp(ServiceManagerAccess);
+	KxVFS_DeclareFlagSet(ServiceManagerAccess);
 
 	enum class ServiceType: uint32_t
 	{
@@ -76,14 +79,5 @@ namespace KxVFS
 		Win32SharedProcess = SERVICE_WIN32_SHARE_PROCESS,
 		InteractiveProcess = SERVICE_INTERACTIVE_PROCESS,
 	};
-	KxVFS_AllowEnumBitwiseOp(ServiceType);
-
-	enum class ServiceErrorControl: uint32_t
-	{
-		Ignore = SERVICE_ERROR_IGNORE,
-		Normal = SERVICE_ERROR_NORMAL,
-		Severe = SERVICE_ERROR_SEVERE,
-		Critical = SERVICE_ERROR_CRITICAL,
-	};
-	KxVFS_AllowEnumCastOp(ServiceErrorControl);
+	KxVFS_DeclareFlagSet(ServiceType);
 }

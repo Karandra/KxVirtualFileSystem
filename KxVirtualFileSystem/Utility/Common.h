@@ -60,7 +60,7 @@ namespace KxVFS::Utility
 	bool CreateDirectoryTree(DynamicStringRefW pathW, bool skipLastPart = false, SECURITY_ATTRIBUTES* securityAttributes = nullptr, DWORD* errorCodeOut = nullptr);
 	bool CreateDirectoryTreeEx(DynamicStringRefW baseDirectory, DynamicStringRefW path, SECURITY_ATTRIBUTES* securityAttributes = nullptr);
 
-	inline FileAttributes GetFileAttributes(DynamicStringRefW path) noexcept
+	inline FlagSet<FileAttributes> GetFileAttributes(DynamicStringRefW path) noexcept
 	{
 		return FromInt<FileAttributes>(::GetFileAttributesW(path.data()));
 	}
@@ -70,12 +70,12 @@ namespace KxVFS::Utility
 	}
 	inline bool IsFileExist(DynamicStringRefW path) noexcept
 	{
-		const FileAttributes attributes = GetFileAttributes(path);
+		const FlagSet<FileAttributes> attributes = GetFileAttributes(path);
 		return attributes != FileAttributes::Invalid && !(attributes & FileAttributes::Directory);
 	}
 	inline bool IsFolderExist(DynamicStringRefW path) noexcept
 	{
-		const FileAttributes attributes = GetFileAttributes(path);
+		const FlagSet<FileAttributes> attributes = GetFileAttributes(path);
 		return attributes != FileAttributes::Invalid && attributes & FileAttributes::Directory;
 	}
 

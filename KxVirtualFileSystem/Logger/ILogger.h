@@ -79,8 +79,9 @@ namespace KxVFS
 #define KxVFS_Log(level, format, ...)	\
 if constexpr(KxVFS::Setup::EnableLog)	\
 {	\
-	if (KxVFS::ILogger::IsLogEnabled())	\
+	using namespace KxVFS;	\
+	if (ILogger::IsLogEnabled())	\
 	{	\
-		KxVFS::ILogger::Get().Log(level, format, __VA_ARGS__);	\
+		ILogger::Get().Log(level, format, __VA_ARGS__);	\
 	}	\
 }	\

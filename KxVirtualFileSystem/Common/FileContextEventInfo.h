@@ -5,40 +5,40 @@
 
 namespace KxVFS
 {
-	class KxVFS_API FileContextEventInfo
+	class KxVFS_API FileContextEventInfo final
 	{
 		private:
 			CreationDisposition m_CreationDisposition = CreationDisposition::None;
-			FileAttributes m_Attributes = FileAttributes::None;
-			AccessRights m_DesiredAccess = AccessRights::None;
-			FileShare m_ShareMode = FileShare::None;
-			KernelFileOptions m_KernelCreationOptions = KernelFileOptions::None;
+			FlagSet<FileAttributes> m_Attributes;
+			FlagSet<AccessRights> m_DesiredAccess;
+			FlagSet<FileShare> m_ShareMode;
+			FlagSet<KernelFileOptions> m_KernelCreationOptions;
 			uint32_t m_OriginProcessID = 0;
 
 		public:
-			CreationDisposition GetCreationDisposition() const
+			CreationDisposition GetCreationDisposition() const noexcept
 			{
 				return m_CreationDisposition;
 			}
-			FileAttributes GetAttributes() const
+			FlagSet<FileAttributes> GetAttributes() const noexcept
 			{
 				return m_Attributes;
 			}
-			AccessRights GetDesiredAccess() const
+			FlagSet<AccessRights> GetDesiredAccess() const noexcept
 			{
 				return m_DesiredAccess;
 			}
-			FileShare GetShareMode() const
+			FlagSet<FileShare> GetShareMode() const noexcept
 			{
 				return m_ShareMode;
 			}
-			uint32_t GetOriginProcessID() const
+			uint32_t GetOriginProcessID() const noexcept
 			{
 				return m_OriginProcessID;
 			}
 
-			void Assign(const EvtCreateFile& eventInfo);
-			void Reset()
+			void Assign(const EvtCreateFile& eventInfo) noexcept;
+			void Reset() noexcept
 			{
 				*this = FileContextEventInfo();
 			}

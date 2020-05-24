@@ -4,8 +4,8 @@
 
 namespace KxVFS
 {
-	class KxVFS_API IFileSystem;
-	class KxVFS_API FileContextManager;
+	class IFileSystem;
+	class FileContextManager;
 }
 
 namespace KxVFS
@@ -31,10 +31,10 @@ namespace KxVFS
 
 		private:
 			bool InitializeAsyncIO();
-			bool InitializePendingAsyncIO();
+			bool InitializePendingAsyncIO() noexcept;
 
-			void CleanupPendingAsyncIO();
-			void CleanupAsyncIO();
+			void CleanupPendingAsyncIO() noexcept;
+			void CleanupAsyncIO() noexcept;
 
 		private:
 			static void CALLBACK AsyncCallback(PTP_CALLBACK_INSTANCE instance,
@@ -45,46 +45,46 @@ namespace KxVFS
 											   PTP_IO completionPort
 			);
 
-			void OnDeleteFileContext(FileContext& fileContext);
-			void OnPushFileContext(FileContext& fileContext);
+			void OnDeleteFileContext(FileContext& fileContext) noexcept;
+			void OnPushFileContext(FileContext& fileContext) noexcept;
 			bool OnPopFileContext(FileContext& fileContext);
 
 		public:
 			IOManager(IOManager&) = delete;
-			IOManager(IFileSystem& fileSystem);
+			IOManager(IFileSystem& fileSystem) noexcept;
 			
 		public:
-			IFileSystem& GetFileSystem()
+			IFileSystem& GetFileSystem() noexcept
 			{
 				return m_FileSystem;
 			}
 			
-			bool IsInitialized() const
+			bool Init();
+			void Cleanup() noexcept;
+			bool IsInitialized() const noexcept
 			{
 				return m_IsInitialized;
 			}
-			bool Init();
-			void Cleanup();
 
-			bool IsAsyncIOEnabled() const
+			bool IsAsyncIOEnabled() const noexcept
 			{
 				return m_IsAsyncIOEnabled;
 			}
-			void EnableAsyncIO(bool enabled = true)
+			void EnableAsyncIO(bool enabled = true) noexcept
 			{
 				m_IsAsyncIOEnabled = enabled;
 			}
 	
 		public:
-			void DeleteContext(AsyncIOContext* asyncContext);
+			void DeleteContext(AsyncIOContext* asyncContext) noexcept;
 			void PushContext(AsyncIOContext& asyncContext);
-			AsyncIOContext* PopContext(FileContext& fileContext);
+			AsyncIOContext* PopContext(FileContext& fileContext) noexcept;
 
 		public:
-			NtStatus ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext = nullptr) const;
-			NtStatus WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext = nullptr) const;
+			NtStatus ReadFileSync(FileHandle& fileHandle, EvtReadFile& eventInfo, FileContext* fileContext = nullptr) const noexcept;
+			NtStatus WriteFileSync(FileHandle& fileHandle, EvtWriteFile& eventInfo, FileContext* fileContext = nullptr) const noexcept;
 
-			NtStatus ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo);
-			NtStatus WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo);
+			NtStatus ReadFileAsync(FileContext& fileContext, EvtReadFile& eventInfo) noexcept;
+			NtStatus WriteFileAsync(FileContext& fileContext, EvtWriteFile& eventInfo) noexcept;
 	};
 }

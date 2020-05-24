@@ -7,7 +7,7 @@
 
 namespace KxVFS
 {
-	TokenHandle CallerUserImpersonation::ImpersonateCallerUser(EvtCreateFile& eventInfo) const
+	TokenHandle CallerUserImpersonation::ImpersonateCallerUser(EvtCreateFile& eventInfo) const noexcept
 	{
 		TokenHandle userTokenHandle = Dokany2::DokanOpenRequestorToken(eventInfo.DokanFileInfo);
 		if (userTokenHandle)
@@ -21,7 +21,7 @@ namespace KxVFS
 		}
 		return userTokenHandle;
 	}
-	bool CallerUserImpersonation::ImpersonateLoggedOnUser(TokenHandle& userTokenHandle) const
+	bool CallerUserImpersonation::ImpersonateLoggedOnUser(TokenHandle& userTokenHandle) const noexcept
 	{
 		if (userTokenHandle)
 		{
@@ -42,7 +42,7 @@ namespace KxVFS
 			return false;
 		}
 	}
-	bool CallerUserImpersonation::CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NtStatus status) const
+	bool CallerUserImpersonation::CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NtStatus status) const noexcept
 	{
 		if (userTokenHandle)
 		{

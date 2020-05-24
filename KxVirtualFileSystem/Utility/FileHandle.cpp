@@ -6,17 +6,17 @@
 namespace KxVFS
 {
 	bool FileHandle::Create(DynamicStringRefW path,
-							AccessRights access,
-							FileShare share,
+							FlagSet<AccessRights> access,
+							FlagSet<FileShare> share,
 							CreationDisposition disposition,
-							FileAttributes attributesAndFlags,
+							FlagSet<FileAttributes> attributesAndFlags,
 							SECURITY_ATTRIBUTES* securityAttributes
-	)
+	) noexcept
 	{
-		Assign(::CreateFileW(path.data(), ToInt(access), ToInt(share), securityAttributes, ToInt(disposition), ToInt(attributesAndFlags), nullptr));
+		Assign(::CreateFileW(path.data(), access.ToInt(), share.ToInt(), securityAttributes, ToInt(disposition), attributesAndFlags.ToInt(), nullptr));
 		return IsValid();
 	}
-	bool FileHandle::OpenVolumeDevice(wchar_t volume, FileAttributes attributesAndFlags)
+	bool FileHandle::OpenVolumeDevice(wchar_t volume, FlagSet<FileAttributes> attributesAndFlags) noexcept
 	{
 		return Create(Utility::GetVolumeDevicePath(volume),
 					  AccessRights::GenericRead,
@@ -26,7 +26,7 @@ namespace KxVFS
 		);
 	}
 
-	bool FileHandle::SetDeleteOnClose(bool deleteOnClose)
+	bool FileHandle::SetDeleteOnClose(bool deleteOnClose) noexcept
 	{
 		FILE_DISPOSITION_INFO fileDispositionInfo = {0};
 		fileDispositionInfo.DeleteFileW = deleteOnClose;
@@ -47,7 +47,7 @@ namespace KxVFS
 		}
 		return path;
 	}
-	NtStatus FileHandle::SetPath(DynamicStringRefW path, bool replaceIfExist)
+	NtStatus FileHandle::SetPath(DynamicStringRefW path, bool replaceIfExist) noexcept
 	{
 		// Allocate buffer for rename info
 		FILE_RENAME_INFO* renameInfo = nullptr;
@@ -80,7 +80,7 @@ namespace KxVFS
 		return IFileSystem::GetNtStatusByWin32LastErrorCode();
 	}
 
-	bool FileHandle::Lock(int64_t offset, int64_t length)
+	bool FileHandle::Lock(int64_t offset, int64_t length) noexcept
 	{
 		DWORD offsetLowPart = 0;
 		DWORD offsetHighPart = 0;
@@ -92,7 +92,7 @@ namespace KxVFS
 
 		return ::LockFile(m_Handle, offsetLowPart, offsetHighPart, lengthLowPart, lengthHighPart);
 	}
-	bool FileHandle::Unlock(int64_t offset, int64_t length)
+	bool FileHandle::Unlock(int64_t offset, int64_t length) noexcept
 	{
 		DWORD offsetLowPart = 0;
 		DWORD offsetHighPart = 0;

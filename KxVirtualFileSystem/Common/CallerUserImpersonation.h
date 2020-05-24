@@ -16,16 +16,16 @@ namespace KxVFS
 			bool m_Enabled = false;
 
 		protected:
-			TokenHandle ImpersonateCallerUser(EvtCreateFile& eventInfo) const;
-			bool ImpersonateLoggedOnUser(TokenHandle& userTokenHandle) const;
-			bool CleanupImpersonateCallerUser(TokenHandle& userTokenHandle) const
+			TokenHandle ImpersonateCallerUser(EvtCreateFile& eventInfo) const noexcept;
+			bool ImpersonateLoggedOnUser(TokenHandle& userTokenHandle) const noexcept;
+			bool CleanupImpersonateCallerUser(TokenHandle& userTokenHandle) const noexcept
 			{
 				// Something which is not 'NtStatus::Success'.
 				return CleanupImpersonateCallerUser(userTokenHandle, NtStatus::NotSupported);
 			}
-			bool CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NtStatus status) const;
+			bool CleanupImpersonateCallerUser(TokenHandle& userTokenHandle, NtStatus status) const noexcept;
 
-			TokenHandle ImpersonateCallerUserIfEnabled(EvtCreateFile& eventInfo) const
+			TokenHandle ImpersonateCallerUserIfEnabled(EvtCreateFile& eventInfo) const noexcept
 			{
 				if (m_Enabled)
 				{
@@ -33,7 +33,7 @@ namespace KxVFS
 				}
 				return TokenHandle();
 			}
-			bool ImpersonateLoggedOnUserIfEnabled(TokenHandle& userTokenHandle) const
+			bool ImpersonateLoggedOnUserIfEnabled(TokenHandle& userTokenHandle) const noexcept
 			{
 				if (m_Enabled)
 				{
@@ -41,7 +41,7 @@ namespace KxVFS
 				}
 				return false;
 			}
-			bool CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle) const
+			bool CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle) const noexcept
 			{
 				if (m_Enabled)
 				{
@@ -49,7 +49,7 @@ namespace KxVFS
 				}
 				return false;
 			}
-			bool CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle, NtStatus status) const
+			bool CleanupImpersonateCallerUserIfEnabled(TokenHandle& userTokenHandle, NtStatus status) const noexcept
 			{
 				if (m_Enabled)
 				{
@@ -60,17 +60,17 @@ namespace KxVFS
 			
 		public:
 			CallerUserImpersonation(CallerUserImpersonation&) = delete;
-			CallerUserImpersonation(IFileSystem* fileSystem)
+			CallerUserImpersonation(IFileSystem* fileSystem) noexcept
 				:m_FileSystem(*fileSystem)
 			{
 			}
 
 		public:
-			bool ShouldImpersonateCallerUser() const
+			bool ShouldImpersonateCallerUser() const noexcept
 			{
 				return m_Enabled;
 			}
-			void EnableImpersonateCallerUser(bool enabled = true)
+			void EnableImpersonateCallerUser(bool enabled = true) noexcept
 			{
 				m_Enabled = enabled;
 			}

@@ -115,7 +115,7 @@ namespace KxVFS
 
 	void FileItem::ToBY_HANDLE_FILE_INFORMATION(BY_HANDLE_FILE_INFORMATION& fileInfo) const noexcept
 	{
-		fileInfo.dwFileAttributes = ToInt(m_Data.m_Attributes);
+		fileInfo.dwFileAttributes = m_Data.m_Attributes.ToInt();
 		fileInfo.ftCreationTime = m_Data.m_CreationTime;
 		fileInfo.ftLastAccessTime = m_Data.m_LastAccessTime;
 		fileInfo.ftLastWriteTime = m_Data.m_ModificationTime;

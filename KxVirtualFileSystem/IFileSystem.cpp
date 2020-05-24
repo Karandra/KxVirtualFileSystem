@@ -14,7 +14,7 @@ namespace KxVFS
 	{
 		return FromInt<NtStatus>(Dokany2::DokanNtStatusFromWin32(::GetLastError()));
 	}
-	std::tuple<FileAttributes, CreationDisposition, AccessRights> IFileSystem::MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo)
+	std::tuple<FlagSet<FileAttributes>, CreationDisposition, FlagSet<AccessRights>> IFileSystem::MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo)
 	{
 		DWORD fileAttributesAndFlags = 0;
 		DWORD creationDisposition = 0;
@@ -34,7 +34,7 @@ namespace KxVFS
 		return Dokany2::DokanRemoveMountPoint(mountPoint.data());
 	}
 
-	bool IFileSystem::IsWriteRequest(bool isExist, AccessRights desiredAccess, CreationDisposition createDisposition) const
+	bool IFileSystem::IsWriteRequest(bool isExist, FlagSet<AccessRights> desiredAccess, CreationDisposition createDisposition) const
 	{
 		/*
 		https://stackoverflow.com/questions/14469607/difference-between-open-always-and-create-always-in-createfile-of-windows-api
@@ -56,7 +56,7 @@ namespace KxVFS
 			(createDisposition == CreationDisposition::TruncateExisting && isExist)
 			);
 	}
-	bool IFileSystem::IsWriteRequest(DynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const
+	bool IFileSystem::IsWriteRequest(DynamicStringRefW filePath, FlagSet<AccessRights> desiredAccess, CreationDisposition createDisposition) const
 	{
 		return IsWriteRequest(Utility::IsAnyExist(filePath), desiredAccess, createDisposition);
 	}
@@ -74,7 +74,7 @@ namespace KxVFS
 		}
 	}
 
-	bool IFileSystem::CheckAttributesToOverwriteFile(FileAttributes fileAttributes, FileAttributes requestAttributes, CreationDisposition creationDisposition) const
+	bool IFileSystem::CheckAttributesToOverwriteFile(FlagSet<FileAttributes> fileAttributes, FlagSet<FileAttributes> requestAttributes, CreationDisposition creationDisposition) const
 	{
 		const bool fileExist = fileAttributes != FileAttributes::Invalid;
 		const bool fileHidden = !(requestAttributes & FileAttributes::Hidden) && fileAttributes & FileAttributes::Hidden;

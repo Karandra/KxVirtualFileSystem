@@ -8,13 +8,13 @@ namespace
 {
 	using namespace KxVFS;
 
-	SearchHandle BeginSearch(DynamicStringRefW query, WIN32_FIND_DATAW& fileInfo, bool isCaseSensitive, bool queryShortNames)
+	SearchHandle BeginSearch(DynamicStringRefW query, WIN32_FIND_DATAW& fileInfo, bool isCaseSensitive, bool queryShortNames) noexcept
 	{
 		const DWORD searchFlags = FIND_FIRST_EX_LARGE_FETCH|(isCaseSensitive ? FIND_FIRST_EX_CASE_SENSITIVE : 0);
 		const FINDEX_INFO_LEVELS infoLevel = queryShortNames ? FindExInfoStandard : FindExInfoBasic;
 		return ::FindFirstFileExW(query.data(), infoLevel, &fileInfo, FindExSearchNameMatch, nullptr, searchFlags);
 	}
-	bool ContinueSearch(SearchHandle& handle, WIN32_FIND_DATAW& fileInfo)
+	bool ContinueSearch(SearchHandle& handle, WIN32_FIND_DATAW& fileInfo) noexcept
 	{
 		return ::FindNextFileW(handle, &fileInfo);
 	}
@@ -112,6 +112,6 @@ namespace KxVFS
 			m_Handle.Close();
 			m_IsCanceled = false;
 		}
-		return FileItem();
+		return {};
 	}
 }

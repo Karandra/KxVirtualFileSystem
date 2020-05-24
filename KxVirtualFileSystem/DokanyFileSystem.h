@@ -18,7 +18,7 @@ namespace KxVFS
 	{
 		private:
 			static void LogDokanyException(uint32_t exceptionCode);
-			static uint32_t ConvertDokanyOptions(FSFlags flags);
+			static uint32_t ConvertDokanyOptions(FlagSet<FSFlags> flags);
 
 		public:
 			template<class TEvent>
@@ -54,7 +54,7 @@ namespace KxVFS
 
 			DynamicStringW m_MountPoint;
 			CriticalSection m_UnmountCS;
-			FSFlags m_Flags = FSFlags::None;
+			FlagSet<FSFlags> m_Flags;
 			bool m_IsMounted = false;
 			bool m_IsDestructing = false;
 
@@ -63,7 +63,7 @@ namespace KxVFS
 			bool DoUnMount();
 
 		public:
-			DokanyFileSystem(FileSystemService& service, DynamicStringRefW mountPoint, FSFlags flags = FSFlags::None);
+			DokanyFileSystem(FileSystemService& service, DynamicStringRefW mountPoint, FlagSet<FSFlags> flags = {});
 			virtual ~DokanyFileSystem();
 
 		public:
@@ -102,11 +102,11 @@ namespace KxVFS
 			
 			bool IsProcessCreatedInVFS(uint32_t pid) const override;
 
-			FSFlags GetFlags() const
+			FlagSet<FSFlags> GetFlags() const noexcept
 			{
 				return m_Flags;
 			}
-			void SetFlags(FSFlags flags)
+			void SetFlags(FlagSet<FSFlags> flags) noexcept
 			{
 				m_Flags = flags;
 			}

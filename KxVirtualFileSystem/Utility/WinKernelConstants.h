@@ -2,7 +2,6 @@
 #include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
 #include "KxVirtualFileSystem/Misc/IncludeDokan.h"
-#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 namespace KxVFS
 {
@@ -59,5 +58,5 @@ namespace KxVFS
 		WriteToEndOfFile = FILE_WRITE_TO_END_OF_FILE,
 		UseFilePointerPosition = FILE_USE_FILE_POINTER_POSITION,
 	};
-	KxVFS_AllowEnumBitwiseOp(KernelFileOptions);
+	KxVFS_DeclareFlagSet(KernelFileOptions);
 }

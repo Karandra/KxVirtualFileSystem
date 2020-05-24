@@ -87,16 +87,10 @@ namespace KxVFS
 		return nullptr;
 	}
 
-	void ExtendedSecurity::OpenWithSecurityAccess(AccessRights& desiredAccess, bool isWriteRequest) const
+	void ExtendedSecurity::OpenWithSecurityAccess(FlagSet<AccessRights>& desiredAccess, bool isWriteRequest) const noexcept
 	{
-		desiredAccess |= AccessRights::ReadControl;
-		if (isWriteRequest)
-		{
-			desiredAccess |= AccessRights::WriteDAC;
-		}
-		if (m_FileSystem.GetService().HasSeSecurityNamePrivilege())
-		{
-			desiredAccess |= AccessRights::SystemSecurity;
-		}
+		desiredAccess.Add(AccessRights::ReadControl);
+		desiredAccess.Add(AccessRights::WriteDAC, isWriteRequest);
+		desiredAccess.Add(AccessRights::SystemSecurity, m_FileSystem.GetService().HasSeSecurityNamePrivilege());
 	}
 }

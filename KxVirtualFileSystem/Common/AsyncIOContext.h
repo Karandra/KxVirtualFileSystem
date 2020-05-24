@@ -30,51 +30,55 @@ namespace KxVFS
 			OperationType m_OperationType = OperationType::Unknown;
 
 		private:
-			OVERLAPPED& GetOverlapped()
+			OVERLAPPED& GetOverlapped() noexcept
 			{
 				return m_Overlapped;
 			}
-			void AssignFileContext(FileContext& fileContext)
+			void AssignFileContext(FileContext& fileContext) noexcept
 			{
 				m_FileContext = &fileContext;
 			}
 
 		public:
-			AsyncIOContext(FileContext& fileContext)
+			AsyncIOContext(FileContext& fileContext) noexcept
 				:m_FileContext(&fileContext)
 			{
 			}
 
 		public:
-			FileContext& GetFileContext() const
+			FileContext& GetFileContext() const noexcept
 			{
 				return *m_FileContext;
 			}
-			IFileSystem& GetFileSystem() const
+			IFileSystem& GetFileSystem() const noexcept
 			{
 				return m_FileContext->GetFileSystem();
 			}
 
-			int64_t GetOperationOffset() const
+			int64_t GetOperationOffset() const noexcept
 			{
 				return Utility::OverlappedOffsetToInt64(m_Overlapped);
 			}
-			OperationType GetOperationType() const
+			OperationType GetOperationType() const noexcept
 			{
 				return m_OperationType;
 			}
 			
-			template<class T = void> T* GetOperationContext()
+			template<class T = void>
+			T* GetOperationContext() noexcept
 			{
 				return reinterpret_cast<T*>(m_OperationContext);
 			}
-			template<class T> void SetOperationContext(T& context, int64_t offset, OperationType type)
+			
+			template<class T>
+			void SetOperationContext(T& context, int64_t offset, OperationType type) noexcept
 			{
 				Utility::Int64ToOverlappedOffset(offset, m_Overlapped);
 				m_OperationContext = reinterpret_cast<void*>(&context);
 				m_OperationType = type;
 			}
-			void ResetOperationContext()
+			
+			void ResetOperationContext() noexcept
 			{
 				Utility::Int64ToOverlappedOffset(0, m_Overlapped);
 				m_OperationContext = nullptr;

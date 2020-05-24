@@ -1,7 +1,6 @@
 #pragma once
 #include "KxVirtualFileSystem/Common.hpp"
 #include "KxVirtualFileSystem/Misc/IncludeWindows.h"
-#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 namespace KxVFS
 {
@@ -46,7 +45,7 @@ namespace KxVFS
 		FlagSessionAware = FILE_FLAG_SESSION_AWARE,
 		FlagWriteThrough = FILE_FLAG_WRITE_THROUGH,
 	};
-	KxVFS_AllowEnumBitwiseOp(FileAttributes);
+	KxVFS_DeclareFlagSet(FileAttributes);
 	
 	enum class FileFlags: uint32_t
 	{
@@ -64,7 +63,7 @@ namespace KxVFS
 		FirstPipeInstance = FILE_FLAG_FIRST_PIPE_INSTANCE,
 		OpenRequiringOplock = FILE_FLAG_OPEN_REQUIRING_OPLOCK,
 	};
-	KxVFS_AllowEnumBitwiseOp(FileFlags);
+	KxVFS_DeclareFlagSet(FileFlags);
 	
 	enum class SecurityFlags: uint32_t
 	{
@@ -75,7 +74,7 @@ namespace KxVFS
 		ContextTracking = SECURITY_CONTEXT_TRACKING,
 		EffectiveOnly = SECURITY_EFFECTIVE_ONLY,
 	};
-	KxVFS_AllowEnumBitwiseOp(SecurityFlags);
+	KxVFS_DeclareFlagSet(SecurityFlags);
 	
 	enum class FileShare: uint32_t
 	{
@@ -86,7 +85,7 @@ namespace KxVFS
 		Write = FILE_SHARE_WRITE,
 		Delete = FILE_SHARE_DELETE,
 	};
-	KxVFS_AllowEnumBitwiseOp(FileShare);
+	KxVFS_DeclareFlagSet(FileShare);
 	
 	enum class CreationDisposition: uint32_t
 	{
@@ -98,7 +97,7 @@ namespace KxVFS
 		OpenExisting = OPEN_EXISTING,
 		TruncateExisting = TRUNCATE_EXISTING,
 	};
-	KxVFS_AllowEnumBitwiseOp(CreationDisposition);
+	KxVFS_DeclareFlagSet(CreationDisposition);
 	
 	enum class AccessRights: uint32_t
 	{
@@ -166,7 +165,7 @@ namespace KxVFS
 		StandardRequired = STANDARD_RIGHTS_REQUIRED,
 		SpecificAll = SPECIFIC_RIGHTS_ALL,
 	};
-	KxVFS_AllowEnumBitwiseOp(AccessRights);
+	KxVFS_DeclareFlagSet(AccessRights);
 
 	enum class ReparsePointTags: uint32_t
 	{
@@ -187,7 +186,7 @@ namespace KxVFS
 		ReservedZero = IO_REPARSE_TAG_RESERVED_ZERO,
 		ReservedRange = IO_REPARSE_TAG_RESERVED_RANGE,
 	};
-	KxVFS_AllowEnumBitwiseOp(ReparsePointTags);
+	KxVFS_DeclareFlagSet(ReparsePointTags);
 	
 	enum class PriorityClass: uint32_t
 	{
@@ -199,5 +198,5 @@ namespace KxVFS
 		BelowNormal = BELOW_NORMAL_PRIORITY_CLASS,
 		Idle = IDLE_PRIORITY_CLASS,
 	};
-	KxVFS_AllowEnumBitwiseOp(PriorityClass);
+	KxVFS_DeclareFlagSet(PriorityClass);
 }

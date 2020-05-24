@@ -118,7 +118,7 @@ namespace KxVFS
 			using FormatTraits = typename FmtTraits;
 			
 			template<class T>
-			using TypeTraits = FormatterTraits<T>;
+			using TypeTraits = FormatterTypeTraits<T>;
 
 		protected:
 			template<class T> void FormatInt(T&& arg, int fieldWidth, int base, wchar_t fillChar)

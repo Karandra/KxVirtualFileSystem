@@ -1,6 +1,5 @@
 #pragma once
 #include "KxVirtualFileSystem/Common.hpp"
-#include "KxVirtualFileSystem/Utility/EnumClassOperations.h"
 
 #ifdef WIN32_NO_STATUS
 #undef WIN32_NO_STATUS
@@ -2712,5 +2711,4 @@ namespace KxVFS
 		AppexecHostIdMismatch = STATUS_APPEXEC_HOST_ID_MISMATCH,
 		AppexecUnknownUser = STATUS_APPEXEC_UNKNOWN_USER,
 	};
-	KxVFS_AllowEnumCastOp(NtStatus);
 }

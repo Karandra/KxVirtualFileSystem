@@ -30,14 +30,14 @@ namespace KxVFS
 		public:
 			static NtStatus GetNtStatusByWin32ErrorCode(DWORD errorCode);
 			static NtStatus GetNtStatusByWin32LastErrorCode();
-			static std::tuple<FileAttributes, CreationDisposition, AccessRights> MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo);
+			static std::tuple<FlagSet<FileAttributes>, CreationDisposition, FlagSet<AccessRights>> MapKernelToUserCreateFileFlags(const EvtCreateFile& eventInfo);
 
 			static bool UnMountDirectory(DynamicStringRefW mountPoint);
 
 		protected:
-			bool IsWriteRequest(bool isExist, AccessRights desiredAccess, CreationDisposition createDisposition) const;
-			bool IsWriteRequest(DynamicStringRefW filePath, AccessRights desiredAccess, CreationDisposition createDisposition) const;
-			bool IsWriteRequest(const FileNode* node, AccessRights desiredAccess, CreationDisposition createDisposition) const
+			bool IsWriteRequest(bool isExist, FlagSet<AccessRights> desiredAccess, CreationDisposition createDisposition) const;
+			bool IsWriteRequest(DynamicStringRefW filePath, FlagSet<AccessRights> desiredAccess, CreationDisposition createDisposition) const;
+			bool IsWriteRequest(const FileNode* node, FlagSet<AccessRights> desiredAccess, CreationDisposition createDisposition) const
 			{
 				return IsWriteRequest(node != nullptr, desiredAccess, createDisposition);
 			}
@@ -45,7 +45,7 @@ namespace KxVFS
 			bool IsRequestingSACLInfo(const PSECURITY_INFORMATION securityInformation) const;
 			void ProcessSESecurityPrivilege(PSECURITY_INFORMATION securityInformation) const;
 
-			bool CheckAttributesToOverwriteFile(FileAttributes fileAttributes, FileAttributes requestAttributes, CreationDisposition creationDisposition) const;
+			bool CheckAttributesToOverwriteFile(FlagSet<FileAttributes> fileAttributes, FlagSet<FileAttributes> requestAttributes, CreationDisposition creationDisposition) const;
 			bool IsDirectory(ULONG kernelCreateOptions) const;
 
 		public:
@@ -72,16 +72,21 @@ namespace KxVFS
 
 		protected:
 			// File context saving and retrieving
-			template<class TEventInfo> FileContext* GetFileContext(TEventInfo& eventInfo) const
+			template<class TEventInfo>
+			FileContext* GetFileContext(TEventInfo& eventInfo) const
 			{
 				return reinterpret_cast<FileContext*>(eventInfo.DokanFileInfo->Context);
 			}
-			template<class TEventInfo> FileContext* SaveFileContext(TEventInfo& eventInfo, FileContext* fileContext) const
+			
+			template<class TEventInfo>
+			FileContext* SaveFileContext(TEventInfo& eventInfo, FileContext* fileContext) const
 			{
 				eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(fileContext);
 				return fileContext;
 			}
-			template<class TEventInfo> void ResetFileContext(TEventInfo& eventInfo) const
+			
+			template<class TEventInfo>
+			void ResetFileContext(TEventInfo& eventInfo) const
 			{
 				eventInfo.DokanFileInfo->Context = reinterpret_cast<ULONG64>(nullptr);
 			}
