@@ -470,7 +470,7 @@ namespace KxVFS
 		const DWORD errorCode = ::GetLastError();
 		CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
 
-		if (directoryHandle.IsValid())
+		if (directoryHandle)
 		{
 			// Directory node should absolutely exist at this point
 			if (!targetNode)
@@ -539,7 +539,7 @@ namespace KxVFS
 				if (auto contextLock = fileContext->LockExclusive(); true)
 				{
 					fileContext->MarkClosed();
-					if (fileContext->GetHandle().IsValidNonNull())
+					if (fileContext->GetHandle())
 					{
 						OnFileClosed(eventInfo, *fileContext);
 						fileContext->CloseHandle();
@@ -603,7 +603,7 @@ namespace KxVFS
 						auto lock = fileNode->LockShared();
 
 						FileHandle tempHandle(fileNode->GetFullPathWithNS(), AccessRights::GenericRead, FileShare::All, CreationDisposition::OpenExisting);
-						if (tempHandle.IsValid())
+						if (tempHandle)
 						{
 							return GetIOManager().ReadFileSync(tempHandle, eventInfo, fileContext);
 						}
@@ -644,7 +644,7 @@ namespace KxVFS
 						auto lock = fileNode->LockShared();
 
 						FileHandle tempHandle(fileNode->GetFullPathWithNS(), AccessRights::GenericWrite, FileShare::All, CreationDisposition::OpenExisting);
-						if (tempHandle.IsValid())
+						if (tempHandle)
 						{
 							// Need to check if its really needs to be a handle of 'fileContext' and not 'tempHandle'.
 							return GetIOManager().WriteFileSync(fileContext->GetHandle(), eventInfo, fileContext);
@@ -879,7 +879,7 @@ namespace KxVFS
 
 				WIN32_FIND_STREAM_DATA findData = {0};
 				SearchHandle findHandle = ::FindFirstStreamW(fileNode->GetFullPathWithNS(), FindStreamInfoStandard, &findData, 0);
-				if (findHandle.IsValid())
+				if (findHandle)
 				{
 					size_t foundStreamsCount = 0;
 

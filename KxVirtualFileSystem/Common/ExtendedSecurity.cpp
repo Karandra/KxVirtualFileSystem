@@ -47,7 +47,7 @@ namespace KxVFS
 			};
 
 			GenericHandle accessTokenHandle = Dokany2::DokanOpenRequestorToken(eventInfo.DokanFileInfo);
-			if (accessTokenHandle.IsValid() && !accessTokenHandle.IsNull())
+			if (accessTokenHandle)
 			{
 				const bool success = ::CreatePrivateObjectSecurity(parentDescriptor,
 																   requestedSecurity,

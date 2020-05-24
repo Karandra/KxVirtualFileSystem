@@ -56,7 +56,7 @@ namespace KxVFS
 	}
 	FileContext* FileContextManager::PopContext(FileHandle fileHandle) noexcept
 	{
-		if (fileHandle.IsNull() || !fileHandle.IsValid() || m_IsUnmounted)
+		if (!fileHandle || m_IsUnmounted)
 		{
 			return nullptr;
 		}

@@ -30,7 +30,7 @@ namespace KxVFS
 			binaryPath.data(),
 			nullptr, nullptr, nullptr, nullptr, nullptr
 		));
-		if (IsValid())
+		if (!IsNull())
 		{
 			if (!description.empty())
 			{
@@ -46,8 +46,7 @@ namespace KxVFS
 							 FlagSet<AccessRights> otherRights
 	) noexcept
 	{
-		Assign(::OpenServiceW(serviceManger, serviceName.data(), serviceAccess.ToInt()|otherRights.ToInt()));
-		return IsValid();
+		return Assign(::OpenServiceW(serviceManger, serviceName.data(), serviceAccess.ToInt()|otherRights.ToInt()));
 	}
 	
 	std::optional<ServiceConfig> ServiceHandle::GetConfig() const

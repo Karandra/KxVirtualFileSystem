@@ -19,9 +19,9 @@ namespace KxVFS
 			}
 
 		public:
-			bool IsOK() const noexcept
+			bool IsNull() const noexcept
 			{
-				return m_Handle.IsValid();
+				return m_Handle.IsNull();
 			}
 			bool Open(FlagSet<ServiceManagerAccess> accessMode) noexcept;
 
@@ -33,11 +33,11 @@ namespace KxVFS
 
 			explicit operator bool() const noexcept
 			{
-				return IsOK();
+				return !IsNull();
 			}
 			bool operator!() const noexcept
 			{
-				return !IsOK();
+				return IsNull();
 			}
 	};
 }

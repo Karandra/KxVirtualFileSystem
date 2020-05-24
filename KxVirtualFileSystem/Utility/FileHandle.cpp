@@ -13,8 +13,7 @@ namespace KxVFS
 							SECURITY_ATTRIBUTES* securityAttributes
 	) noexcept
 	{
-		Assign(::CreateFileW(path.data(), access.ToInt(), share.ToInt(), securityAttributes, ToInt(disposition), attributesAndFlags.ToInt(), nullptr));
-		return IsValid();
+		return Assign(::CreateFileW(path.data(), access.ToInt(), share.ToInt(), securityAttributes, ToInt(disposition), attributesAndFlags.ToInt(), nullptr));
 	}
 	bool FileHandle::OpenVolumeDevice(wchar_t volume, FlagSet<FileAttributes> attributesAndFlags) noexcept
 	{

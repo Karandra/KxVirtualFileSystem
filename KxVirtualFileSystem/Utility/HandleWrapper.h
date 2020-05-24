@@ -22,64 +22,45 @@ namespace KxVFS
 			THandle m_Handle = GetInvalidHandle();
 
 		public:
-			HandleWrapper(THandle value = GetInvalidHandle()) noexcept
+			constexpr HandleWrapper(THandle value = GetInvalidHandle()) noexcept
 				:m_Handle(value)
 			{
 			}
-			HandleWrapper(HandleWrapper&& other) noexcept
+			constexpr HandleWrapper(HandleWrapper&& other) noexcept
 			{
 				*this = std::move(other);
 			}
-			HandleWrapper(const HandleWrapper&) = delete;
+			constexpr HandleWrapper(const HandleWrapper&) = delete;
 			~HandleWrapper() noexcept
 			{
 				Close();
 			}
-			
-			HandleWrapper& operator=(THandle handle) noexcept
-			{
-				return Assign(handle);
-			}
-			HandleWrapper& operator=(HandleWrapper&& other) noexcept
-			{
-				return Assign(other.Release());
-			}
-			HandleWrapper& operator=(const HandleWrapper&) = delete;
 
 		public:
-			bool IsValidNonNull() const noexcept
+			constexpr bool IsNull() const noexcept
 			{
-				return IsValid() && !IsNull();
+				return m_Handle == nullptr || m_Handle == GetInvalidHandle();
 			}
-			bool IsValid() const noexcept
-			{
-				return m_Handle != GetInvalidHandle();
-			}
-			bool IsNull() const noexcept
-			{
-				return m_Handle == nullptr;
-			}
-			
-			THandle Get() const noexcept
+			constexpr THandle Get() const noexcept
 			{
 				return m_Handle;
 			}
-			HandleWrapper& Assign(THandle value) noexcept
+			constexpr HandleWrapper& Assign(THandle value) noexcept
 			{
 				Close();
 				m_Handle = value;
 				return *this;
 			}
 			
-			THandle Release() noexcept
+			constexpr THandle Release() noexcept
 			{
 				THandle value = m_Handle;
 				m_Handle = GetInvalidHandle();
 				return value;
 			}
-			bool Close() noexcept
+			constexpr bool Close() noexcept
 			{
-				if (IsValid())
+				if (!IsNull())
 				{
 					TDerived::DoCloseHandle(Release());
 					return true;
@@ -88,35 +69,45 @@ namespace KxVFS
 			}
 
 		public:
-			bool operator==(const HandleWrapper& other) const noexcept
+			constexpr bool operator==(const HandleWrapper& other) const noexcept
 			{
 				return m_Handle == other.m_Handle;
 			}
-			bool operator!=(const HandleWrapper& other) const noexcept
+			constexpr bool operator!=(const HandleWrapper& other) const noexcept
 			{
 				return !(*this == other);
 			}
 
-			explicit operator bool() const noexcept
+			constexpr explicit operator bool() const noexcept
 			{
-				return IsValid();
+				return !IsNull();
 			}
-			bool operator!() const noexcept
+			constexpr bool operator!() const noexcept
 			{
-				return !IsValid();
+				return IsNull();
 			}
-			operator THandle() const noexcept
+			
+			constexpr operator THandle() const noexcept
 			{
 				return Get();
 			}
-			
-			const THandle* operator&() const noexcept
+			constexpr const THandle* operator&() const noexcept
 			{
 				return &m_Handle;
 			}
-			THandle* operator&() noexcept
+			constexpr THandle* operator&() noexcept
 			{
 				return &m_Handle;
 			}
+
+			constexpr HandleWrapper& operator=(THandle handle) noexcept
+			{
+				return Assign(handle);
+			}
+			constexpr HandleWrapper& operator=(HandleWrapper&& other) noexcept
+			{
+				return Assign(other.Release());
+			}
+			constexpr HandleWrapper& operator=(const HandleWrapper&) = delete;
 	};
 }

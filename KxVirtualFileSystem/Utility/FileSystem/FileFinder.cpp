@@ -70,7 +70,7 @@ namespace KxVFS
 
 	bool FileFinder::IsOK() const
 	{
-		return m_Handle.IsValid() && !m_Handle.IsNull();
+		return !m_Handle.IsNull() && !m_Handle.IsNull();
 	}
 	bool FileFinder::Run()
 	{
@@ -90,7 +90,7 @@ namespace KxVFS
 	}
 	FileItem FileFinder::FindNext()
 	{
-		if (!m_Handle.IsValid())
+		if (!m_Handle)
 		{
 			// No search handle available, begin operation.
 			m_Handle = BeginSearch(m_SearchQuery, m_FindData, m_CaseSensitive, m_QueryShortNames);

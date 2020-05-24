@@ -241,7 +241,7 @@ namespace KxVFS
 				);
 				CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
 
-				if (directoryHandle.IsValid())
+				if (directoryHandle)
 				{
 					FileContextManager& fileContextManager = GetFileContextManager();
 					FileContext* fileContext = SaveFileContext(eventInfo, fileContextManager.PopContext(std::move(directoryHandle)));
@@ -298,7 +298,7 @@ namespace KxVFS
 				CleanupImpersonateCallerUserIfEnabled(userTokenHandle);
 				errorCode = GetLastError();
 
-				if (!fileHandle.IsValid())
+				if (!fileHandle)
 				{
 					KxVFS_Log(LogLevel::Info, L"Failed to create/open file: %1", targetPath);
 					statusCode = GetNtStatusByWin32ErrorCode(errorCode);
@@ -346,7 +346,7 @@ namespace KxVFS
 			if (auto lock = fileContext->LockExclusive(); true)
 			{
 				fileContext->MarkClosed();
-				if (fileContext->GetHandle().IsValidNonNull())
+				if (fileContext->GetHandle())
 				{
 					fileContext->CloseHandle();
 
@@ -539,7 +539,7 @@ namespace KxVFS
 				DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
 				FileHandle tempHandle(targetPath, AccessRights::GenericRead, FileShare::All, CreationDisposition::OpenExisting);
-				if (tempHandle.IsValid())
+				if (tempHandle)
 				{
 					return GetIOManager().ReadFileSync(tempHandle, eventInfo, fileContext);
 				}
@@ -575,7 +575,7 @@ namespace KxVFS
 				DynamicStringW targetPath = DispatchLocationRequest(eventInfo.FileName);
 
 				FileHandle tempHandle(targetPath, AccessRights::GenericWrite, FileShare::All, CreationDisposition::OpenExisting);
-				if (tempHandle.IsValid())
+				if (tempHandle)
 				{
 					// Need to check if its really needs to be handle of 'fileContext' and not 'tempHandle'.
 					return GetIOManager().WriteFileSync(fileContext->GetHandle(), eventInfo, fileContext);
@@ -674,9 +674,9 @@ namespace KxVFS
 				}
 				else
 				{
-					WIN32_FIND_DATAW findData = {0};
+					WIN32_FIND_DATAW findData = {};
 					SearchHandle fileHandle = ::FindFirstFileW(targetPath, &findData);
-					if (fileHandle.IsValid())
+					if (fileHandle)
 					{
 						eventInfo.FileHandleInfo.dwFileAttributes = findData.dwFileAttributes;
 						eventInfo.FileHandleInfo.ftCreationTime = findData.ftCreationTime;
@@ -745,7 +745,7 @@ namespace KxVFS
 
 		WIN32_FIND_DATAW findData = {0};
 		SearchHandle findHandle = ::FindFirstFileW(targetPath, &findData);
-		if (!findHandle.IsValid())
+		if (!findHandle)
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
@@ -792,7 +792,7 @@ namespace KxVFS
 
 		WIN32_FIND_STREAM_DATA findData = {0};
 		SearchHandle findHandle = ::FindFirstStreamW(targetPath, FindStreamInfoStandard, &findData, 0);
-		if (!findHandle.IsValid())
+		if (!findHandle)
 		{
 			return GetNtStatusByWin32LastErrorCode();
 		}
