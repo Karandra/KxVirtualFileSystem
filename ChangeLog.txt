@@ -42,7 +42,7 @@ Version 1.4 - 04.01.2019
 - Function 'NormalizePath' moved to 'AbstractFS' as static function and renamed to 'NormalizeFilePath'.
 - File system classes from KxFramework updated.
 - Fixed building of dispatcher map in 'ConvergenceFS'.
-- Fixed INI optimization. refer to this commit for details (https://github.com/KerberX/KxVirtualFileSystem/commit/cebea634c57154448e6975066460d2b186e482bd).
+- Fixed INI optimization. refer to this commit for details (https://github.com/KerberX/KxVFS/commit/cebea634c57154448e6975066460d2b186e482bd).
 - Implemented security functions.
 
 Version 1.3 - 02.01.2019

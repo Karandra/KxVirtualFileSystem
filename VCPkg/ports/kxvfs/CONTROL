@@ -1,0 +1,6 @@
+Source: kxvfs
+Version: 2.1.2
+Homepage: https://github.com/KerberX/KxVirtualFileSystem
+Description: A Dokany2-based user mode Virtual File System (VFS) implementation.
+Build-Depends: dokany-kerberx
+Default-Features:

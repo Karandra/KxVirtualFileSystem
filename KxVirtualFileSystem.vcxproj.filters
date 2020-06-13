@@ -30,268 +30,277 @@
     <Filter Include="Code\Utility\Formatter">
       <UniqueIdentifier>{aeb968d4-7b9d-42af-967e-a68d4a6ffd86}</UniqueIdentifier>
     </Filter>
+    <Filter Include="VCPkg">
+      <UniqueIdentifier>{5185723b-9e06-43f3-94fc-ba13957cc0b5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VCPkg\ports">
+      <UniqueIdentifier>{9570e7be-1294-4cad-a93e-d4cd1db0dad8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="VCPkg\ports\kxvfs">
+      <UniqueIdentifier>{f24c47c4-fe21-44c9-809b-335ca421b1f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="KxVirtualFileSystem\Utility\ServiceManager.h">
+    <ClInclude Include="KxVFS\Utility\ServiceManager.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\FileHandle.h">
+    <ClInclude Include="KxVFS\Utility\FileHandle.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\Common.h">
+    <ClInclude Include="KxVFS\Utility\Common.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\CriticalSection.h">
+    <ClInclude Include="KxVFS\Utility\CriticalSection.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\HandleWrapper.h">
+    <ClInclude Include="KxVFS\Utility\HandleWrapper.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\TokenHandle.h">
+    <ClInclude Include="KxVFS\Utility\TokenHandle.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\SecurityObject.h">
+    <ClInclude Include="KxVFS\Utility\SecurityObject.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\SRWLock.h">
+    <ClInclude Include="KxVFS\Utility\SRWLock.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\SearchHandle.h">
+    <ClInclude Include="KxVFS\Utility\SearchHandle.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\GenericHandle.h">
+    <ClInclude Include="KxVFS\Utility\GenericHandle.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\BranchLocker.h">
+    <ClInclude Include="KxVFS\Common\BranchLocker.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\FSError.h">
+    <ClInclude Include="KxVFS\Common\FSError.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\IRequestDispatcher.h">
+    <ClInclude Include="KxVFS\Common\IRequestDispatcher.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Misc\IncludeDokan.h">
+    <ClInclude Include="KxVFS\Misc\IncludeDokan.h">
       <Filter>Code\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Misc\IncludeWindows.h">
+    <ClInclude Include="KxVFS\Misc\IncludeWindows.h">
       <Filter>Code\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Misc\UndefWindows.h">
+    <ClInclude Include="KxVFS\Misc\UndefWindows.h">
       <Filter>Code\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\FileNode.h">
+    <ClInclude Include="KxVFS\Common\FileNode.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\CallerUserImpersonation.h">
+    <ClInclude Include="KxVFS\Common\CallerUserImpersonation.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\ExtendedSecurity.h">
+    <ClInclude Include="KxVFS\Common\ExtendedSecurity.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\FileContextManager.h">
+    <ClInclude Include="KxVFS\Common\FileContextManager.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\IOManager.h">
+    <ClInclude Include="KxVFS\Common\IOManager.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\FSFlags.h">
+    <ClInclude Include="KxVFS\Common\FSFlags.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\ServiceHandle.h">
+    <ClInclude Include="KxVFS\Utility\ServiceHandle.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\ServiceConstants.h">
+    <ClInclude Include="KxVFS\Utility\ServiceConstants.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Misc\Setup.h">
+    <ClInclude Include="KxVFS\Misc\Setup.h">
       <Filter>Code\Misc</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\Win32Constants.h">
+    <ClInclude Include="KxVFS\Utility\Win32Constants.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\WinKernelConstants.h">
+    <ClInclude Include="KxVFS\Utility\WinKernelConstants.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\FileContextEventInfo.h">
+    <ClInclude Include="KxVFS\Common\FileContextEventInfo.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\FileContext.h">
+    <ClInclude Include="KxVFS\Common\FileContext.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Common\AsyncIOContext.h">
+    <ClInclude Include="KxVFS\Common\AsyncIOContext.h">
       <Filter>Code\Common</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Logger\ILogger.h">
+    <ClInclude Include="KxVFS\Logger\ILogger.h">
       <Filter>Code\Logger</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Logger\ConsoleLogger.h">
+    <ClInclude Include="KxVFS\Logger\ConsoleLogger.h">
       <Filter>Code\Logger</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Logger\DebugLogger.h">
+    <ClInclude Include="KxVFS\Logger\DebugLogger.h">
       <Filter>Code\Logger</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Logger\FileLogger.h">
+    <ClInclude Include="KxVFS\Logger\FileLogger.h">
       <Filter>Code\Logger</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Logger\ChainLogger.h">
+    <ClInclude Include="KxVFS\Logger\ChainLogger.h">
       <Filter>Code\Logger</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\ProcessHandle.h">
+    <ClInclude Include="KxVFS\Utility\ProcessHandle.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\NtStatusConstants.h">
+    <ClInclude Include="KxVFS\Utility\NtStatusConstants.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\ConvergenceFS.h">
+    <ClInclude Include="KxVFS\ConvergenceFS.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\DokanyFileSystem.h">
+    <ClInclude Include="KxVFS\DokanyFileSystem.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\FileSystemService.h">
+    <ClInclude Include="KxVFS\FileSystemService.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\IFileSystem.h">
+    <ClInclude Include="KxVFS\IFileSystem.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\MirrorFS.h">
+    <ClInclude Include="KxVFS\MirrorFS.h">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility.h">
+    <ClInclude Include="KxVFS\Utility.h">
       <Filter>Code</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="KxVirtualFileSystem\Common.hpp">
+    <ClInclude Include="KxVFS\Common.hpp">
       <Filter>Code</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\DisableWOW64FSRedirection.h">
+    <ClInclude Include="KxVFS\Utility\DisableWOW64FSRedirection.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\CallAtScopeExit.h">
+    <ClInclude Include="KxVFS\Utility\CallAtScopeExit.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\Comparator.h">
+    <ClInclude Include="KxVFS\Utility\Comparator.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\String.h">
+    <ClInclude Include="KxVFS\Utility\String.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\DynamicString\DynamicString.h">
+    <ClInclude Include="KxVFS\Utility\DynamicString\DynamicString.h">
       <Filter>Code\Utility\DynamicString</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\DynamicString\BasicDynamicString.h">
+    <ClInclude Include="KxVFS\Utility\DynamicString\BasicDynamicString.h">
       <Filter>Code\Utility\DynamicString</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\FileSystem\FileFinder.h">
+    <ClInclude Include="KxVFS\Utility\FileSystem\FileFinder.h">
       <Filter>Code\Utility\FileSystem</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\FileSystem\FileItem.h">
+    <ClInclude Include="KxVFS\Utility\FileSystem\FileItem.h">
       <Filter>Code\Utility\FileSystem</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\FileSystem\IFileFinder.h">
+    <ClInclude Include="KxVFS\Utility\FileSystem\IFileFinder.h">
       <Filter>Code\Utility\FileSystem</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\Formatter\Formatter.h">
+    <ClInclude Include="KxVFS\Utility\Formatter\Formatter.h">
       <Filter>Code\Utility\Formatter</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\Formatter\FormatterTraits.h">
+    <ClInclude Include="KxVFS\Utility\Formatter\FormatterTraits.h">
       <Filter>Code\Utility\Formatter</Filter>
     </ClInclude>
-    <ClInclude Include="KxVirtualFileSystem\Utility\FlagSet.h">
+    <ClInclude Include="KxVFS\Utility\FlagSet.h">
       <Filter>Code\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="KxVirtualFileSystem\Utility\Common.cpp">
+    <ClCompile Include="KxVFS\Utility\Common.cpp">
       <Filter>Code\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Utility\FileHandle.cpp">
+    <ClCompile Include="KxVFS\Utility\FileHandle.cpp">
       <Filter>Code\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Utility\ProcessHandle.cpp">
+    <ClCompile Include="KxVFS\Utility\ProcessHandle.cpp">
       <Filter>Code\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Utility\ServiceHandle.cpp">
+    <ClCompile Include="KxVFS\Utility\ServiceHandle.cpp">
       <Filter>Code\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Utility\ServiceManager.cpp">
+    <ClCompile Include="KxVFS\Utility\ServiceManager.cpp">
       <Filter>Code\Utility</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Logger\ChainLogger.cpp">
+    <ClCompile Include="KxVFS\Logger\ChainLogger.cpp">
       <Filter>Code\Logger</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Logger\ConsoleLogger.cpp">
+    <ClCompile Include="KxVFS\Logger\ConsoleLogger.cpp">
       <Filter>Code\Logger</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Logger\DebugLogger.cpp">
+    <ClCompile Include="KxVFS\Logger\DebugLogger.cpp">
       <Filter>Code\Logger</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Logger\FileLogger.cpp">
+    <ClCompile Include="KxVFS\Logger\FileLogger.cpp">
       <Filter>Code\Logger</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Logger\ILogger.cpp">
+    <ClCompile Include="KxVFS\Logger\ILogger.cpp">
       <Filter>Code\Logger</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Common\BranchLocker.cpp">
+    <ClCompile Include="KxVFS\Common\BranchLocker.cpp">
       <Filter>Code\Common</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Common\CallerUserImpersonation.cpp">
+    <ClCompile Include="KxVFS\Common\CallerUserImpersonation.cpp">
       <Filter>Code\Common</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Common\ExtendedSecurity.cpp">
+    <ClCompile Include="KxVFS\Common\ExtendedSecurity.cpp">
       <Filter>Code\Common</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Common\FileContextEventInfo.cpp">
+    <ClCompile Include="KxVFS\Common\FileContextEventInfo.cpp">
       <Filter>Code\Common</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Common\FileContextManager.cpp">
+    <ClCompile Include="KxVFS\Common\FileContextManager.cpp">
       <Filter>Code\Common</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Common\FileNode.cpp">
+    <ClCompile Include="KxVFS\Common\FileNode.cpp">
       <Filter>Code\Common</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Common\FSError.cpp">
+    <ClCompile Include="KxVFS\Common\FSError.cpp">
       <Filter>Code\Common</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Common\IOManager.cpp">
+    <ClCompile Include="KxVFS\Common\IOManager.cpp">
       <Filter>Code\Common</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\ConvergenceFS.cpp">
+    <ClCompile Include="KxVFS\ConvergenceFS.cpp">
       <Filter>Code</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\DokanyFileSystem.cpp">
+    <ClCompile Include="KxVFS\DokanyFileSystem.cpp">
       <Filter>Code</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\FileSystemService.cpp">
+    <ClCompile Include="KxVFS\FileSystemService.cpp">
       <Filter>Code</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\IFileSystem.cpp">
+    <ClCompile Include="KxVFS\IFileSystem.cpp">
       <Filter>Code</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\KxVirtualFileSystemMain.cpp">
+    <ClCompile Include="KxVFS\KxVirtualFileSystemMain.cpp">
       <Filter>Code</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\MirrorFS.cpp">
+    <ClCompile Include="KxVFS\MirrorFS.cpp">
       <Filter>Code</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp" />
-    <ClCompile Include="KxVirtualFileSystem\Utility\DynamicString\DynamicString.cpp">
+    <ClCompile Include="KxVFS\Utility\DynamicString\DynamicString.cpp">
       <Filter>Code\Utility\DynamicString</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Utility\FileSystem\FileItem.cpp">
+    <ClCompile Include="KxVFS\Utility\FileSystem\FileItem.cpp">
       <Filter>Code\Utility\FileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Utility\FileSystem\IFileFinder.cpp">
+    <ClCompile Include="KxVFS\Utility\FileSystem\IFileFinder.cpp">
       <Filter>Code\Utility\FileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Utility\FileSystem\FileFinder.cpp">
+    <ClCompile Include="KxVFS\Utility\FileSystem\FileFinder.cpp">
       <Filter>Code\Utility\FileSystem</Filter>
     </ClCompile>
-    <ClCompile Include="KxVirtualFileSystem\Utility\Formatter\Formatter.cpp">
+    <ClCompile Include="KxVFS\Utility\Formatter\Formatter.cpp">
       <Filter>Code\Utility\Formatter</Filter>
     </ClCompile>
   </ItemGroup>
@@ -301,13 +310,13 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="KxVirtualFileSystem\Common\FileNode.natvis">
+    <Natvis Include="KxVFS\Common\FileNode.natvis">
       <Filter>Code\Common</Filter>
     </Natvis>
-    <Natvis Include="KxVirtualFileSystem\Utility\DynamicString\BasicDynamicString.natvis">
+    <Natvis Include="KxVFS\Utility\DynamicString\BasicDynamicString.natvis">
       <Filter>Code\Utility\DynamicString</Filter>
     </Natvis>
-    <Natvis Include="KxVirtualFileSystem\Utility\FileSystem\FileItem.natvis">
+    <Natvis Include="KxVFS\Utility\FileSystem\FileItem.natvis">
       <Filter>Code\Utility\FileSystem</Filter>
     </Natvis>
   </ItemGroup>
@@ -319,6 +328,15 @@
   <ItemGroup>
     <None Include="README.md">
       <Filter>Resources</Filter>
+    </None>
+    <None Include="VCPkg\ports\kxvfs\CONTROL">
+      <Filter>VCPkg\ports\kxvfs</Filter>
+    </None>
+    <None Include="VCPkg\ports\kxvfs\portfile.cmake">
+      <Filter>VCPkg\ports\kxvfs</Filter>
+    </None>
+    <None Include="VCPkg\ports\kxvfs\vcpkg.targets">
+      <Filter>VCPkg\ports\kxvfs</Filter>
     </None>
   </ItemGroup>
 </Project>

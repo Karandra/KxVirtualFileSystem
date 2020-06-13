@@ -1,7 +1,7 @@
 #pragma once
 
 #define _CRT_SECURE_NO_WARNINGS 1
-#include "KxVirtualFileSystem/Common.hpp"
+#include "KxVFS/Common.hpp"
 
 #include <cstdlib>
 #include <cstdio>

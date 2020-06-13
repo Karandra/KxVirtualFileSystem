@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup Label="Globals">
+		<VcpkgTriplet Condition="'$(OverrideVcpkgTriplet)'=='true'">$(OverrideVcpkgTripletName)</VcpkgTriplet>
+		<VcpkgEnabled>true</VcpkgEnabled>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(VcpkgEnabled)' == 'true'">
+		<VcpkgConfiguration Condition="'$(VcpkgConfiguration)' == ''">$(Configuration)</VcpkgConfiguration>
+		<VcpkgNormalizedConfiguration Condition="$(VcpkgConfiguration.StartsWith('Debug'))">Debug</VcpkgNormalizedConfiguration>
+		<VcpkgNormalizedConfiguration Condition="$(VcpkgConfiguration.StartsWith('Release')) or '$(VcpkgConfiguration)' == 'RelWithDebInfo' or '$(VcpkgConfiguration)' == 'MinSizeRel'">Release</VcpkgNormalizedConfiguration>
+		<VcpkgRoot Condition="'$(VcpkgRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), .vcpkg-root))\installed\$(VcpkgTriplet)\</VcpkgRoot>
+		<VcpkgApplocalDeps Condition="'$(VcpkgApplocalDeps)' == ''">true</VcpkgApplocalDeps>
+		<!-- Deactivate Autolinking if lld is used as a linker. (Until a better way to solve the problem is found!). 
+    Tried to add /lib as a parameter to the linker call but was unable to find a way to pass it as the first parameter. -->
+		<VcpkgAutoLink Condition="'$(UseLldLink)' == 'true' and '$(VcpkgAutoLink)' == ''">false</VcpkgAutoLink>
+	</PropertyGroup>
+
+	<ItemDefinitionGroup Condition="'$(VcpkgEnabled)' == 'true'">
+		<Link>
+			<AdditionalDependencies Condition="'$(VcpkgNormalizedConfiguration)' == 'Debug' and '$(VcpkgAutoLink)' != 'false'">%(AdditionalDependencies);$(VcpkgRoot)debug\lib\*.lib</AdditionalDependencies>
+			<AdditionalDependencies Condition="'$(VcpkgNormalizedConfiguration)' == 'Release' and '$(VcpkgAutoLink)' != 'false'">%(AdditionalDependencies);$(VcpkgRoot)lib\*.lib</AdditionalDependencies>
+			<AdditionalLibraryDirectories Condition="'$(VcpkgNormalizedConfiguration)' == 'Release'">%(AdditionalLibraryDirectories);$(VcpkgRoot)lib;$(VcpkgRoot)lib\manual-link</AdditionalLibraryDirectories>
+			<AdditionalLibraryDirectories Condition="'$(VcpkgNormalizedConfiguration)' == 'Debug'">%(AdditionalLibraryDirectories);$(VcpkgRoot)debug\lib;$(VcpkgRoot)debug\lib\manual-link</AdditionalLibraryDirectories>
+		</Link>
+		<ClCompile>
+			<AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(VcpkgRoot)include</AdditionalIncludeDirectories>
+		</ClCompile>
+		<ResourceCompile>
+			<AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(VcpkgRoot)include</AdditionalIncludeDirectories>
+		</ResourceCompile>
+	</ItemDefinitionGroup>
+</Project>
