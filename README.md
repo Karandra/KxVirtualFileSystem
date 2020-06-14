@@ -9,3 +9,6 @@ This library used in [Kortex Mod Manager](https://github.com/KerberX/Kortex-Mod-
 - Define `DOKAN_STATIC_LINK` macro for `dokan` project.
 - Install `dokany-kerberx` package in **VCPkg**.
 - Build KxVFS! All configurations for x86 and x64.
+
+# As a dependency
+Use **VCPkg** package manager with portfiles in `VCPkg/ports` folder to download and build latest revision of the **KxVFS**. Name in portfile: `kxvfs`.
