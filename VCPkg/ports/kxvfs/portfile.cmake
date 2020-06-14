@@ -34,7 +34,7 @@
 
 include(vcpkg_common_functions)
 
-if (NOT VCPKG_LIBRARY_LINKAGE STREQUAL static)
+if (NOT VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
 	message(FATAL_ERROR "Unsupported linkage: ${VCPKG_LIBRARY_LINKAGE}")
 endif()
 

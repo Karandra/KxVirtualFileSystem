@@ -281,9 +281,6 @@
     <ClCompile Include="KxVFS\IFileSystem.cpp">
       <Filter>Code</Filter>
     </ClCompile>
-    <ClCompile Include="KxVFS\KxVirtualFileSystemMain.cpp">
-      <Filter>Code</Filter>
-    </ClCompile>
     <ClCompile Include="KxVFS\MirrorFS.cpp">
       <Filter>Code</Filter>
     </ClCompile>
