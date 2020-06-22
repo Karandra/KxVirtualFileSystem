@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<PropertyGroup Label="Globals">
-		<VcpkgTriplet Condition="'$(OverrideVcpkgTriplet)'=='true'">$(OverrideVcpkgTripletName)</VcpkgTriplet>
+	<PropertyGroup Label="Vcpkg">
+		<VcpkgUserTriplet Condition="'$(OverrideVcpkgTriplet)'=='true'">$(OverrideVcpkgTripletName)</VcpkgUserTriplet>
 		<VcpkgEnabled>true</VcpkgEnabled>
 	</PropertyGroup>
 
@@ -9,7 +9,7 @@
 		<VcpkgConfiguration Condition="'$(VcpkgConfiguration)' == ''">$(Configuration)</VcpkgConfiguration>
 		<VcpkgNormalizedConfiguration Condition="$(VcpkgConfiguration.StartsWith('Debug'))">Debug</VcpkgNormalizedConfiguration>
 		<VcpkgNormalizedConfiguration Condition="$(VcpkgConfiguration.StartsWith('Release')) or '$(VcpkgConfiguration)' == 'RelWithDebInfo' or '$(VcpkgConfiguration)' == 'MinSizeRel'">Release</VcpkgNormalizedConfiguration>
-		<VcpkgRoot Condition="'$(VcpkgRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), .vcpkg-root))\installed\$(VcpkgTriplet)\</VcpkgRoot>
+		<VcpkgRoot Condition="'$(VcpkgRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), .vcpkg-root))\installed\$(VcpkgUserTriplet)\</VcpkgRoot>
 		<VcpkgApplocalDeps Condition="'$(VcpkgApplocalDeps)' == ''">true</VcpkgApplocalDeps>
 		<!-- Deactivate Autolinking if lld is used as a linker. (Until a better way to solve the problem is found!). 
     Tried to add /lib as a parameter to the linker call but was unable to find a way to pass it as the first parameter. -->
